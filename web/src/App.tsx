@@ -148,21 +148,25 @@ function StaffCard({ onClose }: { onClose: () => void }) {
       aria-labelledby="card-h"
       className="fixed inset-0 z-10 flex flex-col bg-white text-black"
     >
-      <div className="flex flex-1 flex-col justify-center overflow-y-auto px-6 py-8">
-        <h2
-          id="card-h"
-          ref={heading}
-          tabIndex={-1}
-          className="text-[clamp(2.5rem,13vmin,5.5rem)] font-bold leading-[1.08] tracking-tight outline-none"
-        >
-          Please point me to {quietRoom.name}, Level {quietRoom.level}.
-        </h2>
-        <p className="mt-[6vmin] text-[clamp(1.75rem,9vmin,3.5rem)] font-semibold leading-tight">
-          I may not be able to talk right now.
-        </p>
-        <p className="mt-[6vmin] text-[clamp(1.5rem,7.5vmin,2.75rem)] font-semibold leading-tight">
-          {quietRoom.venue}
-        </p>
+      {/* Auto margins centre the words but drop to 0 if they overflow, so the
+          first line can always be scrolled back into view. */}
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-6 py-8">
+        <div className="my-auto">
+          <h2
+            id="card-h"
+            ref={heading}
+            tabIndex={-1}
+            className="text-[clamp(2.5rem,13vmin,5.5rem)] font-bold leading-[1.08] tracking-tight outline-none"
+          >
+            Please point me to {quietRoom.name}, Level {quietRoom.level}.
+          </h2>
+          <p className="mt-[6vmin] text-[clamp(1.75rem,9vmin,3.5rem)] font-semibold leading-tight">
+            I may not be able to talk right now.
+          </p>
+          <p className="mt-[6vmin] text-[clamp(1.5rem,7.5vmin,2.75rem)] font-semibold leading-tight">
+            {quietRoom.venue}
+          </p>
+        </div>
       </div>
       <div className="border-t-2 border-black px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
         <button type="button" onClick={onClose} className="close-button">
