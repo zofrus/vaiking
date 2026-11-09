@@ -61,21 +61,21 @@ export function saveKubectl(on: boolean): void {
 // A break carries over a reload in this tab only, and only until it would end
 // anyway (the next must-see). A shared or bookmarked link to the calm screen
 // opens in a new tab with no break, so it never claims one the person did not start.
-const BREAK_KEY = "grace-break-until-v1";
+const breakKey = (preview: boolean) => `grace-break-until-v1:${preview ? "preview" : "live"}`;
 
-export function loadBreak(nowMs: number): boolean {
+export function loadBreak(nowMs: number, preview: boolean): boolean {
   try {
-    const until = sessionStorage.getItem(BREAK_KEY);
+    const until = sessionStorage.getItem(breakKey(preview));
     return until !== null && Date.parse(until) > nowMs;
   } catch {
     return false;
   }
 }
 
-export function saveBreak(until: string | null): void {
+export function saveBreak(until: string | null, preview: boolean): void {
   try {
-    if (until) sessionStorage.setItem(BREAK_KEY, until);
-    else sessionStorage.removeItem(BREAK_KEY);
+    if (until) sessionStorage.setItem(breakKey(preview), until);
+    else sessionStorage.removeItem(breakKey(preview));
   } catch {
     // Storage can be blocked. The break then lasts until the page closes.
   }

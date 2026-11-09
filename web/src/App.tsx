@@ -211,7 +211,7 @@ export default function App() {
   const [plan, setPlanState] = useState<PlanItem[]>(() => (useSample ? [...samplePlan] : loadPlan()));
   const [buffer, setBufferState] = useState(loadBuffer);
   // A reload keeps a break only when the person pressed the button and it is still valid.
-  const [grace, setGrace] = useState(() => viewFromHash() !== "home" && loadBreak(now().getTime()));
+  const [grace, setGrace] = useState(() => viewFromHash() !== "home" && loadBreak(now().getTime(), isPreview));
   const setPlan = (p: PlanItem[]) => {
     setPlanState(p);
     if (!isPreview) savePlan(p); // a preview never overwrites the real plan
@@ -258,7 +258,7 @@ export default function App() {
 
   const press = () => {
     setGrace(true);
-    saveBreak(result.clearUntil ?? new Date(now().getTime() + 3 * 3_600_000).toISOString());
+    saveBreak(result.clearUntil ?? new Date(now().getTime() + 3 * 3_600_000).toISOString(), isPreview);
     countPress(isPreview ? "preview" : "live");
     // Focus moving to the calm heading says where you are, so the live region
     // adds only the result. It is worked out here from the same plan, so
@@ -274,7 +274,7 @@ export default function App() {
   // The heading's words change, then focus moves to it so a screen reader
   // reads the new words. The button that was pressed is gone by then.
   const putBack = () => {
-    saveBreak(null);
+    saveBreak(null, isPreview);
     flushSync(() => {
       setGrace(false);
       setAnnounce("");
