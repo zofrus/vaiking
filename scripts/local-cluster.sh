@@ -541,7 +541,7 @@ cat <<EOF
     For Claude Code:
       claude mcp add radar-cloud --transport http https://api.radarhq.io/mcp
 
-    AGENTS.md describes the hackathon's cluster: add the note from the README's "On your laptop"
+    AGENTS.md describes the hackathon's cluster: add the note from docs/RADAR-STARTER.md's "On your laptop"
     section to the top of it. Either way, start your agent with:
       We're on a local cluster in our own Radar Cloud organization, named $team. AGENTS.md's
       parts about the hackathon organization, Prometheus, the budget, the host's limits and the

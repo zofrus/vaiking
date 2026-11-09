@@ -146,3 +146,14 @@ test("responses are cached: a second request makes no new outbound calls", async
   await app.inject({ url: "/api/demo" });
   assert.equal(fetch.calls.length, n);
 });
+
+test("button presses count only mode=live", async () => {
+  const fetch = router();
+  const app = await make(fetch);
+  await app.inject({ url: "/api/demo" });
+  const q = fetch.calls
+    .filter((u) => u.startsWith("https://api.example/"))
+    .map((u) => new URL(u).searchParams.get("query"))
+    .find((x) => x.includes("grace_requests_total"));
+  assert.match(q, /grace_requests_total\{mode="live"\}/);
+});

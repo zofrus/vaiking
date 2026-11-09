@@ -6,7 +6,7 @@ const {
 const { clientKey, createLimiter } = require("../lib/guard");
 
 const BUDGET_MS = 800;
-const OPTIONS = { maxRetries: 0 };
+const OPTIONS = { maxRetries: 0, openTelemetry: { enabled: false } };
 
 function similarResponse(results) {
   return results.length === 0
@@ -29,7 +29,9 @@ module.exports = async function similar(app, { elastic, env = process.env }) {
   const seeds = createCache(500, 10 * 60_000);
   const answers = createCache(500, 60_000);
 
-  app.get("/api/similar", async (request, reply) => {
+  // logLevel "warn" keeps the per-request log lines out, as /api/grace does:
+  // their timestamps alone would show a lookup that follows a break press.
+  app.get("/api/similar", { logLevel: "warn" }, async (request, reply) => {
     const talkId = typeof request.query.talk_id === "string" ? request.query.talk_id.trim() : "";
     if (!/^[\w-]{1,40}$/.test(talkId)) return reply.code(400).send({ error: "talk_id is required" });
     const after = parseWhen(request.query.after);
@@ -64,6 +66,7 @@ module.exports = async function similar(app, { elastic, env = process.env }) {
             { index: "talks", id: talkId, _source_includes: ["title", "abstract"] },
             requestOptions(),
           ),
+          { traced: false },
         ).catch((err) => (err?.statusCode === 404 ? null : Promise.reject(err)));
         if (!talk) return reply.code(404).send({ error: "talk not found" });
         text = seedText(talk._source);
@@ -75,6 +78,7 @@ module.exports = async function similar(app, { elastic, env = process.env }) {
           buildSimilarRequest({ talkId, text, after: afterMin, before: beforeMin, limit }),
           requestOptions(),
         ),
+        { traced: false },
       );
       const body = similarResponse((res.hits?.hits ?? []).map((h) => h._source));
       answers.set(key, body);

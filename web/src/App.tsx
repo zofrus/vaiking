@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { flushSync } from "react-dom";
 import { quietRoom, restrooms } from "./data/facilities";
 import { countPress } from "./lib/grace";
 import { PlanSection } from "./Plan";
 import { DayViewSection } from "./DayView";
-import { loadBuffer, loadPlan, saveBuffer, savePlan } from "./lib/plan";
+import { loadBreak, loadBuffer, loadPlan, saveBreak, saveBuffer, savePlan } from "./lib/plan";
 import { isPreview, now, samplePlan, useSample } from "./lib/clock";
 import { useAlternatives, useChanges, useSimilar } from "./lib/live";
 import { formatTime, reconcile, type Notice, type PlanItem } from "./lib/reconcile";
@@ -60,11 +61,13 @@ function Footer() {
 
 function Calm({
   onCard,
+  onBack,
   staffBtn,
   planResult,
 }: {
   planResult: ReactNode;
   onCard: () => void;
+  onBack: () => void;
   staffBtn: { current: HTMLButtonElement | null };
 }) {
   const heading = useRef<HTMLHeadingElement>(null);
@@ -134,6 +137,10 @@ function Calm({
           Estimated. Confirm routes with event staff.
         </p>
       </div>
+
+      <button type="button" onClick={onBack} className="quiet-button">
+        Back to the start
+      </button>
     </section>
   );
 }
@@ -196,16 +203,15 @@ export default function App() {
 
   useEffect(() => {
     if (prev.current === "card" && view === "calm") staffBtn.current?.focus();
+    if (prev.current !== "home" && view === "home") document.getElementById("home-h")?.focus();
+    if (view === "home") setAnnounce("");
     prev.current = view;
   }, [view]);
 
   const [plan, setPlanState] = useState<PlanItem[]>(() => (useSample ? [...samplePlan] : loadPlan()));
   const [buffer, setBufferState] = useState(loadBuffer);
   // A reload keeps a break only when the person pressed the button and it is still valid.
-  const [grace, setGrace] = useState(() => {
-    const until = sessionStorage.getItem("graceUntil");
-    return viewFromHash() !== "home" && until !== null && Date.parse(until) > now().getTime();
-  });
+  const [grace, setGrace] = useState(() => viewFromHash() !== "home" && loadBreak(now().getTime()));
   const setPlan = (p: PlanItem[]) => {
     setPlanState(p);
     if (!isPreview) savePlan(p); // a preview never overwrites the real plan
@@ -216,7 +222,10 @@ export default function App() {
   };
   const changes = useChanges();
   const result = reconcile(plan, changes, { now: now(), bufferMinutes: buffer, graceActive: grace });
-  const clearUntil = result.clearUntil && Date.parse(result.clearUntil) > now().getTime() ? result.clearUntil : null;
+  const clearLine = (r: ReturnType<typeof reconcile>) =>
+    r.clearUntil && Date.parse(r.clearUntil) > now().getTime()
+      ? `You're clear until ${formatTime(r.clearUntil)} MST.`
+      : "You're clear for the rest of your plan.";
   const similar = useSimilar(grace ? result.dropped[0] : undefined);
   const alternatives = useAlternatives(result.notices.filter((n) => !n.fits), buffer);
   // A notice that no longer fits names the first similar talk the person still
@@ -249,22 +258,44 @@ export default function App() {
 
   const press = () => {
     setGrace(true);
-    sessionStorage.setItem("graceUntil", result.clearUntil ?? new Date(now().getTime() + 3 * 3600_000).toISOString());
+    saveBreak(result.clearUntil ?? new Date(now().getTime() + 3 * 3_600_000).toISOString());
     countPress(isPreview ? "preview" : "live");
-    setAnnounce((current) =>
-      current === "Quiet room details are on screen."
-        ? "Quiet room details are still on screen."
-        : "Quiet room details are on screen.",
-    );
+    // Focus moving to the calm heading says where you are, so the live region
+    // adds only the result. It is worked out here from the same plan, so
+    // nothing waits on the network.
+    const pressed = reconcile(plan, changes, { now: now(), bufferMinutes: buffer, graceActive: true });
+    setAnnounce(plan.length > 0 ? `${clearLine(pressed)} Nothing is cancelled. Your plan is saved.` : "");
+    // Pressed again on the calm screen: nothing remounts, so move focus back
+    // to the heading to say it again.
+    if (view === "calm") document.getElementById("calm-h")?.focus();
     go("calm");
   };
+
+  // The heading's words change, then focus moves to it so a screen reader
+  // reads the new words. The button that was pressed is gone by then.
+  const putBack = () => {
+    saveBreak(null);
+    flushSync(() => {
+      setGrace(false);
+      setAnnounce("");
+    });
+    document.getElementById("clear-h")?.focus();
+  };
+
+  useEffect(() => {
+    document.title =
+      view === "card" ? "Staff card · Grace Period" : view === "calm" ? "Take your time · Grace Period" : "Grace Period";
+  }, [view]);
 
   const showCard = view === "card";
 
   return (
     <div className="min-h-screen bg-ground text-ink">
       <p role="status" aria-live="polite" className="sr-only">
-        {announce} {noticeText}
+        {view === "home" ? "" : announce}
+      </p>
+      <p aria-live="polite" className="sr-only">
+        {noticeText}
       </p>
       {/* Everything but the live region goes quiet while the staff card is up,
           so Tab and the screen reader stay on the card. */}
@@ -287,7 +318,7 @@ export default function App() {
         )}
 
         <header className="mx-auto max-w-xl px-5 pt-6">
-          <p className="text-lg font-semibold">Grace Period</p>
+          <h1 className="text-lg font-semibold">Grace Period</h1>
         </header>
 
         <main
@@ -295,12 +326,11 @@ export default function App() {
           tabIndex={-1}
           className="mx-auto max-w-xl space-y-8 px-5 pb-6 pt-5"
         >
-          <h1 className="sr-only">Grace Period</h1>
           <BreakButton onPress={press} />
           {view === "home" ? (
             <>
             <section aria-labelledby="home-h" className="space-y-3">
-              <h2 id="home-h" className="text-2xl font-semibold">
+              <h2 id="home-h" tabIndex={-1} className="text-2xl font-semibold">
                 One tap, no setup.
               </h2>
               <p className="text-lg text-ink-soft">
@@ -321,31 +351,26 @@ export default function App() {
           ) : (
             <Calm
               onCard={() => go("card")}
+              onBack={() => go("home")}
               staffBtn={staffBtn}
               planResult={
                 plan.length > 0 && (
                   <div className="panel space-y-3" aria-labelledby="clear-h" role="group">
-                    <h3 id="clear-h" className="text-2xl font-semibold">
-                      {clearUntil ? `You're clear until ${formatTime(clearUntil)} MST.` : "You're clear for the rest of your plan."}
+                    <h3 id="clear-h" tabIndex={-1} className="text-2xl font-semibold">
+                      {grace ? clearLine(result) : "All your talks are in your plan."}
                     </h3>
-                    <p>Nothing is cancelled. Your plan is saved.</p>
+                    {grace && <p>Nothing is cancelled. Your plan is saved.</p>}
                     {notices}
                     {similar && <p className="text-ink-soft">Similar talk later today: {similar}.</p>}
                     {result.dropped.length > 0 && (
                       <>
-                        <ul className="list-disc pl-6 text-ink-soft">
+                        <p id="aside-h" className="font-semibold">Set aside for now</p>
+                        <ul aria-labelledby="aside-h" className="list-disc space-y-1 pl-6 text-ink-soft">
                           {result.dropped.map((d) => (
-                            <li key={d.id}>Set aside: {d.title}</li>
+                            <li key={d.id}>{d.title}</li>
                           ))}
                         </ul>
-                        <button
-                          type="button"
-                          className="staff-button"
-                          onClick={() => {
-                            setGrace(false);
-                            sessionStorage.removeItem("graceUntil");
-                          }}
-                        >
+                        <button type="button" className="staff-button" onClick={putBack}>
                           Put them back
                         </button>
                       </>
