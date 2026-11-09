@@ -87,7 +87,7 @@ export function DayViewSection({
             · times in MST
           </p>
         </div>
-        <label htmlFor="kubectl" className="gp-switch">
+        <label htmlFor="kubectl" className="gp-switch gp-secondary">
           Show as kubectl
           <input
             id="kubectl"
@@ -145,6 +145,7 @@ export function DayViewSection({
         </ul>
       )}
 
+      {/* mount: AddToCalendar */}
       {kubectl ? (
         <pre
           tabIndex={0}

@@ -128,9 +128,9 @@ export function PlanSection({
         <div className="gp-searchbox">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
           <input id="q" type="search" value={q} onChange={(e) => setQ(e.target.value)} aria-describedby="q-hint" className="gp-input" autoComplete="off" />
-          <span className="gp-credit">Search by <b>Elastic</b></span>
+          <span className="gp-credit gp-secondary">Search by <b>Elastic</b></span>
         </div>
-        <div role="group" aria-labelledby="q-examples" className="flex flex-wrap items-center gap-3">
+        <div role="group" aria-labelledby="q-examples" className="gp-secondary flex flex-wrap items-center gap-3">
           <span id="q-examples" className="gp-hint">Try one:</span>
           {SEARCH_EXAMPLES.map((text) => (
             <button key={text} type="button" aria-label={`Search for ${text}`} onClick={() => tryExample(text)} className="gp-chip">
