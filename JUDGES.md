@@ -2,6 +2,12 @@
 
 **Grace Period** is a phone app for KubeCon attendees who need a break. It has one button with zero setup, and a day plan that is kept in line with the real schedule, the way a Kubernetes controller reconciles desired state. Built by team vAIking at the Cloud Native Hackathon, November 9, 2026. Everything below is merged and was live on build `f1aceff` at 4:05 PM MST.
 
+## In 30 seconds
+
+1. On a phone, open the [sample day with a labelled drill](https://grace.effulgentpoint.com/?preview=2026-11-10T15%3A25%3A00-07%3A00&sample=1&drill=1). A simulated schedule change moves one of your talks, and the app checks your plan against it the way a controller reconciles desired state.
+2. Tap **I need a break**: the quiet room and a card to show staff, with no account.
+3. Open [/demo](https://grace.effulgentpoint.com/demo) to see Elasticsearch, Dash0, Radar and Gitar numbers, live. No real schedule change has happened today, which is why the change in step 1 is a labelled drill.
+
 ## Try it
 
 - Open <https://grace.effulgentpoint.com> on your phone. There's no account and nothing to install. To use a QR code instead, scan the one at the top of <https://grace.effulgentpoint.com/demo>.
