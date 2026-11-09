@@ -4,7 +4,7 @@ const {
 } = require("../lib/search-similar");
 
 const BUDGET_MS = 800;
-const OPTIONS = { maxRetries: 0 };
+const OPTIONS = { maxRetries: 0, openTelemetry: { enabled: false } };
 
 function similarResponse(results) {
   return results.length === 0

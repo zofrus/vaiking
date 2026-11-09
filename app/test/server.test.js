@@ -4,6 +4,10 @@ const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
 const { build } = require("../server");
+const { context } = require("@opentelemetry/api");
+const { AsyncLocalStorageContextManager } = require("@opentelemetry/context-async-hooks");
+const { isTracingSuppressed } = require("@opentelemetry/core");
+const { withSpan } = require("../lib/search-trace");
 
 const NO_PUBLIC = path.join(os.tmpdir(), "vaiking-no-public-dir");
 
@@ -12,6 +16,26 @@ function appWith(opts = {}) {
   test.after(() => app.close());
   return app;
 }
+
+test("untraced operations suppress nested instrumentation spans", async () => {
+  const contextManager = new AsyncLocalStorageContextManager().enable();
+  assert.equal(context.setGlobalContextManager(contextManager), true);
+
+  try {
+    let suppressed;
+    const result = await withSpan("elasticsearch.similar", "search", async () => {
+      await Promise.resolve();
+      suppressed = isTracingSuppressed(context.active());
+      return "done";
+    }, { traced: false });
+
+    assert.equal(result, "done");
+    assert.equal(suppressed, true);
+    assert.equal(isTracingSuppressed(context.active()), false);
+  } finally {
+    contextManager.disable();
+  }
+});
 
 for (const url of ["/healthz", "/readyz"]) {
   test(`${url} returns 200 without external calls`, async () => {
