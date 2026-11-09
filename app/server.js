@@ -9,6 +9,7 @@ const { createElastic } = require("./lib/elastic");
 const SESSIONIZE_URL = "https://sessionize.com/api/v2/svi82w6c/view/All";
 const DEEP_CACHE_MS = 30_000;
 const CHECK_TIMEOUT_MS = 3_000;
+const SHUTDOWN_DEADLINE_MS = 30_000;
 
 // Log only method and path. Query strings carry search text, so they never reach logs.
 function serializeReq(req) {
@@ -171,11 +172,18 @@ function build(opts = {}) {
 
 async function main() {
   const app = build({ logger: LOGGER_OPTIONS });
+  // Finish in-flight requests, then let the process end by itself: calling
+  // process.exit() here would cut off OpenTelemetry's own SIGTERM flush. The
+  // timer only fires if something is still keeping the process alive.
   const shutdown = () => {
-    app.close().then(
-      () => process.exit(0),
-      () => process.exit(1),
-    );
+    setTimeout(
+      () => process.exit(process.exitCode ?? 0),
+      SHUTDOWN_DEADLINE_MS,
+    ).unref();
+    app.close().catch((err) => {
+      console.error("shutdown failed:", err?.name ?? "Error");
+      process.exitCode = 1;
+    });
   };
   // Exit cleanly when Kubernetes stops the pod, so rollouts don't drop requests.
   process.once("SIGTERM", shutdown);
