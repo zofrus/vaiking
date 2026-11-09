@@ -517,7 +517,7 @@ export default function App() {
             <>
             <section aria-labelledby="home-h" className="space-y-3">
               <h2 id="home-h" tabIndex={-1} className="text-xl font-semibold">
-                One tap, no setup.
+                Plan your day.
               </h2>
               <p className="text-[0.9375rem] text-ink-soft">
                 Save the talks you came for. If one moves, we'll tell you whether it still fits.
