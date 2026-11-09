@@ -11,6 +11,7 @@ const pages = [
   { name: "calm screen", url: "/", press: true },
   { name: "staff card", url: "/#/card" },
   { name: "sample plan, after the button", url: sample, press: true },
+  { name: "sample plan, home (calendar button)", url: sample },
   { name: "board", url: "/board" },
 ];
 
