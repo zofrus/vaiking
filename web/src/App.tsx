@@ -517,12 +517,10 @@ export default function App() {
             <>
             <section aria-labelledby="home-h" className="space-y-3">
               <h2 id="home-h" tabIndex={-1} className="text-xl font-semibold">
-                One tap, no setup.
+                Plan your day.
               </h2>
               <p className="text-[0.9375rem] text-ink-soft">
-                Press the button whenever you need a pause. You get the quiet
-                room, a card to show staff, and a list of all-gender restrooms. It
-                needs no account, and works with no signal after your first visit.
+                Save the talks you came for. If one moves, we'll tell you whether it still fits.
               </p>
               <p className="gp-secondary text-xs text-ink-soft">
                 Unofficial attendee companion for KubeCon + CloudNativeCon North

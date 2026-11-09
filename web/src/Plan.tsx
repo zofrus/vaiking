@@ -147,6 +147,13 @@ export function PlanSection({
   return (
     <section aria-labelledby="plan-h" className="gp-find">
       <h2 id="plan-h" className="gp-h">Find your talks</h2>
+      {/* Opens the labelled DRILL view, so the room-change check can be seen on a first visit. */}
+      <a
+        href="/?preview=2026-11-10T15%3A25%3A00-07%3A00&sample=1&drill=1"
+        className="inline-flex min-h-11 items-center text-sm font-medium text-[color:var(--gp-accent)] underline underline-offset-4"
+      >
+        See a sample day with a room change
+      </a>
       <form onSubmit={search} className="space-y-3">
         <label htmlFor="q" className="gp-label">What's the one thing you came for?</label>
         <p id="q-hint" className="gp-hint">Topic, project or speaker.</p>
