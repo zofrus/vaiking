@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { formatTime, type PlanItem } from "./lib/reconcile";
 import { placeLabel } from "./lib/place";
+import { latestOnly } from "./lib/latest";
 import "./day.css";
 
 interface Talk {
@@ -39,6 +40,10 @@ const toItem = (t: Talk, priority: PlanItem["priority"]): PlanItem => ({
   id: t.id, title: t.title, room: t.room, starts_at: t.starts_at, ends_at: t.ends_at, priority,
 });
 
+// Only the newest search may change the screen: a slow older answer must not
+// replace the results of what was asked last.
+const searchTurn = latestOnly();
+
 const when = (t: Talk) => `${formatTime(t.starts_at)} to ${formatTime(t.ends_at)} MST`;
 
 // For first-time users who don't know what to type. Each has a good top match on the live search.
@@ -61,6 +66,8 @@ export function PlanSection({
   // What is in the minutes box while someone types. Clamping on every key
   // turned "3" into 5 before the "0" of 30 arrived, so clamp only on leaving.
   const [draft, setDraft] = useState<string | null>(null);
+  // The words the current results are for. Filters re-run this, not what is typed now.
+  const [submitted, setSubmitted] = useState("");
   const typeBuffer = (text: string) => {
     setDraft(text);
     const n = Number(text);
@@ -72,6 +79,14 @@ export function PlanSection({
     setDraft(null);
   };
 
+  const remove = (id: string) => {
+    const rest = plan.filter((p) => p.id !== id);
+    setPlan(rest);
+    // The pressed button is about to go; keep focus on the list, or the search box
+    // if the list is gone.
+    globalThis.document?.getElementById(rest.length > 0 ? "saved-h" : "q")?.focus();
+  };
+
   const mark = (t: Talk, priority: PlanItem["priority"]) => {
     const current = plan.find((p) => p.id === t.id);
     // Pressing the same choice again takes the talk out of the plan.
@@ -79,6 +94,7 @@ export function PlanSection({
   };
 
   const run = async (text: string, nextTrack: string, nextDay: string) => {
+    const current = searchTurn();
     setStatus("Searching.");
     try {
       const params = new URLSearchParams({ q: text, limit: "8" });
@@ -87,11 +103,13 @@ export function PlanSection({
       const res = await fetch(`/api/search?${params}`, { signal: AbortSignal.timeout(5000) });
       if (!res.ok) throw new Error();
       const body = (await res.json()) as { results: Talk[]; took_ms?: number | null; facets?: Facets };
+      if (!current()) return;
       setResults(body.results);
       // Keep the unfiltered counts so the choices don't disappear once one is picked.
       if (body.facets && !nextTrack && !nextDay) setFacets(body.facets);
       setStatus(body.results.length === 0 ? "No talks found. Try a broader search." : `${body.results.length} talks found${typeof body.took_ms === "number" ? `. Found in ${body.took_ms} ms` : ""}.`);
     } catch {
+      if (!current()) return;
       setResults(null);
       setStatus("Search is not available right now. The break button still works.");
     }
@@ -100,7 +118,11 @@ export function PlanSection({
   const search = (e: FormEvent) => {
     e.preventDefault();
     const text = q.trim();
-    if (!text) return;
+    if (!text) {
+      setStatus("Type a topic, project or speaker.");
+      return;
+    }
+    setSubmitted(text);
     setTrack("");
     setDay("");
     void run(text, "", "");
@@ -108,15 +130,18 @@ export function PlanSection({
 
   const tryExample = (text: string) => {
     setQ(text);
+    setSubmitted(text);
     setTrack("");
     setDay("");
     void run(text, "", "");
   };
 
   const pick = (nextTrack: string, nextDay: string) => {
+    // Nothing has been searched yet, so there is nothing to filter: keep what is shown.
+    if (!submitted) return;
     setTrack(nextTrack);
     setDay(nextDay);
-    void run(q.trim(), nextTrack, nextDay);
+    void run(submitted, nextTrack, nextDay);
   };
 
   return (
@@ -190,7 +215,7 @@ export function PlanSection({
 
       {plan.length > 0 && (
         <div className="space-y-3">
-          <h3 className="gp-label">Saved on this phone</h3>
+          <h3 id="saved-h" tabIndex={-1} className="gp-label">Saved on this phone</h3>
           <ul className="gp-card">
             {[...plan].sort((a, b) => a.starts_at.localeCompare(b.starts_at)).map((p) => (
               <li key={p.id} className="gp-row">
@@ -199,6 +224,7 @@ export function PlanSection({
                   <span className="gp-sub">{p.priority === "must" ? "Must-see" : "Nice to have"}, {formatTime(p.starts_at)} MST</span>
                   <span className="gp-sub">{placeLabel(p.room)}</span>
                 </span>
+                <button type="button" aria-label={`Remove ${p.title}`} onClick={() => remove(p.id)} className="gp-chip">Remove</button>
               </li>
             ))}
           </ul>

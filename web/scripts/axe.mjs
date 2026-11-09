@@ -41,7 +41,8 @@ for (const p of pages) {
   }
   if (p.shareQr) await page.getByRole("button", { name: "Share this app" }).click();
   if (p.openTour) await page.getByRole("button", { name: "Take the 5-step tour" }).click();
-  if (p.press) await page.getByRole("button", { name: "I need a break" }).click();
+  if (p.press) await page.locator("#break-main").click();
+  if (p.press) await page.locator(".more-support > summary").click(); // the extras sit behind one disclosure
   const { violations } = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"]).analyze();
   console.log(`${p.name}: ${violations.length} violations`);
   for (const v of violations) {
