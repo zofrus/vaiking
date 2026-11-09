@@ -36,8 +36,9 @@ export function markTourSeen(store: Store | null = safeStore()): void {
   }
 }
 
-// Show once on a first visit. In preview sample mode only when &tour=1.
-export function shouldAutoShowTour(search: string, seen: boolean): boolean {
+// The tour never opens by itself. This says whether to offer the small "New here?"
+// line: on a first visit, and in preview sample mode only when &tour=1.
+export function shouldShowInvite(search: string, seen: boolean): boolean {
   const p = new URLSearchParams(search);
   if (p.get("tour") === "1") return true;
   if (p.get("sample") === "1") return false;

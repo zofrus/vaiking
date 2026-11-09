@@ -13,7 +13,7 @@ import { formatTime, reconcile, type Notice, type PlanItem } from "./lib/reconci
 import { closestReachable } from "./lib/reach";
 import { placeLabel } from "./lib/place";
 import { Sticker } from "./Sticker";
-import { ReplayTour, Tour } from "./Tour";
+import { ReplayTour, Tour, TourInvite } from "./Tour";
 import { VenueHelp } from "./VenueHelp";
 
 type View = "home" | "calm" | "card";
@@ -364,6 +364,7 @@ export default function App() {
                 {notices}
               </section>
             )}
+            <TourInvite />{/* mount: TourInvite */}
             <InstallPrompt />
             <PlanSection plan={plan} setPlan={setPlan} buffer={buffer} setBuffer={setBuffer} />
             <DayViewSection plan={plan} changes={changes} result={result} now={now()} bufferMinutes={buffer} />

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { TOUR_OPEN_EVENT, TOUR_STEPS, hasSeenTour, markTourSeen, shouldAutoShowTour } from "./lib/tour";
+import { TOUR_OPEN_EVENT, TOUR_STEPS, hasSeenTour, markTourSeen, shouldShowInvite } from "./lib/tour";
 
 const btn =
   "inline-flex min-h-11 items-center justify-center rounded-xl border-2 border-deep px-5 py-2 font-semibold text-deep";
@@ -13,6 +13,7 @@ export function ReplayTour() {
   );
 }
 
+// The tour never opens by itself; the invite or a Replay button asks for it.
 // Native <dialog> opened with showModal(): background goes inert, Escape closes,
 // focus returns to whatever opened it. No timers, no auto-advance, no animation.
 // Closing in any way (Skip, Done, Escape) marks the tour as seen.
@@ -29,7 +30,6 @@ export function Tour() {
   };
 
   useEffect(() => {
-    if (shouldAutoShowTour(location.search, hasSeenTour())) open();
     window.addEventListener(TOUR_OPEN_EVENT, open);
     return () => window.removeEventListener(TOUR_OPEN_EVENT, open);
   }, []);
@@ -73,5 +73,39 @@ export function Tour() {
         </button>
       </div>
     </dialog>
+  );
+}
+
+// Small first-visit line below the break button. Never a modal, so the break
+// button is always reachable. "No thanks" and finishing the tour both set seen.
+export function TourInvite() {
+  const [show, setShow] = useState(() => shouldShowInvite(location.search, hasSeenTour()));
+  if (!show) return null;
+  return (
+    <div className="panel" role="group" aria-label="Tour">
+      <p>New here? Take the 5-step tour.</p>
+      <div className="mt-3 flex flex-wrap gap-3">
+        <button
+          type="button"
+          className={btn}
+          onClick={() => {
+            setShow(false);
+            window.dispatchEvent(new Event(TOUR_OPEN_EVENT));
+          }}
+        >
+          Take the 5-step tour
+        </button>
+        <button
+          type="button"
+          className={btn}
+          onClick={() => {
+            markTourSeen();
+            setShow(false);
+          }}
+        >
+          No thanks
+        </button>
+      </div>
+    </div>
   );
 }

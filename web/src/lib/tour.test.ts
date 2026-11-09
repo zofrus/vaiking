@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { TOUR_STEPS, hasSeenTour, markTourSeen, shouldAutoShowTour } from "./tour";
+import { TOUR_STEPS, hasSeenTour, markTourSeen, shouldShowInvite } from "./tour";
 
 function memoryStore() {
   const m = new Map<string, string>();
@@ -7,21 +7,21 @@ function memoryStore() {
 }
 
 describe("tour", () => {
-  it("shows once: first visit yes, after seen no", () => {
+  it("offers the invite once: first visit yes, after seen no", () => {
     const store = memoryStore();
-    expect(shouldAutoShowTour("", hasSeenTour(store))).toBe(true);
-    markTourSeen(store); // Skip and Done both do this
+    expect(shouldShowInvite("", hasSeenTour(store))).toBe(true);
+    markTourSeen(store); // No thanks, Skip and Done all do this
     expect(hasSeenTour(store)).toBe(true);
-    expect(shouldAutoShowTour("", hasSeenTour(store))).toBe(false);
+    expect(shouldShowInvite("", hasSeenTour(store))).toBe(false);
   });
 
-  it("replay works even after it was seen: tour=1 forces it", () => {
-    expect(shouldAutoShowTour("?tour=1", true)).toBe(true);
+  it("tour=1 forces the invite even after seen", () => {
+    expect(shouldShowInvite("?tour=1", true)).toBe(true);
   });
 
-  it("never auto-shows in preview sample mode unless tour=1", () => {
-    expect(shouldAutoShowTour("?preview=2026-11-10T15%3A25%3A00-07%3A00&sample=1", false)).toBe(false);
-    expect(shouldAutoShowTour("?sample=1&tour=1", false)).toBe(true);
+  it("never offers the invite in preview sample mode unless tour=1", () => {
+    expect(shouldShowInvite("?preview=2026-11-10T15%3A25%3A00-07%3A00&sample=1", false)).toBe(false);
+    expect(shouldShowInvite("?sample=1&tour=1", false)).toBe(true);
   });
 
   it("does not nag when storage throws", () => {
