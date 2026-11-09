@@ -1,0 +1,98 @@
+# Keeps the talks index in step with the real schedule. One replica on purpose:
+# it is a single control loop, and it serves no traffic. Its label must not be
+# app: app, or Service app would send visitors to it.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: reconciler
+  labels:
+    app: reconciler
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: reconciler
+  template:
+    metadata:
+      labels:
+        app: reconciler
+    spec:
+      automountServiceAccountToken: false
+      terminationGracePeriodSeconds: 60
+      containers:
+        - name: reconciler
+          image: app
+          command: ["node", "reconciler.js"]
+          ports:
+            - name: health
+              containerPort: 8081
+          env:
+            # Order matters: $(VAR) only expands variables defined earlier.
+            # Every secretKeyRef is optional so pods start before the Secret exists.
+            - name: DASH0_AUTH_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: app-credentials
+                  key: dash0-auth-token
+                  optional: true
+            - name: OTEL_SERVICE_NAME
+              value: "vaiking-reconciler"
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              valueFrom:
+                secretKeyRef:
+                  name: app-credentials
+                  key: otlp-endpoint
+                  optional: true
+            - name: OTEL_EXPORTER_OTLP_HEADERS
+              value: "Authorization=Bearer $(DASH0_AUTH_TOKEN)"
+            - name: OTEL_METRICS_EXPORTER
+              value: "otlp"
+            - name: NODE_OPTIONS
+              value: "--require @opentelemetry/auto-instrumentations-node/register"
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_UID
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.uid
+            - name: OTEL_RESOURCE_ATTRIBUTES
+              value: "k8s.pod.name=$(POD_NAME),k8s.pod.uid=$(POD_UID),deployment.environment.name=hackathon"
+            - name: ELASTICSEARCH_URL
+              valueFrom:
+                secretKeyRef:
+                  name: app-credentials
+                  key: elasticsearch-url
+                  optional: true
+            - name: ELASTICSEARCH_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: app-credentials
+                  key: elasticsearch-api-key
+                  optional: true
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 250m
+              memory: 256Mi
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: health
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: health
+            periodSeconds: 30
+          securityContext:
+            runAsNonRoot: true
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+            seccompProfile:
+              type: RuntimeDefault
+            capabilities:
+              drop: ["ALL"]

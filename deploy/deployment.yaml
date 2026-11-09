@@ -1,0 +1,143 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app
+  labels:
+    app: app
+spec:
+  # Remove this line when you turn on the HPA (examples/hpa), or Argo CD and
+  # the autoscaler will keep resetting each other.
+  replicas: 2
+  selector:
+    matchLabels:
+      app: app
+  template:
+    metadata:
+      labels:
+        app: app
+    spec:
+      # The app never talks to the Kubernetes API.
+      automountServiceAccountToken: false
+      # Above the 5s preStop drain plus the app's 30s limit to finish and flush.
+      terminationGracePeriodSeconds: 45
+      # Keep the two replicas on different nodes when the cluster can.
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: app
+      containers:
+        - name: app
+          image: app
+          ports:
+            - name: http
+              containerPort: 8080
+          env:
+            - name: TEAM_NAME
+              value: "vaiking"
+            # Order matters: $(VAR) only expands variables defined earlier.
+            # Every secretKeyRef is optional so pods start before the Secret exists.
+            - name: DASH0_AUTH_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: app-credentials
+                  key: dash0-auth-token
+                  optional: true
+            - name: OTEL_SERVICE_NAME
+              value: "vaiking-app"
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              valueFrom:
+                secretKeyRef:
+                  name: app-credentials
+                  key: otlp-endpoint
+                  optional: true
+            - name: OTEL_EXPORTER_OTLP_HEADERS
+              value: "Authorization=Bearer $(DASH0_AUTH_TOKEN)"
+            - name: OTEL_METRICS_EXPORTER
+              value: "otlp"
+            - name: NODE_OPTIONS
+              value: "--require ./otel.js"
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_UID
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.uid
+            - name: OTEL_RESOURCE_ATTRIBUTES
+              value: "k8s.pod.name=$(POD_NAME),k8s.pod.uid=$(POD_UID),deployment.environment.name=hackathon"
+            - name: ELASTICSEARCH_URL
+              valueFrom:
+                secretKeyRef:
+                  name: app-credentials
+                  key: elasticsearch-url
+                  optional: true
+            - name: ELASTICSEARCH_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: app-credentials
+                  key: elasticsearch-api-key
+                  optional: true
+            - name: DASH0_RUM_ENDPOINT
+              valueFrom:
+                secretKeyRef:
+                  name: app-credentials
+                  key: rum-endpoint
+                  optional: true
+            - name: DASH0_RUM_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: app-credentials
+                  key: rum-token
+                  optional: true
+            - name: DASH0_DATASET
+              valueFrom:
+                secretKeyRef:
+                  name: app-credentials
+                  key: dataset
+                  optional: true
+            - name: DASH0_READ_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: app-credentials
+                  key: dash0-read-token
+                  optional: true
+            - name: DASH0_API_URL
+              valueFrom:
+                secretKeyRef:
+                  name: app-credentials
+                  key: dash0-api-url
+                  optional: true
+          resources:
+            requests:
+              cpu: 100m
+              memory: 192Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          lifecycle:
+            preStop:
+              # Keep serving while the Service stops routing to this pod.
+              exec:
+                command: ["sleep", "5"]
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: http
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: 10
+          securityContext:
+            runAsNonRoot: true
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+            seccompProfile:
+              type: RuntimeDefault
+            capabilities:
+              drop: ["ALL"]
