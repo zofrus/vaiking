@@ -17,6 +17,17 @@ Live at <https://vaiking.cnh.radarhq.io>. Built at the Cloud Native Hackathon, N
 
 Semantic search through Elasticsearch's embeddings is the only AI in the product. Nothing on the break-button path calls a model.
 
+## Who it helps
+
+Conferences are loud, long and crowded, and some people need to step away without having to explain why. Grace Period is built for that moment.
+
+- **A break with nothing to fill in.** The "I need a break" button needs no account, no plan and no reason. The app asks what helps, never what someone has: no diagnosis words and no disability checkboxes.
+- **Something to show instead of explaining.** A card for event staff, for anyone who finds it hard to say what they need right then.
+- **Places, stated honestly.** It names Quiet Room 260A, which is open to everyone, and the venue's all-gender restrooms, transcribed from the event's accessibility page. With no location signal it never says "the nearest". Hours show as "Hours not listed" until someone verifies them, and directions say "Estimated. Confirm routes with event staff."
+- **Your plan is kept.** A press sets aside the nice-to-have talks before your next must-see. Nothing is cancelled, and "Put them back" restores them.
+- **Works in a crowded venue.** After the first visit the app keeps working offline, so the button still works when the signal is poor.
+- **Accessible by default.** Real headings, a skip link, keyboard support and aria-live announcements. CI runs an axe accessibility check on the built app, and Gitar reviews our PRs against [accessibility rules we wrote](.gitar/review/accessibility.md).
+
 ## Run it yourself
 
 You need Node 22 or newer. Elasticsearch and Dash0 are optional. Without them the app still starts: `/api/search`, `/api/talks`, `/api/similar` and `/api/changes` answer 503 with a JSON error, while the break button, `/api/facilities` and `/api/board` keep working.
