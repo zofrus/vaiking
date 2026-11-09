@@ -3,7 +3,6 @@
 //   node scripts/ingest-sessionize.mjs [--dry-run]
 // Needs ELASTICSEARCH_URL and ELASTICSEARCH_API_KEY unless --dry-run is given.
 // Prints counts only. Unchanged documents are skipped so re-runs do not re-embed.
-import { createHash } from 'node:crypto';
 import { createRequire } from 'node:module';
 
 const require = createRequire(new URL('../app/package.json', import.meta.url));
@@ -16,16 +15,14 @@ if (
 const { SpanStatusCode, trace } = require('@opentelemetry/api');
 const tracer = trace.getTracer('vaiking-ingest');
 
-const SOURCE_URL = 'https://sessionize.com/api/v2/svi82w6c/view/All';
-const SESSION_PAGE = 'https://events.linuxfoundation.org/kubecon-cloudnativecon-north-america/program/schedule/?id=';
+// Shared with the reconciler, so both compute the same content_hash.
+const { SOURCE_URL, normalize } = require('./lib/feed.js');
+
 const INDEX = 'talks-v1';
 const ALIAS = 'talks';
 const INFERENCE_ID = '.jina-embeddings-v5-text-small';
-const EXCLUDED_TRACKS = new Set(['Breaks', 'Registration']);
-// The feed's times have no offset; the conference runs on Mountain time.
-const CONFERENCE_OFFSET = '-07:00';
 
-// One set of field names, shared by the mapping and normalize() below.
+// One set of field names, shared by the mapping and normalize().
 const MAPPINGS = {
   properties: {
     id: { type: 'keyword' },
@@ -47,70 +44,6 @@ const MAPPINGS = {
     semantic_content: { type: 'semantic_text', inference_id: INFERENCE_ID },
   },
 };
-
-const ENTITIES = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", '#39': "'", nbsp: ' ' };
-
-function plainText(value) {
-  return (value ?? '')
-    .replace(/<\/p>|<br\s*\/?>/gi, '\n')
-    .replace(/<[^>]+>/g, '')
-    .replace(/&(amp|lt|gt|quot|apos|#39|nbsp);/g, (_, name) => ENTITIES[name])
-    .trim();
-}
-
-function withOffset(time) {
-  if (!time) return null;
-  return /(Z|[+-]\d\d:\d\d)$/.test(time) ? time : time + CONFERENCE_OFFSET;
-}
-
-function hashOf(doc) {
-  return createHash('sha256').update(JSON.stringify(doc)).digest('hex');
-}
-
-export function normalize(feed) {
-  const rooms = new Map(feed.rooms.map((r) => [r.id, r.name.trim()]));
-  const questions = new Map(feed.questions.map((q) => [q.id, q.question]));
-  const speakerNames = new Map(feed.speakers.map((p) => [p.id, p.fullName]));
-  const categoryItems = new Map(
-    feed.categories.flatMap((c) => c.items.map((i) => [i.id, { category: c.title, name: i.name }])),
-  );
-
-  const docs = [];
-  for (const session of feed.sessions) {
-    const items = session.categoryItems.map((id) => categoryItems.get(id)).filter(Boolean);
-    const namesIn = (...categories) =>
-      items.filter((i) => categories.includes(i.category)).map((i) => i.name);
-
-    const track = namesIn('All Sessions')[0] ?? null;
-    if (EXCLUDED_TRACKS.has(track)) continue;
-
-    const room = rooms.get(session.roomId) ?? 'Room TBD';
-    const floor = /Level\s*(\d+)/.exec(room);
-    const slides = (session.questionAnswers ?? []).find(
-      (a) => questions.get(a.questionId) === 'Presentation Slides',
-    );
-
-    const doc = {
-      id: String(session.id),
-      title: plainText(session.title),
-      abstract: plainText(session.description),
-      speakers: session.speakers.map((id) => speakerNames.get(id)).filter(Boolean),
-      tags: namesIn('CNCF Projects', 'SubTopic'),
-      track,
-      level: namesIn('Audience Level'),
-      flags: namesIn('End User Programming', 'Is Sponsored Keynote', 'Solutions Showcase Programming'),
-      room,
-      venue: room.split('|')[0].trim(),
-      floor: floor ? Number(floor[1]) : null,
-      starts_at: withOffset(session.startsAt),
-      ends_at: withOffset(session.endsAt),
-      url: SESSION_PAGE + session.id,
-      slides_url: slides?.answerValue ?? null,
-    };
-    docs.push({ ...doc, content_hash: hashOf(doc) });
-  }
-  return { fetched: feed.sessions.length, docs };
-}
 
 async function withSpan(name, attributes, operation) {
   return tracer.startActiveSpan(name, async (span) => {

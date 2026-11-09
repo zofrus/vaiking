@@ -4,6 +4,24 @@ interface PublicConfig {
   rum: { endpoint: string; token: string; dataset: string | null } | null;
 }
 
+export function reportRequestFailure(endpoint: string, error: unknown): void {
+  const message = `Request failed: ${endpoint}`;
+  const reportedError = error instanceof Error ? error : new Error(message);
+  console.error(message, error);
+  void import("@dash0/sdk-web")
+    .then(({ reportError, sendEvent }) => {
+      reportError(reportedError, { attributes: { "http.route": endpoint } });
+      sendEvent("request_failure", {
+        title: message,
+        attributes: { "http.route": endpoint },
+        severity: "ERROR",
+      });
+    })
+    .catch(() => {
+      // Telemetry must never break the page.
+    });
+}
+
 export async function initTelemetry(): Promise<void> {
   try {
     const res = await fetch("/api/public-config");

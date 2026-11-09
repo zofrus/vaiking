@@ -1,3 +1,61 @@
+# Grace Period
+
+Your KubeCon day as desired state. You say what you came for, and the app keeps reconciling your day against the real schedule. It tells you plainly what changed and what it kept, and one large "I need a break" button works offline with no account.
+
+Live at <https://vaiking.cnh.radarhq.io>. Built at the Cloud Native Hackathon, November 9, 2026.
+
+## How it fits together
+
+| Part | Where | What it does |
+|---|---|---|
+| Web app | `web/` | React phone UI, built into the server's image. The button path never waits on the network. |
+| API server | `app/server.js`, `app/routes/` | Fastify. Each file in `app/routes/` is an auto-loaded route. |
+| Reconciler | `app/reconciler.js`, `deploy/reconciler.yaml` | Second Deployment on the same image. Every 2 minutes it compares the Sessionize feed with the `talks` index and records what moved. |
+| Search and data | Elasticsearch | `talks` (hybrid keyword and semantic search), `changes`, and `facilities-v1`. |
+| Telemetry | OpenTelemetry to Dash0 | Traces, logs and metrics. Attendee identity and access needs stay out of them. |
+| Delivery | `deploy/`, Argo CD, Radar | A push to `main` builds an image, and Argo CD syncs the `team-vaiking` namespace. |
+
+Semantic search through Elasticsearch's embeddings is the only AI in the product. Nothing on the break-button path calls a model.
+
+## Run it yourself
+
+You need Node 22. Elasticsearch and Dash0 are optional: without them the app still starts, and the routes that need them answer 503.
+
+```bash
+cd app && npm ci && npm test && npm start   # API on http://localhost:8080
+cd web && npm ci && npm run dev             # UI, in a second terminal
+```
+
+To run the complete image, as production does:
+
+```bash
+docker build -t grace-period . && docker run -p 8080:8080 grace-period
+```
+
+Connecting Elasticsearch needs two environment variables, which also let you load the data:
+
+```bash
+export ELASTICSEARCH_URL=...      # never commit these
+export ELASTICSEARCH_API_KEY=...
+node scripts/ingest-sessionize.mjs   # add --dry-run to preview without Elasticsearch
+node scripts/ingest-facilities.mjs
+cd app && node reconciler.js         # optional: the schedule loop
+```
+
+To deploy on a cluster, create Secret `app-credentials` in the app's namespace with the keys `elasticsearch-url`, `elasticsearch-api-key`, `otlp-endpoint`, `dash0-auth-token`, `rum-endpoint`, `rum-token` and `dataset`, then apply `argocd/application.yaml`. Every key is optional, so pods start without it.
+
+## AI use
+
+_To be written by the project owner before submission._
+
+## Credits
+
+Schedule data: KubeCon + CloudNativeCon North America 2026, The Linux Foundation, CC BY 3.0.
+
+---
+
+The rest of this file is the hackathon's starter guide, kept for the cluster details it documents.
+
 # Radar AI SRE track starter: Cloud Native Hackathon
 
 Start here if your team has its own cluster at the hackathon: a virtual Kubernetes cluster (vcluster) where you're cluster-admin. You get a small app that `git push` deploys through Argo CD, and notes your coding agent reads so it ships through [Radar](https://radarhq.io)'s MCP server. Below is a menu of what Radar can do: pick what your project needs.

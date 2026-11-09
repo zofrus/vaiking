@@ -16,6 +16,16 @@ spec:
       labels:
         app: app
     spec:
+      # The app never talks to the Kubernetes API.
+      automountServiceAccountToken: false
+      # Keep the two replicas on different nodes when the cluster can.
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: app
       containers:
         - name: app
           image: app
@@ -46,7 +56,7 @@ spec:
             - name: OTEL_METRICS_EXPORTER
               value: "otlp"
             - name: NODE_OPTIONS
-              value: "--require @opentelemetry/auto-instrumentations-node/register"
+              value: "--require ./otel.js"
             - name: POD_NAME
               valueFrom:
                 fieldRef:
@@ -87,6 +97,18 @@ spec:
                   name: app-credentials
                   key: dataset
                   optional: true
+            - name: DASH0_READ_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: app-credentials
+                  key: dash0-read-token
+                  optional: true
+            - name: DASH0_API_URL
+              valueFrom:
+                secretKeyRef:
+                  name: app-credentials
+                  key: dash0-api-url
+                  optional: true
           resources:
             requests:
               cpu: 100m
@@ -106,6 +128,7 @@ spec:
             periodSeconds: 10
           securityContext:
             runAsNonRoot: true
+            readOnlyRootFilesystem: true
             allowPrivilegeEscalation: false
             seccompProfile:
               type: RuntimeDefault

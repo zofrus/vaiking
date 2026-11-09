@@ -181,6 +181,7 @@ export default function App() {
   };
   const changes = useChanges();
   const result = reconcile(plan, changes, { now: now(), bufferMinutes: buffer, graceActive: grace });
+  const clearUntil = result.clearUntil && Date.parse(result.clearUntil) > now().getTime() ? result.clearUntil : null;
   const similar = useSimilar(grace ? result.dropped[0] : undefined);
   const noticeText = result.notices.map((n) => n.text).join(" ");
 
@@ -261,7 +262,7 @@ export default function App() {
                 plan.length > 0 && (
                   <div className="panel space-y-3" aria-labelledby="clear-h" role="group">
                     <h3 id="clear-h" className="text-2xl font-semibold">
-                      {result.clearUntil ? `You're clear until ${formatTime(result.clearUntil)} MST.` : "You're clear for the rest of your plan."}
+                      {clearUntil ? `You're clear until ${formatTime(clearUntil)} MST.` : "You're clear for the rest of your plan."}
                     </h3>
                     <p>Nothing is cancelled. Your plan is saved.</p>
                     {result.notices.map((n) => (

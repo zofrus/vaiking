@@ -11,9 +11,11 @@ FROM node:22-alpine
 WORKDIR /app
 COPY app/package.json app/package-lock.json ./
 RUN npm ci --omit=dev --no-audit --no-fund
-COPY app/server.js ./
+COPY app/server.js app/reconciler.js ./
+COPY app/otel.js ./otel.js
 COPY app/lib ./lib
 COPY app/routes ./routes
+COPY app/data ./data
 COPY --from=web /web/dist ./public
 ARG APP_VERSION=dev
 ENV PORT=8080 APP_VERSION=$APP_VERSION NODE_ENV=production
