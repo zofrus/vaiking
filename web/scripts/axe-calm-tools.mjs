@@ -26,6 +26,7 @@ async function open(reducedMotion) {
   await page.goto(base + "/");
   await page.waitForSelector("main");
   await page.locator("#break-main").click();
+  await page.locator(".more-support > summary").click(); // the extras sit behind one disclosure
   await page.getByRole("heading", { name: "Background sound" }).waitFor();
   return { page, axe };
 }

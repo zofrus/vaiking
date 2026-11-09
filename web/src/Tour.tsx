@@ -2,12 +2,12 @@ import { useEffect, useRef, useState } from "react";
 import { TOUR_OPEN_EVENT, TOUR_STEPS, hasSeenTour, markTourSeen, shouldShowInvite } from "./lib/tour";
 
 const btn =
-  "inline-flex min-h-11 items-center justify-center rounded-xl border-2 border-deep px-5 py-2 font-semibold text-deep";
+  "btn-s";
 
 // Button that asks the one mounted <Tour /> to open. Safe to place anywhere.
 export function ReplayTour() {
   return (
-    <button type="button" className={btn} onClick={() => window.dispatchEvent(new Event(TOUR_OPEN_EVENT))}>
+    <button type="button" className="link-button" onClick={() => window.dispatchEvent(new Event(TOUR_OPEN_EVENT))}>
       Replay tour
     </button>
   );
@@ -46,7 +46,7 @@ export function Tour() {
       ref={dialog}
       aria-labelledby="tour-h"
       onClose={() => markTourSeen()}
-      className="m-auto w-[min(32rem,calc(100vw-1.5rem))] rounded-2xl bg-white p-5 text-[#0f2328] backdrop:bg-black/70"
+      className="m-auto w-[min(32rem,calc(100vw-1.5rem))] rounded-2xl bg-white p-5 text-ink backdrop:bg-black/70"
     >
       <p className="text-sm font-semibold">
         Step {step + 1} of {TOUR_STEPS.length}

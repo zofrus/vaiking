@@ -26,6 +26,7 @@ const axe = async (name) => {
 await page.goto(base + "/");
 await page.waitForSelector("main");
 await page.locator("#break-main").click();
+await page.locator(".more-support > summary").click(); // the extras sit behind one disclosure
 await page.getByRole("button", { name: "Choose my sticker" }).waitFor();
 await axe("calm with sticker panel");
 
@@ -44,11 +45,13 @@ check(
 
 await page.reload();
 await page.waitForSelector("main");
+await page.locator(".more-support > summary").click();
 check("choice survives reload", await page.getByText("Your choice: Red.").isVisible());
 
 await context.setOffline(true);
 await page.reload().catch(() => {});
 await page.waitForSelector("main").catch(() => {});
+await page.locator(".more-support > summary").click().catch(() => {});
 check("choice shows offline (reload, no network)", await page.getByText("Your choice: Red.").isVisible().catch(() => false));
 await browser.close();
 process.exit(failed ? 1 : 0);

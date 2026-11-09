@@ -17,7 +17,7 @@ const TINT: Record<StickerId, string> = {
 };
 
 const btn =
-  "inline-flex min-h-11 items-center justify-center rounded-xl border-2 border-deep px-5 py-2 font-semibold text-deep";
+  "btn-s";
 
 // A native <dialog> opened with showModal(): the page behind goes inert, Escape
 // closes it, and focus goes back to the button that opened it.
@@ -49,7 +49,7 @@ export function Sticker() {
       <dialog
         ref={dialog}
         aria-labelledby="sticker-h"
-        className="m-auto w-[min(32rem,calc(100vw-1.5rem))] rounded-2xl bg-white p-5 text-[#0f2328] backdrop:bg-black/70"
+        className="m-auto w-[min(32rem,calc(100vw-1.5rem))] rounded-2xl bg-white p-5 text-ink backdrop:bg-black/70"
       >
         <h2 id="sticker-h" className="text-2xl font-semibold">
           My communication sticker
@@ -87,7 +87,7 @@ export function Sticker() {
             ))}
           </fieldset>
           <p className="mt-4">{STICKER_PICKUP_LINE}</p>
-          <p className="mt-1 text-sm text-[#3b5057]">{STICKER_SOURCE_LINE}</p>
+          <p className="mt-1 text-sm text-ink-soft">{STICKER_SOURCE_LINE}</p>
           <button type="submit" className={`${btn} mt-5 w-full`}>
             Close
           </button>

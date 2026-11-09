@@ -249,14 +249,20 @@ function Calm({
         </span>
       </div>
 
-      {/* mount: Sticker */}<Sticker />
-      <FocusToggle />{/* mount: FocusToggle (calm) */}
-      <div className="panel"><ReplayTour /></div>{/* mount: ReplayTour */}
-      {/* mount: VenueHelp */}<VenueHelp />
-      {/* mount: Breathe */}<Breathe />
-      {/* mount: SoundPanel */}<SoundPanel />
-
       {planResult}
+
+      {/* Everything optional sits behind one disclosure, under the essentials. */}
+      <details className="panel more-support">
+        <summary>More support</summary>
+        <div className="more-support-body">
+          {/* mount: Sticker */}<Sticker />
+          {/* mount: VenueHelp */}<VenueHelp />
+          {/* mount: Breathe */}<Breathe />
+          {/* mount: SoundPanel */}<SoundPanel />
+          <FocusToggle />{/* mount: FocusToggle (calm) */}
+          <div><ReplayTour /></div>{/* mount: ReplayTour */}
+        </div>
+      </details>
 
       <button type="button" onClick={onBack} className="quiet-button">
         Back to the start
@@ -459,7 +465,7 @@ export default function App() {
             </span>
             Grace Period
           </h1>
-          <span className="ml-auto flex flex-wrap items-center justify-end gap-x-3 gap-y-1">
+          <span className="ml-auto flex flex-wrap items-center justify-end gap-x-2 gap-y-1">
             <FocusToggle compact />{/* mount: FocusToggle (header) */}
             <OfflineChip />{/* mount: OfflineChip */}
           </span>
