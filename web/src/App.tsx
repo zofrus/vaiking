@@ -12,6 +12,14 @@ import { placeLabel } from "./lib/place";
 
 type View = "home" | "calm" | "card";
 
+// The banner names the day being previewed, not always Tuesday.
+const previewDay = new Intl.DateTimeFormat("en-US", {
+  timeZone: "America/Denver",
+  weekday: "long",
+  month: "long",
+  day: "numeric",
+}).format(now());
+
 const viewFromHash = (): View =>
   location.hash === "#/calm" ? "calm" : location.hash === "#/card" ? "card" : "home";
 
@@ -193,7 +201,9 @@ export default function App() {
 
   const [plan, setPlanState] = useState<PlanItem[]>(() => (useSample ? [...samplePlan] : loadPlan()));
   const [buffer, setBufferState] = useState(loadBuffer);
-  const [grace, setGrace] = useState(false);
+  // A reload on the calm screen or the card keeps the break the person
+  // started, so "You're clear until ..." stays true with the talks still set aside.
+  const [grace, setGrace] = useState(() => viewFromHash() !== "home");
   const setPlan = (p: PlanItem[]) => {
     setPlanState(p);
     if (!isPreview) savePlan(p); // a preview never overwrites the real plan
@@ -268,7 +278,7 @@ export default function App() {
         </a>
         {isPreview && (
           <p className="bg-black px-5 py-3 text-center font-semibold text-white">
-            Preview of Tuesday. Times are real, the moment is simulated.
+            Preview of {previewDay}. Times are real, the moment is simulated.
             {useSample && " The plan below is a sample."}
           </p>
         )}
@@ -293,7 +303,7 @@ export default function App() {
               <p className="text-lg text-ink-soft">
                 Press the button whenever you need a pause. You get the quiet
                 room, a card to show staff, and a list of all-gender restrooms. It
-                works with no account and no signal.
+                needs no account, and works with no signal after your first visit.
               </p>
             </section>
             {result.notices.length > 0 && (
