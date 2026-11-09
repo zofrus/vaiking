@@ -39,17 +39,17 @@ function Footer() {
   );
 }
 
-function Calm({ onCard, showCard }: { onCard: () => void; showCard: boolean }) {
+function Calm({
+  onCard,
+  staffBtn,
+}: {
+  onCard: () => void;
+  staffBtn: { current: HTMLButtonElement | null };
+}) {
   const heading = useRef<HTMLHeadingElement>(null);
-  const cardButton = useRef<HTMLButtonElement>(null);
-  const wasShowingCard = useRef(showCard);
   useEffect(() => {
     heading.current?.focus();
   }, []);
-  useEffect(() => {
-    if (wasShowingCard.current && !showCard) cardButton.current?.focus();
-    wasShowingCard.current = showCard;
-  }, [showCard]);
 
   const byVenue = (venue: string) => restrooms.filter((r) => r.venue === venue);
 
@@ -78,7 +78,12 @@ function Calm({ onCard, showCard }: { onCard: () => void; showCard: boolean }) {
         <p className="mt-1 text-ink-soft">
           Estimated. Confirm routes with event staff.
         </p>
-        <button ref={cardButton} type="button" onClick={onCard} className="staff-button mt-6">
+        <button
+          ref={staffBtn}
+          type="button"
+          onClick={onCard}
+          className="staff-button mt-6"
+        >
           Show this to staff
         </button>
         <p className="mt-3 text-ink-soft">
@@ -146,10 +151,21 @@ function StaffCard({ onClose }: { onClose: () => void }) {
 export default function App() {
   const [view, go] = useView();
   const [announce, setAnnounce] = useState("");
+  const staffBtn = useRef<HTMLButtonElement>(null);
+  const prev = useRef(view);
+
+  useEffect(() => {
+    if (prev.current === "card" && view === "calm") staffBtn.current?.focus();
+    prev.current = view;
+  }, [view]);
 
   const press = () => {
     countPress("live");
-    setAnnounce("Quiet room details are on screen.");
+    setAnnounce((current) =>
+      current === "Quiet room details are on screen."
+        ? "Quiet room details are still on screen."
+        : "Quiet room details are on screen.",
+    );
     go("calm");
   };
 
@@ -157,7 +173,14 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-ground text-ink">
-      <a href="#main" className="skip-link">
+      <a
+        href="#main"
+        className="skip-link"
+        onClick={(e) => {
+          e.preventDefault();
+          document.getElementById("main")?.focus();
+        }}
+      >
         Skip to main content
       </a>
       <p role="status" aria-live="polite" className="sr-only">
@@ -169,7 +192,11 @@ export default function App() {
           <p className="text-lg font-semibold">Grace Period</p>
         </header>
 
-        <main id="main" className="mx-auto max-w-xl space-y-8 px-5 pb-6 pt-5">
+        <main
+          id="main"
+          tabIndex={-1}
+          className="mx-auto max-w-xl space-y-8 px-5 pb-6 pt-5"
+        >
           <h1 className="sr-only">Grace Period</h1>
           <BreakButton onPress={press} />
           {view === "home" ? (
@@ -184,7 +211,7 @@ export default function App() {
               </p>
             </section>
           ) : (
-            <Calm onCard={() => go("card")} showCard={showCard} />
+            <Calm onCard={() => go("card")} staffBtn={staffBtn} />
           )}
         </main>
         <Footer />

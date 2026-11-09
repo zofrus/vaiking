@@ -6,8 +6,8 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "test": "node --test \"test/**/*.test.js\"",
-    "lint": "cd .. && app/node_modules/.bin/eslint -c app/eslint.config.js app scripts/ingest-sessionize.mjs"
+    "test": "node --test \"test/**/*.test.js\" \"../tests/**/*.test.js\"",
+    "lint": "cd .. && app/node_modules/.bin/eslint -c app/eslint.config.js app scripts/ingest-sessionize.mjs scripts/ingest-facilities.mjs"
   },
   "dependencies": {
     "@elastic/elasticsearch": "^9.5.1",
