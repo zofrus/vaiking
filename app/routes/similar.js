@@ -22,10 +22,10 @@ function floorToMinute(iso) {
   return new Date(t - (t % 60_000)).toISOString();
 }
 
-module.exports = async function similar(app, { elastic, env = process.env }) {
+module.exports = async function similar(app, { elastic, env = process.env, totalLimiter }) {
   const perClient = Number.parseInt(env.RATE_LIMIT_PER_MIN, 10) || 120;
   const total = Number.parseInt(env.RATE_LIMIT_TOTAL_PER_MIN, 10) || 600;
-  const limited = createLimiter({ perClient, total });
+  const limited = createLimiter({ perClient, total, totalLimiter });
   const seeds = createCache(500, 10 * 60_000);
   const answers = createCache(500, 60_000);
 
