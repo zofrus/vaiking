@@ -3,7 +3,8 @@ const { SpanStatusCode, trace } = require("@opentelemetry/api");
 const tracer = trace.getTracer("vaiking-search");
 
 // Records the operation only, never ids or query text.
-function withSpan(name, operation, fn) {
+function withSpan(name, operation, fn, { traced = true } = {}) {
+  if (!traced) return fn();
   return tracer.startActiveSpan(name, async (span) => {
     span.setAttribute("db.system.name", "elasticsearch");
     span.setAttribute("db.operation.name", operation);
