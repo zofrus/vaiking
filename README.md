@@ -175,7 +175,7 @@ The one CI failure: [run 42695403818](https://github.com/zofrus/vaiking/actions/
 AI agents wrote most of the code in this repo. I directed the work, reviewed it, ran the acceptance tests and decided what merged.
 
 **What I did myself.**
-- Chose the problem and the product: Grace Period, a break button for overwhelmed attendees. Then kept steering. I pushed back on a search-only app, asked for the kubectl day view and the four-tools demo page, called a redesign at 2:52 PM after seeing other teams' search apps, and picked the Pro Product design out of five. I asked for Focus mode, calendar transition reminders, a replayable tour, background sound and breathing, read aloud, and neurodivergent-friendly defaults.
+- Chose the problem and the product: Grace Period, a break button for overwhelmed attendees. Then kept steering. I pushed back on a search-only app, asked for the kubectl day view and the four-tools demo page, called a redesign at 2:52 PM after realizing, on my way to a bio break, that other teams were probably building similar search apps, and picked the Pro Product design out of five. I asked for Focus mode, calendar transition reminders, a replayable tour, background sound and breathing, read aloud, and neurodivergent-friendly defaults.
 - Set up every account and integration: this GitHub repo and its Actions (enabled for this repo only), Elastic Cloud Serverless, Dash0, the Radar cluster and Argo CD GitOps, Gitar, a Vercel proxy and Cloudflare DNS for grace.effulgentpoint.com, and Google Drive for the video.
 - Approved the merges and the security trade-offs. Tested on my phone and in the room.
 - Built the setup the agents ran on: two of my Macs, linked over Tailscale and SSH.
