@@ -22,7 +22,7 @@ function createMetrics(meter = metrics.getMeter("vaiking-app")) {
     description: "Times the break button was pressed",
   });
   const plan = meter.createCounter("plan_requests_total", {
-    description: "Plan screen requests (search, changes, talks), split by whether they answered within 1 second",
+    description: "Plan screen requests (search, talks), split by whether they answered within 1 second",
   });
 
   // Adding 0 for every label set at startup makes the series exist before the
