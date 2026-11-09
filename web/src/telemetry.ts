@@ -4,6 +4,24 @@ interface PublicConfig {
   rum: { endpoint: string; token: string; dataset: string | null } | null;
 }
 
+export function reportRequestFailure(endpoint: string, error: unknown): void {
+  const message = `Request failed: ${endpoint}`;
+  const reportedError = error instanceof Error ? error : new Error(message);
+  console.error(message, error);
+  void import("@dash0/sdk-web")
+    .then(({ reportError, sendEvent }) => {
+      reportError(reportedError, { attributes: { "http.route": endpoint } });
+      sendEvent("request_failure", {
+        title: message,
+        attributes: { "http.route": endpoint },
+        severity: "ERROR",
+      });
+    })
+    .catch(() => {
+      // Telemetry must never break the page.
+    });
+}
+
 export async function initTelemetry(): Promise<void> {
   try {
     const res = await fetch("/api/public-config");
@@ -19,9 +37,10 @@ export async function initTelemetry(): Promise<void> {
         authToken: rum.token,
         ...(rum.dataset ? { dataset: rum.dataset } : {}),
       },
-      // The grace-count beacon never gets a span or trace header, so the
-      // button press stays out of browser telemetry.
-      ignoreUrls: [/\/api\/grace(?:[?#]|$)/],
+      // The grace-count beacon and search requests never get a span or trace
+      // header, so the button press and the words typed in search stay out of
+      // browser telemetry.
+      ignoreUrls: [/\/api\/grace(?:[?#]|$)/, /\/api\/search(?:[?#/]|$)/],
       sessionInactivityTimeoutMillis: 30 * 60 * 1000,
       sessionTerminationTimeoutMillis: 4 * 60 * 60 * 1000,
     });

@@ -125,3 +125,12 @@ test("SPA fallback serves index for pages, 404 for API and missing assets", asyn
   assert.equal((await app.inject({ url: "/api/nope" })).statusCode, 404);
   assert.equal((await app.inject({ url: "/assets/nope.js" })).statusCode, 404);
 });
+
+test("request log serializer drops the query string", () => {
+  const { serializeReq } = require("../server");
+  assert.deepEqual(
+    serializeReq({ method: "GET", url: "/api/search?q=secret+words&day=1", headers: { a: "b" } }),
+    { method: "GET", url: "/api/search" },
+  );
+  assert.deepEqual(serializeReq({ method: "GET", url: "/api/talks" }), { method: "GET", url: "/api/talks" });
+});
