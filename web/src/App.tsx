@@ -111,7 +111,7 @@ function BreakButton({ onPress }: { onPress: () => void }) {
           I need a break
         </span>
         <span id="break-desc" className="break-sub">
-          The quiet room, a card to show staff, and restrooms. Works without signal after your first visit.
+          Quiet room, staff card, restrooms. Works offline after your first visit.
         </span>
       </span>
     </button>
@@ -192,10 +192,10 @@ function Calm({
             tabIndex={-1}
             className="text-[1.875rem] font-medium leading-[1.18] outline-none"
           >
-            Take your time. The quiet room is open to everyone.
+            Take your time.
           </h2>
           <p className="mt-2.5 text-lg text-ink-soft">
-            Nothing here needs an answer from you.
+            The quiet room is open to everyone.
           </p>
         </div>
       </div>
@@ -205,16 +205,14 @@ function Calm({
           <div className="min-w-0">
             <h3 className="text-[1.625rem] font-semibold leading-tight">{quietRoom.name}</h3>
             <p className="mt-1 text-lg">
-              {quietRoom.venue}, Level {quietRoom.level}
+              {quietRoom.venue}, <strong>Level {quietRoom.level}</strong>
             </p>
           </div>
           <span className="gp-icon !h-10 !w-10 !rounded-full !bg-[var(--gp-accent-soft)]" aria-hidden="true">
             <MoonIcon size={20} />
           </span>
         </div>
-        <p className="text-base text-ink-soft">
-          Hours not listed. Estimated. Confirm routes with event staff.
-        </p>
+        <p className="text-base text-ink-soft">Hours not listed.</p>
         {/* mount: ReadAloud */}<div className="mt-4"><ReadAloud text={`${quietRoom.name}, ${quietRoom.venue}, Level ${quietRoom.level}.`} /></div>
         <button
           ref={staffBtn}
@@ -226,7 +224,7 @@ function Calm({
           Show this to staff
         </button>
         <p className="text-[0.9375rem] text-ink-soft">
-          Opens a large card you can hold up instead of speaking.
+          Opens a large card to hold up.
         </p>
       </div>
 
@@ -243,10 +241,10 @@ function Calm({
                   </span>
                   <span className="flex flex-col">
                     <span className="font-semibold">
-                      Level {r.level}
+                      {r.name}
                       <span className="sr-only">. </span>
                     </span>
-                    <span className="text-base text-ink-soft">{r.name}</span>
+                    <span className="text-base text-ink-soft">Level {r.level}</span>
                   </span>
                 </li>
               ))}
@@ -520,7 +518,7 @@ export default function App() {
                 Plan your day.
               </h2>
               <p className="text-[0.9375rem] text-ink-soft">
-                Save the talks you came for. If one moves, we'll tell you whether it still fits.
+                <strong>Save your talks</strong> and we'll tell you if one moves.
               </p>
               <p className="gp-secondary text-xs text-ink-soft">
                 Unofficial attendee companion for KubeCon + CloudNativeCon North

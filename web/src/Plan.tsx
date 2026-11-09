@@ -155,7 +155,7 @@ export function PlanSection({
         See a sample day with a room change
       </a>
       <form onSubmit={search} className="space-y-3">
-        <label htmlFor="q" className="gp-label">What's the one thing you came for?</label>
+        <label htmlFor="q" className="gp-label">What did you come for?</label>
         <p id="q-hint" className="gp-hint">Topic, project or speaker.</p>
         <div className="gp-searchbox">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
