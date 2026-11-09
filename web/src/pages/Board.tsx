@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { reportRequestFailure } from "../telemetry";
+import "./pages.css";
 
 interface Row {
   floor: string;
@@ -22,31 +23,63 @@ const floorLabel = (f: string) =>
 
 function Table({ caption, rows }: { caption: string; rows: Row[] }) {
   if (rows.length === 0)
-    return <p className="mt-2">No presses in this window.</p>;
+    return <p className="gp-note gp-muted">No presses in this window.</p>;
   return (
-    <table className="mt-2 w-full border-collapse text-left">
+    <table className="gp-table">
       <caption className="sr-only">{caption}</caption>
       <thead>
-        <tr className="border-b border-slate-400">
-          <th scope="col" className="py-2 pr-4">
-            Floor
-          </th>
-          <th scope="col" className="py-2">
+        <tr>
+          <th scope="col">Floor</th>
+          <th scope="col" className="gp-num-cell">
             Presses
           </th>
         </tr>
       </thead>
       <tbody>
         {rows.map((r) => (
-          <tr key={r.floor} className="border-b border-slate-300">
-            <th scope="row" className="py-2 pr-4 font-normal">
-              {floorLabel(r.floor)}
-            </th>
-            <td className="py-2">{r.count}</td>
+          <tr key={r.floor}>
+            <th scope="row">{floorLabel(r.floor)}</th>
+            <td className="gp-num-cell gp-mono">{r.count}</td>
           </tr>
         ))}
       </tbody>
     </table>
+  );
+}
+
+// One large count per window. With no rows there is nothing to add up, and
+// "0" would claim a measurement the server may not have made (the status line
+// above says why), so the tile says so in words.
+function StatTile({ label, rows }: { label: string; rows: Row[] }) {
+  const total = rows.reduce((sum, r) => sum + r.count, 0);
+  return (
+    <div className="gp-card gp-stat">
+      {rows.length > 0 ? (
+        <p className="gp-stat-num gp-mono">{total.toLocaleString("en-US")}</p>
+      ) : (
+        <p className="gp-stat-none">None counted</p>
+      )}
+      <p className="gp-stat-label gp-muted">{label}</p>
+    </div>
+  );
+}
+
+function Mark() {
+  return (
+    <span className="gp-mark" aria-hidden="true">
+      <svg
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      >
+        <path d="M12 3v4M12 17v4M3 12h4M17 12h4" />
+        <circle cx="12" cy="12" r="3" />
+      </svg>
+    </span>
   );
 }
 
@@ -81,47 +114,79 @@ export default function BoardPage() {
   }, []);
 
   return (
-    <main id="main" tabIndex={-1} className="mx-auto max-w-2xl px-4 py-6">
-      <h1 className="text-3xl font-bold">Organizer board</h1>
-      <p className="mt-2">
-        For event staff: how many breaks were taken in the last hour, by floor.
-        Counts only, nobody's identity.
-      </p>
-      <p role="status" aria-live="polite" className="mt-4">
-        {load.state === "loading" && "Loading counts."}
-        {load.state === "error" && "Counts are unavailable right now."}
-        {load.state === "ready" &&
-          (load.stale || load.board.stale) &&
-          "Couldn't refresh; these counts may be out of date. "}
-        {load.state === "ready" && load.board.sample_note}
-      </p>
-      {load.state === "ready" && (
-        <>
-          <section aria-labelledby="live-h" className="mt-6">
-            <h2 id="live-h" className="text-xl font-semibold">
-              Floor of the talk on now or next when people pressed the button
-            </h2>
-            <p className="text-sm text-slate-700">
-              Last hour, from the venue. Counts only, no identities.
-            </p>
-            <Table caption="Presses by floor, live" rows={load.board.live} />
-            <p className="mt-3 text-sm text-slate-700">
-              A floor shows when the person pressing has a talk in their plan:
-              the one on now, or else their next one today. “Floor not known”
-              means they had no such talk in their plan, or it was off-site.
-            </p>
-          </section>
-          <section aria-labelledby="preview-h" className="mt-8">
-            <h2 id="preview-h" className="text-xl font-semibold">
-              Preview taps, not from the venue
-            </h2>
-            <Table
-              caption="Presses by floor, preview"
-              rows={load.board.preview}
-            />
-          </section>
-        </>
-      )}
-    </main>
+    <div className="gp-page">
+      <header className="gp-header">
+        <span className="gp-brand">
+          <Mark />
+          Grace Period
+        </span>
+        <a className="gp-link" href="/">
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M15 18l-6-6 6-6" />
+          </svg>
+          Back to the app
+        </a>
+      </header>
+      <main id="main" tabIndex={-1} className="gp-board-main">
+        <h1>Organizer board</h1>
+        <p className="gp-lede">
+          For event staff: how many breaks were taken in the last hour, by
+          floor. Counts only, nobody's identity.
+        </p>
+        <p role="status" aria-live="polite" className="gp-status gp-muted">
+          {load.state === "loading" && "Loading counts."}
+          {load.state === "error" && "Counts are unavailable right now."}
+          {load.state === "ready" &&
+            (load.stale || load.board.stale) &&
+            "Couldn't refresh; these counts may be out of date. "}
+          {load.state === "ready" && load.board.sample_note}
+        </p>
+        {load.state === "ready" && (
+          <>
+            <div className="gp-stats">
+              <StatTile
+                label="presses in the last hour, from the venue"
+                rows={load.board.live}
+              />
+              <StatTile
+                label="preview taps, not from the venue"
+                rows={load.board.preview}
+              />
+            </div>
+            <section aria-labelledby="live-h" className="gp-card gp-section">
+              <h2 id="live-h">
+                Floor of the talk on now or next when people pressed the button
+              </h2>
+              <p className="gp-note gp-muted">
+                Last hour, from the venue. Counts only, no identities.
+              </p>
+              <Table caption="Presses by floor, live" rows={load.board.live} />
+              <p className="gp-note gp-muted">
+                A floor shows when the person pressing has a talk in their plan:
+                the one on now, or else their next one today. “Floor not known”
+                means they had no such talk in their plan, or it was off-site.
+              </p>
+            </section>
+            <section aria-labelledby="preview-h" className="gp-card gp-section">
+              <h2 id="preview-h">Preview taps, not from the venue</h2>
+              <Table
+                caption="Presses by floor, preview"
+                rows={load.board.preview}
+              />
+            </section>
+          </>
+        )}
+      </main>
+    </div>
   );
 }

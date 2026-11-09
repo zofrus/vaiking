@@ -2,15 +2,32 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>Grace Period</title>
-    <meta name="theme-color" content="#0d4a52" />
+    <meta name="description" content="The button for when you need to leave a talk. A quiet room, a card for staff and your day plan, one tap away." />
+    <meta name="theme-color" content="#FAFAFA" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#18181B" media="(prefers-color-scheme: dark)" />
     <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="icon" type="image/svg+xml" href="/icon.svg" />
     <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-title" content="Grace Period" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Grace" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Grace Period" />
+    <meta property="og:title" content="Grace Period" />
+    <meta property="og:description" content="The button for when you need to leave a talk." />
+    <meta property="og:image" content="https://grace.effulgentpoint.com/og.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Grace Period: the button for when you need to leave a talk" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <!-- With viewport-fit=cover the page reaches the screen edges: keep content out of notches and the home bar. -->
+    <style>
+      #root { padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
+    </style>
   </head>
   <body>
     <div id="root"></div>
