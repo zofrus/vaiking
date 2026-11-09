@@ -2,6 +2,7 @@
 // talk, read from Dash0's Prometheus API with a read-only token. The token never
 // leaves the server. Results are cached for 30 seconds.
 const CACHE_MS = 30_000;
+const MAX_STALE_MS = 10 * 60_000;
 const TIMEOUT_MS = 4_000;
 const SMALL_SAMPLE = 20;
 const WINDOW = "1h";
@@ -88,7 +89,14 @@ module.exports = async function board(app, { env, fetch: fetchImpl }) {
         { reason: String(err.message).slice(0, 40) },
         "board query failed",
       );
-      if (cached) return cached;
+      const staleForMs = Date.now() - cachedAt;
+      if (cached && staleForMs < MAX_STALE_MS) {
+        return {
+          ...cached,
+          stale: true,
+          sample_note: `Counts from ${Math.round(staleForMs / 60_000)} min ago; live update failed.`,
+        };
+      }
       return reply
         .code(502)
         .send({ error: "counts are unavailable right now" });

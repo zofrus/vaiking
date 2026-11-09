@@ -82,3 +82,38 @@ test("upstream failure gives a plain JSON error, no upstream details", async () 
   assert.equal(res.statusCode, 502);
   assert.deepEqual(res.json(), { error: "counts are unavailable right now" });
 });
+
+test("serves recent cached counts as stale and rejects cache older than ten minutes", async () => {
+  const originalNow = Date.now;
+  let now = 1_700_000_000_000;
+  let fail = false;
+  Date.now = () => now;
+  const app = await make(ENV, async () =>
+    fail ? { ok: false, status: 503 } : prom([["2", 7]]),
+  );
+
+  try {
+    const fresh = await app.inject({ url: "/api/board" });
+    assert.equal(fresh.statusCode, 200);
+
+    fail = true;
+    now += 2 * 60_000;
+    const stale = await app.inject({ url: "/api/board" });
+    assert.equal(stale.statusCode, 200);
+    assert.deepEqual(stale.json().live, [{ floor: "2", count: 7 }]);
+    assert.equal(stale.json().stale, true);
+    assert.match(
+      stale.json().sample_note,
+      /Counts from 2 min ago; live update failed\./,
+    );
+
+    now += 9 * 60_000;
+    const expired = await app.inject({ url: "/api/board" });
+    assert.equal(expired.statusCode, 502);
+    assert.deepEqual(expired.json(), {
+      error: "counts are unavailable right now",
+    });
+  } finally {
+    Date.now = originalNow;
+  }
+});

@@ -9,6 +9,7 @@ interface Board {
   live: Row[];
   preview: Row[];
   sample_note: string;
+  stale?: boolean;
 }
 type Load =
   { state: "loading" } | { state: "error" } | { state: "ready"; board: Board };
@@ -58,10 +59,7 @@ export default function BoardPage() {
         const board = (await res.json()) as Board;
         if (current) setLoad({ state: "ready", board });
       } catch {
-        if (current)
-          setLoad((prev) =>
-            prev.state === "ready" ? prev : { state: "error" },
-          );
+        if (current) setLoad({ state: "error" });
       }
     };
     void run();
@@ -78,7 +76,12 @@ export default function BoardPage() {
       <p role="status" aria-live="polite" className="mt-4">
         {load.state === "loading" && "Loading counts."}
         {load.state === "error" && "Counts are unavailable right now."}
-        {load.state === "ready" && load.board.sample_note}
+        {load.state === "ready" && (
+          <>
+            {load.board.stale && <strong>Stale data. </strong>}
+            {load.board.sample_note}
+          </>
+        )}
       </p>
       {load.state === "ready" && (
         <>
