@@ -5,8 +5,10 @@ import { PlanSection } from "./Plan";
 import { DayViewSection } from "./DayView";
 import { loadBuffer, loadPlan, saveBuffer, savePlan } from "./lib/plan";
 import { isPreview, now, samplePlan, useSample } from "./lib/clock";
-import { useChanges, useSimilar } from "./lib/live";
-import { formatTime, reconcile, type PlanItem } from "./lib/reconcile";
+import { useAlternatives, useChanges, useSimilar } from "./lib/live";
+import { formatTime, reconcile, type Notice, type PlanItem } from "./lib/reconcile";
+import { closestReachable } from "./lib/reach";
+import { placeLabel } from "./lib/place";
 
 type View = "home" | "calm" | "card";
 
@@ -204,6 +206,33 @@ export default function App() {
   const result = reconcile(plan, changes, { now: now(), bufferMinutes: buffer, graceActive: grace });
   const clearUntil = result.clearUntil && Date.parse(result.clearUntil) > now().getTime() ? result.clearUntil : null;
   const similar = useSimilar(grace ? result.dropped[0] : undefined);
+  const alternatives = useAlternatives(result.notices.filter((n) => !n.fits), buffer);
+  // A notice that no longer fits names the first similar talk the person still
+  // has time for, once /api/similar has answered. Until then it says only what changed.
+  const noticeLine = (n: Notice) => {
+    const reach = n.fits
+      ? null
+      : closestReachable(alternatives[n.changeId] ?? [], [...result.kept, ...result.dropped], n.talkId, now(), buffer);
+    return {
+      text: reach
+        ? `${n.text} Similar talk you still have time for: ${reach.title}, ${formatTime(reach.starts_at)} MST, ${placeLabel(reach.room)}.`
+        : n.text,
+      reach: reach !== null,
+    };
+  };
+  const lines = result.notices.map((n) => ({ id: n.changeId, ...noticeLine(n) }));
+  const notices = lines.length > 0 && (
+    <>
+      {lines.map((l) => (
+        <p key={l.id} className="font-semibold">{l.text}</p>
+      ))}
+      {lines.some((l) => l.reach) && (
+        <p className="text-ink-soft">
+          Based on the {buffer} minutes you want between talks. Estimated. Confirm routes with event staff.
+        </p>
+      )}
+    </>
+  );
 
   const press = () => {
     setGrace(true);
@@ -231,8 +260,8 @@ export default function App() {
       <p role="status" aria-live="polite" className="sr-only">{announce}</p>
       {/* One node per notice, so additions and text changes are announced independently. */}
       <div role="status" aria-live="polite" aria-atomic="false" aria-relevant="additions text" className="sr-only">
-        {result.notices.map((n) => (
-          <p key={n.changeId}>{n.text}</p>
+        {lines.map((l) => (
+          <p key={l.id}>{l.text}</p>
         ))}
       </div>
       {/* Everything but the live region goes quiet while the staff card is up,
@@ -281,9 +310,7 @@ export default function App() {
             {result.notices.length > 0 && (
               <section aria-labelledby="news-h" className="panel space-y-2">
                 <h2 id="news-h" className="text-xl font-semibold">What changed</h2>
-                {result.notices.map((n) => (
-                  <p key={n.changeId}>{n.text}</p>
-                ))}
+                {notices}
               </section>
             )}
             <PlanSection plan={plan} setPlan={setPlan} buffer={buffer} setBuffer={setBuffer} />
@@ -300,9 +327,7 @@ export default function App() {
                       {clearUntil ? `You're clear until ${formatTime(clearUntil)} MST.` : "You're clear for the rest of your plan."}
                     </h3>
                     <p>Nothing is cancelled. Your plan is saved.</p>
-                    {result.notices.map((n) => (
-                      <p key={n.changeId} className="font-semibold">{n.text}</p>
-                    ))}
+                    {notices}
                     {similar && <p className="text-ink-soft">Similar talk later today: {similar}.</p>}
                     {result.dropped.length > 0 && (
                       <>
