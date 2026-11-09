@@ -11,7 +11,10 @@ const pages = [
   { name: "calm screen", url: "/", press: true },
   { name: "staff card", url: "/#/card" },
   { name: "sample plan, after the button", url: sample, press: true },
+  { name: "sample plan, home (calendar button)", url: sample },
   { name: "board", url: "/board" },
+  { name: "first visit, invite shown", url: "/", firstVisit: true },
+  { name: "tour open (after Take the tour)", url: "/", firstVisit: true, openTour: true },
   // Focus mode on: saved choice read at startup, as after a reload.
   { name: "home, focus mode on", url: "/", focus: true },
   { name: "calm screen, focus mode on", url: "/", press: true, focus: true },
@@ -24,6 +27,8 @@ const browser = await chromium.launch({ channel: process.env.AXE_CHANNEL || unde
 let failed = 0;
 for (const p of pages) {
   const page = await (await browser.newContext()).newPage();
+  // Only the first-visit pages see the tour invite; the rest start as returning visitors.
+  if (!p.firstVisit) await page.addInitScript(() => localStorage.setItem("grace-tour-seen-v1", "1"));
   if (p.focus) await page.addInitScript(() => localStorage.setItem("grace-focus-v1", "1"));
   if (p.font) await page.addInitScript(() => localStorage.setItem("grace-font-v1", "1"));
   await page.goto(base + p.url);
@@ -32,6 +37,7 @@ for (const p of pages) {
     console.log(`  ${p.name}: data-focus was not set at startup`);
     failed++;
   }
+  if (p.openTour) await page.getByRole("button", { name: "Take the 5-step tour" }).click();
   if (p.press) await page.getByRole("button", { name: "I need a break" }).click();
   const { violations } = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"]).analyze();
   console.log(`${p.name}: ${violations.length} violations`);

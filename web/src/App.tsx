@@ -1,8 +1,10 @@
+import { QueryShape } from "./QueryShape";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { flushSync } from "react-dom";
 import { quietRoom, restrooms } from "./data/facilities";
 import { countPress } from "./lib/grace";
 import { PlanSection } from "./Plan";
+import { AddToCalendar } from "./AddToCalendar";
 import { DayViewSection } from "./DayView";
 import { InstallPrompt } from "./InstallPrompt";
 import { FocusToggle } from "./FocusToggle";
@@ -14,7 +16,11 @@ import { formatTime, reconcile, type Notice, type PlanItem } from "./lib/reconci
 import { closestReachable } from "./lib/reach";
 import { placeLabel } from "./lib/place";
 import { Sticker } from "./Sticker";
+import { ReplayTour, Tour, TourInvite } from "./Tour";
 import { VenueHelp } from "./VenueHelp";
+import { SoundPanel } from "./SoundPanel";
+import { Breathe } from "./Breathe";
+import { ReadAloud } from "./ReadAloud";
 
 type View = "home" | "calm" | "card";
 
@@ -57,6 +63,7 @@ function Footer() {
         Schedule data: KubeCon + CloudNativeCon North America 2026, The Linux
         Foundation, CC BY 3.0.
       </p>
+      <div className="mt-3"><ReplayTour /><Tour /></div>{/* mount: Tour */}
       <a className="mt-2 inline-block underline" href="/board">
         Organizer board
       </a>
@@ -107,6 +114,7 @@ function Calm({
         <p className="mt-1 text-ink-soft">
           Estimated. Confirm routes with event staff.
         </p>
+        {/* mount: ReadAloud */}<div className="mt-4"><ReadAloud text={`${quietRoom.name}, ${quietRoom.venue}, Level ${quietRoom.level}.`} /></div>
         <button
           ref={staffBtn}
           type="button"
@@ -143,7 +151,10 @@ function Calm({
 
       {/* mount: Sticker */}<Sticker />
       <FocusToggle />{/* mount: FocusToggle (calm) */}
+      <div className="panel"><ReplayTour /></div>{/* mount: ReplayTour */}
       {/* mount: VenueHelp */}<VenueHelp />
+      {/* mount: Breathe */}<Breathe />
+      {/* mount: SoundPanel */}<SoundPanel />
 
       {planResult}
 
@@ -196,6 +207,7 @@ function StaffCard({ onClose }: { onClose: () => void }) {
         </div>
       </div>
       <div className="border-t-2 border-black px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+        {/* mount: ReadAloud */}<div className="mb-3 text-black"><ReadAloud text={`Please point me to ${quietRoom.name}, Level ${quietRoom.level}. I may not be able to talk right now. ${quietRoom.venue}.`} /></div>
         <button type="button" onClick={onClose} className="close-button">
           Close card
         </button>
@@ -267,6 +279,8 @@ export default function App() {
           Based on the {buffer} minutes you want between talks. Estimated. Confirm routes with event staff.
         </p>
       )}
+      {/* mount: QueryShape */}
+      {lines.some((l) => l.reach) && <QueryShape />}
     </>
   );
 
@@ -337,7 +351,7 @@ export default function App() {
         <header className="mx-auto max-w-xl px-5 pt-6">
           <h1 className="text-lg font-semibold">Grace Period</h1>
           <OfflineChip />{/* mount: OfflineChip */}
-          <FocusToggle />{/* mount: FocusToggle (header) */}
+          <FocusToggle compact />{/* mount: FocusToggle (header) */}
         </header>
 
         <main
@@ -364,9 +378,11 @@ export default function App() {
                 {notices}
               </section>
             )}
+            <TourInvite />{/* mount: TourInvite */}
             <InstallPrompt />
             <PlanSection plan={plan} setPlan={setPlan} buffer={buffer} setBuffer={setBuffer} />
             <DayViewSection plan={plan} changes={changes} result={result} now={now()} bufferMinutes={buffer} />
+            <AddToCalendar talks={[...result.kept, ...result.dropped]} />{/* mount: AddToCalendar */}
             </>
           ) : (
             <Calm

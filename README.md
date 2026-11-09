@@ -17,8 +17,8 @@
 
 1. Open the app on a phone and press **I need a break**: Quiet Room 260A, the all-gender restrooms and **Show this to staff**, with no sign-up.
 2. Open the staff card, then **Close card** and **Back to the start**.
-3. Under **Your day**, search for what you came for (try "kubernetes"). Each result says whether it matched your words or your meaning. Mark one **Must-see**.
-4. Read **Your plan against the schedule**, and turn on **Show as kubectl** to see the same facts as `kubectl get` and `describe` output.
+3. Under **Find your talks**, search for what you came for (try "kubernetes"). Each result says whether it matched your words or your meaning. Mark one **Must-see**.
+4. Read **Your day**, and turn on **Show as kubectl** to see the same facts as `kubectl get` and `describe` output.
 5. Open the [preview of Tuesday](https://vaiking.cnh.radarhq.io/?preview=2026-11-10T15:25:00-07:00&sample=1) for a sample saved plan, labelled as simulated, and press the button there. Then open [/demo](https://vaiking.cnh.radarhq.io/demo).
 
 <!--
@@ -43,7 +43,7 @@ flowchart LR
     rec["Reconciler, app/reconciler.js<br/>every 2 minutes"]
     prom["Prometheus<br/>in the cluster"]
   end
-  es[("Elasticsearch<br/>talks alias: hybrid keyword + semantic search<br/>changes, facilities-v1")]
+  es[("Elasticsearch<br/>talks alias: hybrid keyword + semantic search<br/>changes")]
   feed["Sessionize schedule feed"]
   dash0["Dash0<br/>traces, logs, metrics, browser RUM"]
   gh["GitHub repo zofrus/vaiking"]
@@ -77,7 +77,8 @@ flowchart LR
 | Web app | `web/` | React phone UI, built into the server's image. The button path never waits on the network. |
 | API server | `app/server.js`, `app/routes/` | Fastify. Each file in `app/routes/` is an auto-loaded route. |
 | Reconciler | `app/reconciler.js`, `deploy/reconciler.yaml` | Second Deployment on the same image. Every 2 minutes it compares the Sessionize feed with the `talks` index and records what moved. |
-| Search and data | Elasticsearch | `talks` (hybrid keyword and semantic search), `changes`, and `facilities-v1`. |
+| Search and data | Elasticsearch | `talks` (hybrid keyword and semantic search) and `changes`, which the reconciler writes. |
+| Facilities | `web/src/data/facilities.ts`, `app/data/facilities.json` | The quiet room and restrooms are bundled with the app, not read from Elasticsearch, so the break screen works offline. The phone uses its own copy, and `/api/facilities` serves the JSON copy. `scripts/ingest-facilities.mjs` can also load them into a `facilities-v1` index, which the app does not read. |
 | Telemetry | OpenTelemetry to Dash0 | Traces, logs and metrics. Attendee identity and access needs stay out of them. |
 | Delivery | `deploy/`, Argo CD, Radar | A push to `main` builds an image, and Argo CD syncs the `team-vaiking` namespace. |
 
@@ -87,7 +88,7 @@ Semantic search through Elasticsearch's embeddings is the only AI in the product
 
 | Tool | What we used it for | Evidence |
 |---|---|---|
-| Elasticsearch | The data layer. 582 talks in the `talks` alias with hybrid search: typo-tolerant keyword search plus `semantic_text` embeddings, fused with RRF, with facets and per-result match reasons. Also the reconciler's `changes` index and `facilities-v1`. | [`app/lib/search.js`](app/lib/search.js), [`scripts/ingest-sessionize.mjs`](scripts/ingest-sessionize.mjs), PRs [#6](https://github.com/zofrus/vaiking/pull/6), [#34](https://github.com/zofrus/vaiking/pull/34) and [#15](https://github.com/zofrus/vaiking/pull/15), and the Elasticsearch column on [/demo](https://vaiking.cnh.radarhq.io/demo) |
+| Elasticsearch | The data layer. 582 talks in the `talks` alias with hybrid search: typo-tolerant keyword search plus `semantic_text` embeddings, fused with RRF, with facets and per-result match reasons. Also the reconciler's `changes` index. Facilities are bundled with the app instead, so the break screen works offline. | [`app/lib/search.js`](app/lib/search.js), [`scripts/ingest-sessionize.mjs`](scripts/ingest-sessionize.mjs), PRs [#6](https://github.com/zofrus/vaiking/pull/6), [#34](https://github.com/zofrus/vaiking/pull/34) and [#15](https://github.com/zofrus/vaiking/pull/15), and the Elasticsearch column on [/demo](https://vaiking.cnh.radarhq.io/demo) |
 | Dash0 | OpenTelemetry traces, logs and metrics from the API and the reconciler, browser RUM, and metrics read back for `/board` and `/demo`. Agent0 found a false error report in our browser telemetry. | [`app/otel.js`](app/otel.js), [`web/src/telemetry.ts`](web/src/telemetry.ts), [`dash0/README.md`](dash0/README.md), PRs [#16](https://github.com/zofrus/vaiking/pull/16) and [#48](https://github.com/zofrus/vaiking/pull/48), the [Agent0 note on #38](https://github.com/zofrus/vaiking/pull/38#issuecomment-6751879772), and the Dash0 column on [/demo](https://vaiking.cnh.radarhq.io/demo) |
 | Radar | Watching GitOps deploys to `team-vaiking`. Checks went from 4 medium findings to 1, `diagnose` found a real crash loop in one call, and the AI investigation is told honestly, including that it was wrong. | [`STORY.md`](STORY.md), PRs [#19](https://github.com/zofrus/vaiking/pull/19), [#23](https://github.com/zofrus/vaiking/pull/23), [#27](https://github.com/zofrus/vaiking/pull/27) and [#40](https://github.com/zofrus/vaiking/pull/40), and the Radar column on [/demo](https://vaiking.cnh.radarhq.io/demo) |
 | Gitar | Reviews our pull requests against rules we wrote in [`.gitar/`](.gitar/), and pushes fix commits that we read before merging. | [How Gitar was used to build this](#how-gitar-was-used-to-build-this), the [Gitar review on #13](https://github.com/zofrus/vaiking/pull/13#issuecomment-6750912301), fix commit [c4ef373](https://github.com/zofrus/vaiking/commit/c4ef373), and the Gitar column on [/demo](https://vaiking.cnh.radarhq.io/demo) |
