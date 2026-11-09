@@ -181,7 +181,7 @@ async function main() {
       SHUTDOWN_DEADLINE_MS,
     ).unref();
     app.close().catch((err) => {
-      app.log.error({ err }, "shutdown failed");
+      console.error("shutdown failed:", err?.name ?? "Error");
       process.exitCode = 1;
     });
   };

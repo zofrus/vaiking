@@ -20,7 +20,8 @@ function flush() {
   if (flushed) return;
   flushed = true;
   sdk.shutdown().catch((err) => {
-    console.error("otel shutdown failed:", err?.message ?? err);
+    // Name only: export errors can carry the endpoint.
+    console.error("otel shutdown failed:", err?.name ?? "Error");
   });
 }
 process.on("SIGTERM", flush);
