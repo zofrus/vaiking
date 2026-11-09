@@ -22,17 +22,17 @@ const c = talk("c", "16:00", "16:30", "must");
 describe("buildDayView", () => {
   it("keeps untouched talks and says so from the schedule time", () => {
     const v = run([a, c], []);
-    expect(v.summary).toBe("You wanted 2 talks. 2 still fit.");
+    expect(v.summary).toBe("2 of 2 talks still fit.");
     expect(v.entries[0]).toMatchObject({ status: "kept" });
-    expect(v.entries[0].reason).toBe("Still at 1:30 PM MST in 100A. The schedule has not changed it.");
+    expect(v.entries[0].reason).toBe("1:30 PM MST · 100A. Unchanged.");
   });
 
   it("reports a move that still fits with room, time and the person's buffer", () => {
     const v = run([a, b, c], [move("b", { room: "355F", starts_at: at("14:45"), ends_at: at("15:15") })], false, 15);
     const e = v.entries.find((x) => x.id === "b")!;
     expect(e.status).toBe("moved-fits");
-    expect(e.reason).toBe("Moved to 355F at 2:45 PM MST. It still fits your 15 minutes buffer.");
-    expect(v.summary).toBe("You wanted 3 talks. 3 still fit. 1 moved.");
+    expect(e.reason).toBe("Moved to 2:45 PM · 355F · still fits.");
+    expect(v.summary).toBe("3 of 3 talks still fit. 1 moved.");
   });
 
   it("explains a move that no longer fits with the real gap and buffer", () => {
@@ -40,10 +40,10 @@ describe("buildDayView", () => {
     const v = run([a, b], [move("b", { starts_at: at("14:20"), ends_at: at("14:50") })]);
     const e = v.entries.find((x) => x.id === "b")!;
     expect(e.status).toBe("no-longer-fits");
-    expect(e.reason).toContain("It starts 20 minutes after Talk a ends");
-    expect(e.reason).toContain("you asked for 25 minutes");
+    expect(e.reason).toContain("Starts 20 minutes after Talk a ends");
+    expect(e.reason).toContain("You set 25 minutes.");
     expect(e.event.message).toBe("0/1 slots fit: starts 20m after the previous talk, you asked for 25m");
-    expect(v.summary).toBe("You wanted 2 talks. 1 still fits. 1 moved. 1 no longer fits.");
+    expect(v.summary).toBe("1 of 2 talks still fits. 1 moved. 1 no longer fits.");
   });
 
   it("describes a short gap before the next talk as an end gap", () => {
@@ -55,26 +55,26 @@ describe("buildDayView", () => {
   it("reports overlap rather than a negative gap", () => {
     const v = run([a, b], [move("b", { starts_at: at("13:45"), ends_at: at("14:15") })]);
     const e = v.entries.find((x) => x.id === "b")!;
-    expect(e.reason).toContain("overlaps");
+    expect(e.reason).toContain("Overlaps");
     expect(e.reason).not.toContain("-");
   });
 
   it("reports cancelled talks as no longer fitting", () => {
     const cancel: Change = { id: "x", talk_id: "a", kind: "cancelled", before: null, after: null, detected_at: at("12:00") };
     const v = run([a, c], [cancel]);
-    expect(v.entries[0]).toMatchObject({ id: "a", status: "no-longer-fits", reason: "It was cancelled in the real schedule." });
+    expect(v.entries[0]).toMatchObject({ id: "a", status: "no-longer-fits", reason: "Cancelled in the real schedule." });
   });
 
   it("reports talks set aside by the button, with the must-see time", () => {
     const v = run([a, b, c], [], true);
     expect(v.entries.map((e) => e.status)).toEqual(["set-aside", "kept", "kept"]);
-    expect(v.entries[0].reason).toBe('You pressed the break button. This nice-to-have is set aside until your must-see at 2:30 PM MST. To bring it back, press "I need a break" and choose "Put them back".');
-    expect(v.summary).toBe("You wanted 3 talks. 2 still fit. 1 set aside by you.");
+    expect(v.entries[0].reason).toBe('Set aside until your must-see at 2:30 PM MST. To bring it back: "I need a break", then "Put them back".');
+    expect(v.summary).toBe("2 of 3 talks still fit. 1 set aside by you.");
   });
 
   it("handles an empty plan and singular wording", () => {
-    expect(run([], []).summary).toBe("You wanted 0 talks. 0 still fit.");
-    expect(run([a], []).summary).toBe("You wanted 1 talk. 1 still fits.");
+    expect(run([], []).summary).toBe("0 of 0 talks still fit.");
+    expect(run([a], []).summary).toBe("1 of 1 talk still fits.");
   });
 });
 

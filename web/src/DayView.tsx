@@ -169,7 +169,8 @@ export function DayViewSection({
                 )}
               </div>
               <p className="gp-notice-body">
-                <strong>{e.title}</strong>. {e.reason}
+                {e.reason}
+                <span className="gp-sub">{e.title}</span>
               </p>
               <NoticeCredit drill={isDrillFor(e.id, changes)} />
             </li>

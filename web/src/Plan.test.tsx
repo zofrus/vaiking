@@ -53,7 +53,7 @@ describe("search hints", () => {
     const hint = els.find(
       (e) => e.props.id === input.props["aria-describedby"],
     )!;
-    expect(hint.props.children).toBe("Any topic, project or speaker works.");
+    expect(hint.props.children).toBe("Topic, project or speaker.");
   });
 
   it("offers each example as a real button that does not submit the form", () => {

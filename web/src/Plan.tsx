@@ -107,11 +107,11 @@ export function PlanSection({
       setResults(body.results);
       // Keep the unfiltered counts so the choices don't disappear once one is picked.
       if (body.facets && !nextTrack && !nextDay) setFacets(body.facets);
-      setStatus(body.results.length === 0 ? "No talks found. Try a broader search." : `${body.results.length} talks found${typeof body.took_ms === "number" ? `. Found in ${body.took_ms} ms` : ""}.`);
+      setStatus(body.results.length === 0 ? "No talks found. Try fewer words." : `${body.results.length} talks found${typeof body.took_ms === "number" ? `. Found in ${body.took_ms} ms` : ""}.`);
     } catch {
       if (!current()) return;
       setResults(null);
-      setStatus("Search is not available right now. The break button still works.");
+      setStatus("Search is down. The break button still works.");
     }
   };
 
@@ -156,7 +156,7 @@ export function PlanSection({
       </a>
       <form onSubmit={search} className="space-y-3">
         <label htmlFor="q" className="gp-label">What's the one thing you came for?</label>
-        <p id="q-hint" className="gp-hint">Any topic, project or speaker works.</p>
+        <p id="q-hint" className="gp-hint">Topic, project or speaker.</p>
         <div className="gp-searchbox">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
           <input id="q" type="search" value={q} onChange={(e) => setQ(e.target.value)} aria-describedby="q-hint" className="gp-input" autoComplete="off" />
@@ -236,7 +236,7 @@ export function PlanSection({
             ))}
           </ul>
           <label htmlFor="buffer" className="gp-label">Minutes you want between talks</label>
-          <p id="buffer-hint" className="gp-hint">Any number from 5 to 120.</p>
+          <p id="buffer-hint" className="gp-hint">5 to 120.</p>
           <input
             id="buffer"
             type="number"
@@ -250,7 +250,7 @@ export function PlanSection({
             onBlur={leaveBuffer}
             className="gp-field"
           />
-          <p className="gp-hint">Your reasons and your plan are saved only on this phone. The app sends the words you type, and talk numbers to find similar talks. When you press the button, it sends the floor of your current or next talk, if it knows one, and whether this is a preview.</p>
+          <p className="gp-hint">Your plan stays on this phone. Search sends your words and talk numbers; the break button sends your floor.</p>
         </div>
       )}
     </section>
