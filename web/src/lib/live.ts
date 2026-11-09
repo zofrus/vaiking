@@ -80,7 +80,11 @@ export function useAlternatives(notices: { changeId: string; talkId: string }[],
           const results = b?.results ?? [];
           if (results.length) setFound((old) => ({ ...old, [changeId]: results }));
         })
-        .catch((error: unknown) => reportRequestFailure("/api/similar", error));
+        .catch(() => {
+          // Not reported on purpose: /api/similar stays out of telemetry because it
+          // also runs right after a break press (see useSimilar). Offline or slow just
+          // means no alternatives are shown.
+        });
     }
   }, [key, bufferMinutes]);
   return found;
