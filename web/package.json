@@ -8,7 +8,8 @@
     "lint": "eslint . && tsc --noEmit",
     "build": "tsc --noEmit && vite build",
     "test": "vitest run",
-    "axe": "node scripts/axe.mjs"
+    "axe": "node scripts/axe.mjs",
+    "asset-recovery": "node scripts/asset-recovery.mjs"
   },
   "dependencies": {
     "@dash0/sdk-web": "^0.30.0",
