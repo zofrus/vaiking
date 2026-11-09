@@ -16,6 +16,7 @@ import { formatTime, reconcile, type Notice, type PlanItem } from "./lib/reconci
 import { closestReachable } from "./lib/reach";
 import { placeLabel } from "./lib/place";
 import { Sticker } from "./Sticker";
+import { VENUE_SOURCE_LINE, venueFacts } from "./data/facilities";
 import { ShareQR } from "./ShareQR";
 import { ChangesChecked } from "./ChangesChecked";
 import { nextRoom } from "./lib/nextRoom";
@@ -171,6 +172,7 @@ function Calm({
   }, []);
 
   const byVenue = (venue: string) => restrooms.filter((r) => r.venue === venue);
+  const firstAid = venueFacts.find((f) => f.id === "first-aid");
 
   return (
     <section aria-labelledby="calm-h" className="space-y-6">
@@ -199,7 +201,7 @@ function Calm({
 
       <div className="panel space-y-3">
         <div className="flex items-start justify-between gap-3">
-          <div>
+          <div className="min-w-0">
             <h3 className="text-[1.625rem] font-semibold leading-tight">{quietRoom.name}</h3>
             <p className="mt-1 text-lg">
               {quietRoom.venue}, Level {quietRoom.level}
@@ -265,6 +267,18 @@ function Calm({
 
       {/* Always visible on calm: the one place the Focus switch is shown here. */}
       <div className="panel"><FocusToggle /></div>{/* mount: FocusToggle (calm) */}
+
+      {/* Safety information is never behind a tap: the first-aid sentence, as the
+          page words it, with its source. The other venue facts stay inside. */}
+      {firstAid && (
+        <section aria-labelledby="aid-h" className="panel space-y-2">
+          <h3 id="aid-h" className="text-lg font-semibold">
+            {firstAid.title}
+          </h3>
+          <p>{firstAid.text}</p>
+          <p className="text-sm text-ink-soft">{VENUE_SOURCE_LINE}</p>
+        </section>
+      )}
 
       {/* Everything optional sits behind one disclosure, under the essentials. */}
       <details className="panel more-support">
