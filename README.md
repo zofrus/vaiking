@@ -1,6 +1,6 @@
 # Grace Period
 
-Your KubeCon day as desired state. You say what you came for, and the app keeps reconciling your day against the real schedule. It tells you plainly what changed and what it kept, and one large "I need a break" button works offline with no account.
+Your KubeCon day as desired state. You say what you came for, and the app keeps reconciling your day against the real schedule. It tells you plainly what changed and what it kept, and one large "I need a break" button needs no account. It also works offline once the page has loaded one time, because the offline cache is set up on the first visit.
 
 Live at <https://vaiking.cnh.radarhq.io>. Built at the Cloud Native Hackathon, November 9, 2026.
 
@@ -19,7 +19,7 @@ Semantic search through Elasticsearch's embeddings is the only AI in the product
 
 ## Run it yourself
 
-You need Node 22 or newer. Elasticsearch and Dash0 are optional: without them the app still starts, and the routes that need them answer 503.
+You need Node 22 or newer. Elasticsearch and Dash0 are optional. Without them the app still starts: `/api/search`, `/api/talks`, `/api/similar` and `/api/changes` answer 503 with a JSON error, while the break button, `/api/facilities` and `/api/board` keep working.
 
 Run the API and the UI in two terminals, each starting from the repo root:
 
