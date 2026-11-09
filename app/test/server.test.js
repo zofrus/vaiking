@@ -158,3 +158,16 @@ test("request log serializer drops the query string", () => {
   );
   assert.deepEqual(serializeReq({ method: "GET", url: "/api/talks" }), { method: "GET", url: "/api/talks" });
 });
+
+test("every response carries the hardening headers, pages and API alike", async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "vaiking-pub-"));
+  fs.writeFileSync(path.join(dir, "index.html"), "<!doctype html><title>t</title>");
+  const app = build({ env: {}, publicDir: dir });
+  test.after(() => app.close());
+  for (const url of ["/", "/board", "/api/status", "/healthz", "/api/nope"]) {
+    const res = await app.inject(url);
+    assert.equal(res.headers["x-content-type-options"], "nosniff", url);
+    assert.equal(res.headers["referrer-policy"], "strict-origin-when-cross-origin", url);
+    assert.equal(res.headers["content-security-policy"], "frame-ancestors 'self'", url);
+  }
+});
