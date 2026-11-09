@@ -15,6 +15,7 @@ import { formatTime, reconcile, type Notice, type PlanItem } from "./lib/reconci
 import { closestReachable } from "./lib/reach";
 import { placeLabel } from "./lib/place";
 import { Sticker } from "./Sticker";
+import { ReplayTour, Tour, TourInvite } from "./Tour";
 import { VenueHelp } from "./VenueHelp";
 import { SoundPanel } from "./SoundPanel";
 import { Breathe } from "./Breathe";
@@ -61,6 +62,7 @@ function Footer() {
         Schedule data: KubeCon + CloudNativeCon North America 2026, The Linux
         Foundation, CC BY 3.0.
       </p>
+      <div className="mt-3"><ReplayTour /><Tour /></div>{/* mount: Tour */}
       <a className="mt-2 inline-block underline" href="/board">
         Organizer board
       </a>
@@ -147,6 +149,7 @@ function Calm({
       </div>
 
       {/* mount: Sticker */}<Sticker />
+      <div className="panel"><ReplayTour /></div>{/* mount: ReplayTour */}
       {/* mount: VenueHelp */}<VenueHelp />
       {/* mount: Breathe */}<Breathe />
       {/* mount: SoundPanel */}<SoundPanel />
@@ -372,6 +375,7 @@ export default function App() {
                 {notices}
               </section>
             )}
+            <TourInvite />{/* mount: TourInvite */}
             <InstallPrompt />
             <PlanSection plan={plan} setPlan={setPlan} buffer={buffer} setBuffer={setBuffer} />
             <DayViewSection plan={plan} changes={changes} result={result} now={now()} bufferMinutes={buffer} />
