@@ -39,7 +39,7 @@ function Table({ caption, rows }: { caption: string; rows: Row[] }) {
         {rows.map((r) => (
           <tr key={r.floor}>
             <th scope="row">{floorLabel(r.floor)}</th>
-            <td className="gp-num-cell gp-mono">{r.count}</td>
+            <td className="gp-num-cell gp-digits">{r.count}</td>
           </tr>
         ))}
       </tbody>
@@ -56,22 +56,26 @@ function StatTile({
   label,
   rows,
   stale,
+  secondary = false,
 }: {
   label: string;
   rows: Row[];
   stale: boolean;
+  secondary?: boolean;
 }) {
   const total = rows.reduce((sum, r) => sum + r.count, 0);
   return (
-    <div className="gp-card gp-stat">
+    <div
+      className={"gp-box gp-stat" + (secondary ? " gp-stat-secondary" : "")}
+    >
       {rows.length > 0 ? (
-        <p className="gp-stat-num gp-mono">{total.toLocaleString("en-US")}</p>
+        <p className="gp-stat-num gp-digits">{total.toLocaleString("en-US")}</p>
       ) : (
         <p className="gp-stat-none">None counted</p>
       )}
       <p className="gp-stat-label gp-muted">{label}</p>
       {stale && (
-        <p className="gp-chip gp-chip-partial gp-stat-stale">
+        <p className="gp-pill gp-pill-partial gp-stat-stale">
           May be out of date
         </p>
       )}
@@ -158,7 +162,7 @@ export default function BoardPage() {
           For event staff: how many breaks were taken in the last hour, by
           floor. Counts only, nobody's identity.
         </p>
-        <p role="status" aria-live="polite" className="gp-status gp-muted">
+        <p role="status" aria-live="polite" className="gp-load-status gp-muted">
           {load.state === "loading" && "Loading counts."}
           {load.state === "error" && "Counts are unavailable right now."}
           {load.state === "ready" &&
@@ -177,10 +181,11 @@ export default function BoardPage() {
               <StatTile
                 label="preview taps, not from the venue"
                 rows={load.board.preview}
+                secondary
                 stale={Boolean(load.stale || load.board.stale)}
               />
             </div>
-            <section aria-labelledby="live-h" className="gp-card gp-section">
+            <section aria-labelledby="live-h" className="gp-box gp-section">
               <h2 id="live-h">
                 Floor of the talk on now or next when people pressed the button
               </h2>
@@ -194,7 +199,7 @@ export default function BoardPage() {
                 means they had no such talk in their plan, or it was off-site.
               </p>
             </section>
-            <section aria-labelledby="preview-h" className="gp-card gp-section">
+            <section aria-labelledby="preview-h" className="gp-box gp-section">
               <h2 id="preview-h">Preview taps, not from the venue</h2>
               <Table
                 caption="Presses by floor, preview"
