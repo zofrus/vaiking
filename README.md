@@ -34,9 +34,9 @@ From the live app, Nov 9, 2026, 4:12 PM MST (build `c52585e`).
 
 Open <https://grace.effulgentpoint.com> on your phone. No account, no install needed.
 
-<!-- TODO: Builder A is generating docs/qr-grace.svg. When it is in the repo, replace this comment with:
-![QR code that opens https://grace.effulgentpoint.com](docs/qr-grace.svg)
--->
+<img src="web/public/qr-grace.svg" width="160" alt="QR code that opens https://grace.effulgentpoint.com">
+
+The same code is served by the app at <https://grace.effulgentpoint.com/qr-grace.svg>.
 
 ## 30-second tour
 
@@ -57,11 +57,11 @@ Everything below is merged and live.
 - **Sourced venue facts.** The calm screen's quiet room, restrooms and first aid come from the event's [Inclusion + Accessibility page](https://events.linuxfoundation.org/kubecon-cloudnativecon-north-america/attend/inclusion-accessibility/), with the source line shown ([#67](https://github.com/zofrus/vaiking/pull/67)).
 - **Read aloud.** The calm screen and the staff card can read their words out with the phone's own voice ([#72](https://github.com/zofrus/vaiking/pull/72)).
 - **Breathing guide and background sound.** Box breathing (in 4, hold 4, out 4, hold 4) with the words and a count always on screen, and quiet background sound ([#72](https://github.com/zofrus/vaiking/pull/72)). They sit together under **More support** ([#71](https://github.com/zofrus/vaiking/pull/71)).
-- **Calendar reminders.** Add your day to your calendar. The file is built on the phone with no request, and each talk gets reminders 10 and 2 minutes before ([#74](https://github.com/zofrus/vaiking/pull/74)).
+- **Calendar reminders.** Add your day to your calendar. The file is built on the phone with no request, and each talk gets reminders 20, 10 and 2 minutes before ([#74](https://github.com/zofrus/vaiking/pull/74), [#87](https://github.com/zofrus/vaiking/pull/87)).
 - **A 5-step tour you can replay** from the home screen at any time ([#73](https://github.com/zofrus/vaiking/pull/73)).
 - **Labelled drill.** In preview mode, a simulated reschedule is marked "Drill · simulated", and its notice starts "Drill: simulated change, not from the official schedule." ([#63](https://github.com/zofrus/vaiking/pull/63)).
 - **Honest offline chip.** "Ready offline" once the app is cached, and "Offline. The break button still works." when the connection drops ([#66](https://github.com/zofrus/vaiking/pull/66)).
-- **Share by QR.** [/demo](https://grace.effulgentpoint.com/demo) shows a QR code that opens <https://grace.effulgentpoint.com> on a phone ([#47](https://github.com/zofrus/vaiking/pull/47)).
+- **Share by QR.** [/demo](https://grace.effulgentpoint.com/demo) shows a QR code that opens <https://grace.effulgentpoint.com> on a phone ([#84](https://github.com/zofrus/vaiking/pull/84)).
 - **Feels like a real app.** It installs to the home screen, with an icon, a manifest and a share image ([#45](https://github.com/zofrus/vaiking/pull/45), [#76](https://github.com/zofrus/vaiking/pull/76)).
 
 ## Accessibility
@@ -72,7 +72,7 @@ What we check, and where it lives:
 - **A review gate.** Gitar reports accessibility problems as blocking findings under rules we wrote in [`.gitar/review/accessibility.md`](.gitar/review/accessibility.md). Audit fixes are in [#42](https://github.com/zofrus/vaiking/pull/42).
 - **Reduced motion.** The app honours `prefers-reduced-motion` ([`web/src/index.css`](web/src/index.css), [`web/src/day.css`](web/src/day.css)), and Focus mode turns motion off ([#69](https://github.com/zofrus/vaiking/pull/69)).
 - **200% zoom and narrow screens.** Checked on the live site on Nov 9, 2026 at 15:52 MST: no horizontal scrolling at 640 CSS pixels wide (1280 by 800 at 200% zoom) or at 320 pixels, on the home screen, calm screen, staff card and board. The method is in [#83](https://github.com/zofrus/vaiking/pull/83), which added this line.
-- **Screen-reader names.** Each talk's buttons carry the talk's name ([#37](https://github.com/zofrus/vaiking/pull/37)), and search results are announced ([#35](https://github.com/zofrus/vaiking/pull/35)).
+- **Screen-reader names.** Each talk's buttons carry the talk's name ([#37](https://github.com/zofrus/vaiking/pull/37)), and the number of search results is announced.
 - **No colour-only meaning.** Sticker colours always come with the word ([`web/src/Sticker.tsx`](web/src/Sticker.tsx)), the breathing guide always shows words and a count ([`web/src/Breathe.tsx`](web/src/Breathe.tsx)), and /demo statuses are words, not dots ([`web/src/pages/Demo.tsx`](web/src/pages/Demo.tsx)).
 - **Venue facts verbatim and sourced.** Sticker wording and venue facts are copied from the event's page, with a source line and the date checked ([`web/src/lib/sticker.ts`](web/src/lib/sticker.ts), [`web/src/data/facilities.ts`](web/src/data/facilities.ts), [#64](https://github.com/zofrus/vaiking/pull/64), [#67](https://github.com/zofrus/vaiking/pull/67)).
 
