@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { quietRoom, restrooms } from "./data/facilities";
 import { countPress } from "./lib/grace";
 import { PlanSection } from "./Plan";
+import { DayViewSection } from "./DayView";
 import { loadBuffer, loadPlan, saveBuffer, savePlan } from "./lib/plan";
 import { isPreview, now, samplePlan, useSample } from "./lib/clock";
 import { useChanges, useSimilar } from "./lib/live";
@@ -256,6 +257,7 @@ export default function App() {
               </section>
             )}
             <PlanSection plan={plan} setPlan={setPlan} buffer={buffer} setBuffer={setBuffer} />
+            <DayViewSection plan={plan} changes={changes} result={result} now={now()} bufferMinutes={buffer} />
             </>
           ) : (
             <Calm
