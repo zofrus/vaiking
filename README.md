@@ -96,7 +96,17 @@ The one CI failure: [run 42695403818](https://github.com/zofrus/vaiking/actions/
 
 ## AI use
 
-_To be written by the project owner before submission._
+We used AI heavily to build this, and we say so plainly, as event rule 5 asks.
+
+**Writing the code.** Claude Code wrote most of the code, running as several parallel sessions, each owning one part of the system (search, reconciler and operations, phone UI, metrics) under a shared contract. Commits made with it carry a `Co-Authored-By` line naming the model, Claude Opus 5.5 or Claude Sonnet 5.5, so `git log` shows which commits had AI help. Every change went through a pull request.
+
+**Reviewing and fixing.** Gitar reviewed the pull requests against our own rules and pushed fix commits, each marked as Gitar's in the history (see [How Gitar was used](#how-gitar-was-used-to-build-this)). We read them before merging and changed one that logged too much.
+
+**Operating it.** Claude Code drove deploys and diagnosis through Radar's MCP server. A Radar AI investigation looked at the rollout that stalled; its conclusion was wrong, and we went with the pod logs instead ([STORY.md](STORY.md)). Dash0's Agent0 diagnosed a false browser error report that we then fixed.
+
+**In the product.** The only AI is semantic search: Elasticsearch embeds talk titles and abstracts so a search can match by meaning. No language model is called anywhere, and nothing on the break-button path uses AI.
+
+**What we did ourselves.** _Owner: replace this line with what you decided and did yourself, for example the idea, the product rules, reviewing and merging each pull request, and the demo._
 
 ## Credits
 
