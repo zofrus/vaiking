@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { flushSync } from "react-dom";
 import { quietRoom, restrooms } from "./data/facilities";
 import { countPress } from "./lib/grace";
 import { PlanSection } from "./Plan";
@@ -220,24 +221,38 @@ export default function App() {
   const press = () => {
     setGrace(true);
     countPress(isPreview ? "preview" : "live");
-    // Say the result too, not only where it is. Worked out here from the same
-    // plan, so nothing waits on the network.
+    // Focus moving to the calm heading says where you are, so the live region
+    // adds only the result. It is worked out here from the same plan, so
+    // nothing waits on the network.
     const pressed = reconcile(plan, changes, { now: now(), bufferMinutes: buffer, graceActive: true });
-    const planLine = plan.length > 0 ? ` ${clearLine(pressed)} Nothing is cancelled. Your plan is saved.` : "";
-    setAnnounce((current) =>
-      (current.startsWith("Quiet room details are on screen.")
-        ? "Quiet room details are still on screen."
-        : "Quiet room details are on screen.") + planLine,
-    );
+    setAnnounce(plan.length > 0 ? `${clearLine(pressed)} Nothing is cancelled. Your plan is saved.` : "");
+    // Pressed again on the calm screen: nothing remounts, so move focus back
+    // to the heading to say it again.
+    if (view === "calm") document.getElementById("calm-h")?.focus();
     go("calm");
   };
+
+  // The heading's words change, then focus moves to it so a screen reader
+  // reads the new words. The button that was pressed is gone by then.
+  const putBack = () => {
+    flushSync(() => {
+      setGrace(false);
+      setAnnounce("");
+    });
+    document.getElementById("clear-h")?.focus();
+  };
+
+  useEffect(() => {
+    document.title =
+      view === "card" ? "Staff card · Grace Period" : view === "calm" ? "Take your time · Grace Period" : "Grace Period";
+  }, [view]);
 
   const showCard = view === "card";
 
   return (
     <div className="min-h-screen bg-ground text-ink">
       <p role="status" aria-live="polite" className="sr-only">
-        {announce}
+        {view === "home" ? "" : announce}
       </p>
       <p aria-live="polite" className="sr-only">
         {noticeText}
@@ -298,18 +313,15 @@ export default function App() {
           ) : (
             <Calm
               onCard={() => go("card")}
-              onBack={() => {
-                setAnnounce("");
-                go("home");
-              }}
+              onBack={() => go("home")}
               staffBtn={staffBtn}
               planResult={
                 plan.length > 0 && (
                   <div className="panel space-y-3" aria-labelledby="clear-h" role="group">
-                    <h3 id="clear-h" className="text-2xl font-semibold">
-                      {clearLine(result)}
+                    <h3 id="clear-h" tabIndex={-1} className="text-2xl font-semibold">
+                      {grace ? clearLine(result) : "Your talks are back in your plan."}
                     </h3>
-                    <p>Nothing is cancelled. Your plan is saved.</p>
+                    {grace && <p>Nothing is cancelled. Your plan is saved.</p>}
                     {result.notices.map((n) => (
                       <p key={n.changeId} className="font-semibold">{n.text}</p>
                     ))}
@@ -322,7 +334,7 @@ export default function App() {
                             <li key={d.id}>{d.title}</li>
                           ))}
                         </ul>
-                        <button type="button" className="staff-button" onClick={() => setGrace(false)}>
+                        <button type="button" className="staff-button" onClick={putBack}>
                           Put them back
                         </button>
                       </>
