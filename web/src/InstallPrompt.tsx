@@ -113,7 +113,7 @@ export function InstallPrompt() {
   };
 
   return (
-    <section aria-labelledby="install-h" className="panel space-y-3">
+    <section aria-labelledby="install-h" className="panel gp-secondary space-y-3">
       <h2 id="install-h" className="text-xl font-semibold">
         Keep Grace Period on your phone
       </h2>

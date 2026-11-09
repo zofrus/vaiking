@@ -5,6 +5,7 @@ import { countPress } from "./lib/grace";
 import { PlanSection } from "./Plan";
 import { DayViewSection } from "./DayView";
 import { InstallPrompt } from "./InstallPrompt";
+import { FocusToggle } from "./FocusToggle";
 import { OfflineChip } from "./OfflineChip";
 import { loadBreak, loadBuffer, loadPlan, saveBreak, saveBuffer, savePlan } from "./lib/plan";
 import { isPreview, now, samplePlan, useSample } from "./lib/clock";
@@ -51,7 +52,7 @@ function BreakButton({ onPress }: { onPress: () => void }) {
 
 function Footer() {
   return (
-    <footer className="mx-auto max-w-xl px-5 pb-10 pt-6 text-sm text-ink-soft">
+    <footer className="gp-secondary mx-auto max-w-xl px-5 pb-10 pt-6 text-sm text-ink-soft">
       <p>
         Schedule data: KubeCon + CloudNativeCon North America 2026, The Linux
         Foundation, CC BY 3.0.
@@ -141,6 +142,7 @@ function Calm({
       </div>
 
       {/* mount: Sticker */}<Sticker />
+      <FocusToggle />{/* mount: FocusToggle (calm) */}
       {/* mount: VenueHelp */}<VenueHelp />
 
       {planResult}
@@ -335,6 +337,7 @@ export default function App() {
         <header className="mx-auto max-w-xl px-5 pt-6">
           <h1 className="text-lg font-semibold">Grace Period</h1>
           <OfflineChip />{/* mount: OfflineChip */}
+          <FocusToggle />{/* mount: FocusToggle (header) */}
         </header>
 
         <main

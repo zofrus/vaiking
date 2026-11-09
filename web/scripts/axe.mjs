@@ -12,14 +12,23 @@ const pages = [
   { name: "staff card", url: "/#/card" },
   { name: "sample plan, after the button", url: sample, press: true },
   { name: "board", url: "/board" },
+  // Focus mode on: saved choice read at startup, as after a reload.
+  { name: "home, focus mode on", url: "/", focus: true },
+  { name: "calm screen, focus mode on", url: "/", press: true, focus: true },
+  { name: "staff card, focus mode on", url: "/#/card", focus: true },
 ];
 
 const browser = await chromium.launch({ channel: process.env.AXE_CHANNEL || undefined });
 let failed = 0;
 for (const p of pages) {
   const page = await (await browser.newContext()).newPage();
+  if (p.focus) await page.addInitScript(() => localStorage.setItem("grace-focus-v1", "1"));
   await page.goto(base + p.url);
   await page.waitForSelector("main");
+  if (p.focus && (await page.locator("html").getAttribute("data-focus")) !== "on") {
+    console.log(`  ${p.name}: data-focus was not set at startup`);
+    failed++;
+  }
   if (p.press) await page.getByRole("button", { name: "I need a break" }).click();
   const { violations } = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"]).analyze();
   console.log(`${p.name}: ${violations.length} violations`);
