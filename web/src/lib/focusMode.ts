@@ -5,6 +5,8 @@
 // A phone that asks for reduced motion starts with focus mode suggested on.
 // Whatever the person picks after that wins.
 
+import { initReadableFont } from "./readableFont";
+
 const KEY = "grace-focus-v1";
 
 let current = false;
@@ -40,6 +42,7 @@ function apply(on: boolean): void {
 // Call once at startup, before the first render, so there is no flash.
 export function initFocus(): void {
   apply(saved() ?? suggested());
+  initReadableFont();
 }
 
 export function setFocus(on: boolean): void {
