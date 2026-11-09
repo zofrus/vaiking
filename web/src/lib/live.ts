@@ -42,12 +42,18 @@ export function useSimilar(talk: PlanItem | undefined): string | null {
     fetch(`/api/similar?talk_id=${encodeURIComponent(id)}&after=${encodeURIComponent(after)}&before=${encodeURIComponent(before)}&limit=1`, {
       signal: AbortSignal.timeout(800),
     })
-      .then((r) => (r.ok ? r.json() : null))
+      .then((r) => {
+        if (!r.ok) throw new Error(`Similar request failed with status ${r.status}`);
+        return r.json();
+      })
       .then((b: { results?: { title: string }[] } | null) => {
         const first = b?.results?.[0];
         setLine(first ? { id, title: first.title } : null);
       })
-      .catch((error: unknown) => reportRequestFailure("/api/similar", error));
+      .catch((error: unknown) => {
+        if (error instanceof DOMException && (error.name === "TimeoutError" || error.name === "AbortError")) return;
+        reportRequestFailure("/api/similar", error);
+      });
   }, [id, after]);
   return line && line.id === id ? line.title : null;
 }
