@@ -99,7 +99,7 @@ export default function BoardPage() {
         <>
           <section aria-labelledby="live-h" className="mt-6">
             <h2 id="live-h" className="text-xl font-semibold">
-              Floor of the last planned talk when people pressed the button
+              Floor of the talk on now or next when people pressed the button
             </h2>
             <p className="text-sm text-slate-700">
               Last hour, from the venue. Counts only, no identities.
