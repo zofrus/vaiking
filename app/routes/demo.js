@@ -133,7 +133,7 @@ module.exports = async function demo(app, { elastic, env, fetch: fetchImpl }) {
     const q = (query) => promScalar(fetchImpl, url, headers, query);
     const [presses, plans, rate] = await Promise.all([
       stat(log, "button_presses", () =>
-        q("round(sum(increase(grace_requests_total[1h])))"),
+        q('round(sum(increase(grace_requests_total{mode="live"}[1h])))'),
       ),
       stat(log, "plan_requests", () =>
         q("round(sum(increase(plan_requests_total[1h])))"),
