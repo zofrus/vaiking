@@ -13,11 +13,12 @@ initFocus(); // sets data-focus before the first render, so nothing flashes
 
 void initTelemetry();
 
-// After a deploy, an open tab's lazy chunks are gone from the server. Reload once.
+// After a deploy, an open tab's lazy chunks are gone from the server. Reload once per build.
 addEventListener("vite:preloadError", () => {
   reloadOnceForNewBuild(
     () => sessionStorage,
     () => location.reload(),
+    import.meta.url,
   );
 });
 
