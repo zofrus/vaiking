@@ -132,7 +132,7 @@ describe("links", () => {
     const link = smsLink("(801) 555-0134", "Sam")!;
     expect(link.startsWith("sms:8015550134?&body=")).toBe(true);
     expect(decodeURIComponent(link.split("body=")[1])).toBe(
-      "This is Sam. I need help at KubeCon, Salt Palace. Please call me.",
+      "This is Sam. I need help at KubeCon. Please call me.",
     );
     expect(smsLink("", "Sam")).toBeNull();
   });
@@ -146,7 +146,7 @@ describe("links", () => {
 
   it("leaves out the name sentence when there is no name", () => {
     expect(smsBody("  ")).toBe(
-      "I need help at KubeCon, Salt Palace. Please call me.",
+      "I need help at KubeCon. Please call me.",
     );
   });
 });

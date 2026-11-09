@@ -156,7 +156,7 @@ check(
   "Text link uses the person's own contact number and message",
   sms.startsWith("sms:8015550134?&body=") &&
     decodeURIComponent(sms).includes(
-      "This is Sam Rivera. I need help at KubeCon, Salt Palace. Please call me.",
+      "This is Sam Rivera. I need help at KubeCon. Please call me.",
     ),
 );
 check(

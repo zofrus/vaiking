@@ -85,9 +85,10 @@ export const telLink = (phone: string): string | null => {
   return p ? `tel:${p}` : null;
 };
 
+// No venue is named: the app does not know where the person is (Salt Palace or Hyatt).
 export const smsBody = (name: string): string => {
   const n = name.trim();
-  return `${n ? `This is ${n}. ` : ""}I need help at KubeCon, Salt Palace. Please call me.`;
+  return `${n ? `This is ${n}. ` : ""}I need help at KubeCon. Please call me.`;
 };
 
 // "?&body=" is the form both iPhone and Android open with the text filled in.
