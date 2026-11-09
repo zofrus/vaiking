@@ -148,7 +148,9 @@ function StaffCard({ onClose }: { onClose: () => void }) {
       aria-labelledby="card-h"
       className="fixed inset-0 z-10 flex flex-col bg-white text-black"
     >
-      <div className="flex flex-1 flex-col overflow-y-auto px-6 py-8">
+      {/* Auto margins centre the words but drop to 0 if they overflow, so the
+          first line can always be scrolled back into view. */}
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-6 py-8">
         <div className="my-auto">
           <h2
             id="card-h"
