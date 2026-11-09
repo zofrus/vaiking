@@ -6,6 +6,7 @@
 // instrumentation so its spans cannot carry identifying request attributes
 // such as the client IP and User-Agent. Other routes retain automatic spans.
 const { FLOORS, MODES, getMetrics, normalizeFloor } = require("../lib/metrics");
+const { clientBucket } = require("../lib/guard");
 
 const WINDOW_MS = 60_000;
 const MAX_PER_WINDOW = 30;
@@ -15,29 +16,20 @@ const MAX_TRACKED = 5_000;
 // forged. Requests already rejected per client do not count toward it.
 const MAX_TOTAL_PER_WINDOW = 1_200;
 
-// Behind the platform gateway request.ip is the gateway for everyone. A client
-// can send its own X-Forwarded-For, and the gateway appends the address it saw
-// to the end, so the LEFT-most entry is spoofable and the RIGHT-most entry is the
-// one the gateway added. Use the right-most. This assumes exactly one trusted
-// proxy; if there are more, this is the last proxy's view, which still cannot be
-// forged by the client. The key is used in memory only.
-function clientKey(request) {
-  const fwd = request.headers["x-forwarded-for"];
-  if (typeof fwd === "string" && fwd) {
-    const last = fwd.split(",").pop().trim();
-    if (last) return last.slice(0, 64);
-  }
-  return request.ip;
-}
+// The per-client key is the right-most X-Forwarded-For entry, the one the
+// platform gateway added (the left ones are client-controlled), or the shared
+// "proxy:grace" bucket for visitors through grace.effulgentpoint.com. Both come
+// from clientBucket in lib/guard.js. The key is used in memory only.
 
 module.exports = async function grace(app, opts) {
   const metrics = opts.metrics ?? getMetrics();
+  const env = opts.env ?? process.env;
   // Per-IP counts live in memory only, are never logged, and are dropped each window.
   let hits = new Map();
   let total = 0;
   let windowEnds = Date.now() + WINDOW_MS;
 
-  function limited(ip) {
+  function limited(ip, scale) {
     const now = Date.now();
     if (now >= windowEnds) {
       hits = new Map();
@@ -47,7 +39,7 @@ module.exports = async function grace(app, opts) {
     // Per-client check first, so a rejected request never drains the shared cap.
     if (!hits.has(ip) && hits.size >= MAX_TRACKED) return true;
     const n = (hits.get(ip) ?? 0) + 1;
-    if (n > MAX_PER_WINDOW) return true;
+    if (n > MAX_PER_WINDOW * scale) return true;
     if (total >= MAX_TOTAL_PER_WINDOW) return true;
     hits.set(ip, n);
     total += 1;
@@ -71,7 +63,8 @@ module.exports = async function grace(app, opts) {
       },
     },
     async (request, reply) => {
-      if (limited(clientKey(request))) {
+      const bucket = clientBucket(request, env);
+      if (limited(bucket.key, bucket.scale)) {
         return reply.code(429).header("retry-after", "60").send({
           error: "too many requests",
         });
