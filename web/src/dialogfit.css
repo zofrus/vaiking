@@ -1,0 +1,65 @@
+/* A modal dialog that always fits a short phone: it is never taller than the
+   screen, its body scrolls inside it, and its action bar stays pinned at the
+   bottom so Close is always reachable. Same pattern as the tour dialog.
+   Scoped to .fit-dialog so nothing leaks into the rest of the app. */
+
+.fit-dialog {
+  max-height: calc(100dvh - 1rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.fit-dialog .dialog-actions {
+  position: sticky;
+  bottom: -1.25rem; /* the dialog has p-5, so the bar sits flush with its edge */
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 1.25rem -1.25rem -1.25rem;
+  padding: 0.75rem 1.25rem;
+  background: var(--gp-surface, #fff);
+  border-top: 1px solid var(--gp-hair, var(--gp-line, #e4e4e7));
+}
+
+.fit-dialog .btn-p {
+  display: inline-flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 2.875rem;
+  padding: 0 1rem;
+  border-radius: 0.625rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: var(--gp-btn, var(--gp-accent, #18181b));
+  color: var(--gp-btn-ink, #fff);
+  box-shadow:
+    0 1px 2px rgb(9 9 11 / 0.2),
+    inset 0 1px 0 rgb(255 255 255 / 0.12);
+}
+
+/* The form has no box of its own, so the sticky action bar is held inside the
+   dialog itself. Inside the form it could only move within the form, which at
+   large text starts below the fold and left Close off the screen. */
+.fit-dialog form {
+  display: contents;
+}
+
+/* Option cards wrap their words and shrink with the dialog, never past its edge. */
+.fit-dialog label {
+  min-width: 0;
+  max-width: 100%;
+  padding: 0.75rem;
+}
+.fit-dialog label > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* A focused option scrolls clear of the pinned bar instead of sitting under it. */
+.fit-dialog {
+  scroll-padding-bottom: 6rem;
+}

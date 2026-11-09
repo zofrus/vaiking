@@ -1,0 +1,18 @@
+{
+  "name": "Grace Period",
+  "short_name": "Grace",
+  "description": "The button for when you need to leave a talk. A quiet room, a card for staff and your day plan, one tap away.",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "lang": "en",
+  "theme_color": "#FAFAFA",
+  "background_color": "#FAFAFA",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

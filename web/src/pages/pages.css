@@ -1,0 +1,566 @@
+/* Organizer board (/board) and live demo (/demo), Pro Product look.
+   Token names come from the redesign brief; R1 defines them in index.css.
+   Each fallback is the brief's value, so these pages look right before R1
+   merges. Every text pair below is 4.5:1 or better on its background.
+   Class names here must not reuse names from day.css or index.css: those load
+   on every route, so a shared name would mix both sets of rules. */
+
+.gp-page {
+  min-height: 100vh;
+  background: var(--gp-bg, #fafafa);
+  color: var(--gp-ink, #18181b);
+  font-family: var(
+    --gp-font-sans,
+    "Geist Variable",
+    "Geist",
+    system-ui,
+    sans-serif
+  );
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.gp-page :focus-visible {
+  outline: 2px solid var(--gp-accent, #4f3ff0);
+  outline-offset: 2px;
+}
+
+.gp-digits {
+  font-family: var(
+    --gp-font-mono,
+    "Geist Mono Variable",
+    "Geist Mono",
+    ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    Consolas,
+    "Liberation Mono",
+    monospace
+  );
+  font-variant-numeric: tabular-nums;
+}
+
+.gp-muted {
+  color: var(--gp-muted, #52525b);
+}
+
+.gp-box {
+  background: var(--gp-surface, #ffffff);
+  border-radius: 14px;
+  box-shadow:
+    0 0 0 1px var(--gp-line, #e4e4e7),
+    0 1px 2px rgba(9, 9, 11, 0.05);
+  padding: 1rem;
+  min-width: 0;
+}
+
+/* Header: the brand mark, the name and one way back. */
+.gp-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  padding: 0.5rem 1rem;
+  background: var(--gp-surface, #ffffff);
+  border-bottom: 1px solid var(--gp-line, #e4e4e7);
+}
+.gp-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  min-height: 44px;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.gp-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  background: var(--gp-ink, #18181b);
+  color: var(--gp-surface, #ffffff);
+  flex: none;
+}
+.gp-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  min-height: 44px;
+  padding: 0 0.25rem;
+  color: var(--gp-accent, #4f3ff0);
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* Status pills: always a word, never colour alone. */
+.gp-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  margin: 0;
+  padding: 0 9px;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  white-space: nowrap;
+  background: #f4f4f5;
+  color: #3f3f46;
+}
+.gp-pill-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+  flex: none;
+}
+.gp-pill-live {
+  background: #ecfdf3;
+  color: #166534;
+}
+.gp-pill-live .gp-pill-dot {
+  background: #16a34a;
+}
+.gp-pill-partial {
+  background: var(--gp-notice-bg, #fff7ed);
+  color: var(--gp-notice, #9a4a00);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .gp-pill-live .gp-pill-dot {
+    animation: gp-pulse 2.4s ease-out infinite;
+  }
+}
+@keyframes gp-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.45);
+  }
+  100% {
+    box-shadow: 0 0 0 7px rgba(22, 163, 74, 0);
+  }
+}
+
+/* ---------- Organizer board ---------- */
+
+.gp-board-main {
+  max-width: 56rem;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.gp-board-main h1 {
+  margin: 0;
+  font-size: clamp(1.75rem, 5vw, 2.375rem);
+  font-weight: 600;
+  letter-spacing: -0.035em;
+  line-height: 1.1;
+}
+.gp-board-main h2 {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.35;
+}
+.gp-lede {
+  margin: 0;
+  font-size: 1.0625rem;
+  max-width: 42rem;
+}
+.gp-load-status {
+  margin: 0;
+  font-size: 0.9375rem;
+}
+.gp-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+  gap: 0.75rem;
+}
+.gp-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  container-type: inline-size;
+}
+.gp-stat-num {
+  margin: 0;
+  font-size: clamp(2.5rem, 22cqw, 3.5rem);
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  overflow-wrap: anywhere;
+}
+.gp-stat-none {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+.gp-stat-label {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 500;
+}
+/* Preview taps are secondary: muted surface, smaller number, so they are
+   never read as the venue figure next to them. */
+.gp-stat-secondary {
+  background: #f4f4f5;
+}
+.gp-stat-secondary .gp-stat-num {
+  font-size: clamp(1.75rem, 14cqw, 2.25rem);
+}
+.gp-stat-stale {
+  align-self: flex-start;
+  margin: 0.25rem 0 0;
+}
+.gp-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.gp-note {
+  margin: 0;
+  font-size: 0.875rem;
+}
+.gp-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 0.9375rem;
+}
+.gp-table th,
+.gp-table td {
+  padding: 0.625rem 0.25rem;
+  border-bottom: 1px solid var(--gp-line, #e4e4e7);
+}
+.gp-table thead th {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--gp-muted, #52525b);
+}
+.gp-table tbody th {
+  font-weight: 500;
+}
+.gp-table tbody tr:last-child th,
+.gp-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+.gp-table .gp-num-cell {
+  text-align: right;
+}
+
+/* ---------- Live demo ---------- */
+
+.gp-demo-app {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 70vh;
+  padding: 1rem;
+  border-bottom: 1px solid var(--gp-line, #e4e4e7);
+  background: var(--gp-bg, #fafafa);
+}
+/* The app in a phone frame, centred: it is a phone UI. Never taller than its
+   pane, so the projector fit holds. */
+.gp-phone {
+  width: min(390px, 100%);
+  height: min(844px, 100%);
+  border-radius: 44px;
+  overflow: hidden;
+  background: #ffffff;
+  box-shadow:
+    0 0 0 1px var(--gp-line, #e4e4e7),
+    0 30px 60px -30px rgba(9, 9, 11, 0.3);
+}
+@media (max-width: 639.98px) {
+  .gp-demo-tools .gp-header {
+    position: static;
+  }
+}
+/* A tool with nothing live: one line instead of a tile per stat. */
+.gp-unavail {
+  margin: 0;
+  padding: 0.75rem;
+  border-radius: 10px;
+  background: var(--gp-bg, #fafafa);
+  box-shadow: inset 0 0 0 1px var(--gp-line, #e4e4e7);
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+/* Board failure: one panel with the message and a way to try again. */
+.gp-fail {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+.gp-fail .gp-load-status {
+  color: var(--gp-ink, #18181b);
+  font-size: 1rem;
+  font-weight: 600;
+}
+.gp-retry {
+  font: inherit;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  min-height: 44px;
+  padding: 0 1.125rem;
+  border: 0;
+  border-radius: 10px;
+  background: var(--gp-ink, #18181b);
+  color: var(--gp-surface, #ffffff);
+  cursor: pointer;
+}
+.gp-demo-app iframe {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: #ffffff;
+}
+.gp-demo-tools {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.gp-demo-tools .gp-header {
+  padding: 0.375rem 0.75rem;
+}
+
+/* One column per tool: 1 on a phone, 2 on a tablet. */
+.gp-demo-grid {
+  display: grid;
+  align-items: start;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.75rem;
+  padding: 0.75rem;
+}
+@media (min-width: 640px) {
+  .gp-demo-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+.gp-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  container-type: inline-size;
+}
+.gp-col-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.25rem 0.5rem;
+  flex-wrap: wrap;
+}
+.gp-kicker {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.3;
+}
+.gp-col h2 {
+  margin: 0;
+  font-size: clamp(1.125rem, 9cqw, 1.5rem);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+/* Stat tiles. Each tile is its own container, so the number is sized to the
+   tile it sits in and never runs past it; the unit gets its own line. */
+.gp-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 8.5rem), 1fr));
+  gap: 0.375rem;
+}
+.gp-tile {
+  container-type: inline-size;
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-width: 0;
+  padding: 0.5rem 0.625rem;
+  border-radius: 10px;
+  background: var(--gp-bg, #fafafa);
+  box-shadow: inset 0 0 0 1px var(--gp-line, #e4e4e7);
+}
+.gp-tile-label {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.3;
+}
+.gp-value {
+  margin: 0;
+  display: flex;
+  align-items: flex-end;
+  /* Fixed line box: the size changes with length, the tile height does not. */
+  min-height: clamp(1.5rem, 7dvh, 4.5rem);
+  /* A mono digit is about 0.6em wide: --gp-len characters fill the tile at
+     100cqw / (len * 0.64). The cap grows with the screen's height, so a
+     projector gets big numbers and a laptop still fits without scrolling.
+     Wrapping is only a last resort. */
+  font-size: clamp(
+    1.5rem,
+    min(calc(100cqw / (var(--gp-len, 3) * 0.64)), 7dvh),
+    4.5rem
+  );
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  overflow-wrap: anywhere;
+}
+.gp-value-word {
+  font-family: var(
+    --gp-font-sans,
+    "Geist Variable",
+    "Geist",
+    system-ui,
+    sans-serif
+  );
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  line-height: 1.2;
+  color: var(--gp-muted, #52525b);
+}
+.gp-unit {
+  display: block;
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.3;
+}
+.gp-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--gp-line, #e4e4e7);
+}
+.gp-pr {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  min-height: 44px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--gp-accent, #4f3ff0);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  overflow-wrap: anywhere;
+}
+.gp-col-foot {
+  margin: 0;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--gp-line, #e4e4e7);
+  font-size: 0.875rem;
+  line-height: 1.35;
+}
+.gp-col-foot .gp-updated {
+  display: block;
+  margin-top: 0.125rem;
+}
+
+/* In the header: a small code with the address beside it. DemoQr was drawn
+   for a dark page, so its colours are set here. */
+.gp-qr > div {
+  flex-wrap: nowrap;
+  gap: 0.625rem;
+}
+.gp-qr svg {
+  width: 4rem;
+  height: 4rem;
+  box-shadow: inset 0 0 0 1px var(--gp-line, #e4e4e7);
+}
+.gp-qr p {
+  margin: 0;
+  color: var(--gp-muted, #52525b);
+  font-size: 0.875rem;
+  line-height: 1.3;
+}
+.gp-qr a {
+  display: block;
+  padding: 0.25rem 0;
+  min-height: 24px;
+  font-size: 0.9375rem;
+  white-space: nowrap;
+  color: var(--gp-accent, #4f3ff0);
+}
+
+/* Projector and laptop: one screen, no scrolling. The app is a phone UI, so
+   it gets a phone-to-small-tablet width and the tools get the rest. Below
+   1200px the tools sit in two columns, from 1200px in four, one per tool. */
+@media (min-width: 1024px) {
+  .gp-demo {
+    display: flex;
+    height: 100vh;
+    height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
+  }
+  .gp-demo-app {
+    flex: none;
+    width: clamp(390px, 34vw, 520px);
+    height: 100%;
+    border-bottom: 0;
+    border-right: 1px solid var(--gp-line, #e4e4e7);
+  }
+  .gp-demo-tools {
+    flex: 1;
+    height: 100%;
+  }
+  /* A last resort only: if a screen is too short, the tools scroll rather
+     than clip. At 1280x800 and 1920x1080 nothing scrolls. */
+  .gp-demo-grid {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 0.5rem;
+    gap: 0.5rem;
+  }
+}
+@media (min-width: 1200px) {
+  .gp-demo-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+@media (min-width: 1600px) {
+  .gp-demo-grid {
+    padding: 0.75rem;
+    gap: 0.75rem;
+  }
+  .gp-col {
+    padding: 1rem;
+    gap: 0.75rem;
+  }
+  /* A projector has the height: one tile per row, so numbers can grow. */
+  .gp-tiles {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.5rem;
+  }
+  .gp-tile {
+    padding: 0.75rem 0.875rem;
+    gap: 0.25rem;
+  }
+  .gp-tile-label,
+  .gp-unit,
+  .gp-col-foot {
+    font-size: 1rem;
+  }
+}

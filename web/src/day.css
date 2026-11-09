@@ -1,0 +1,504 @@
+/* R2: Your day, the kubectl view and plan search.
+   Uses R1's --gp-* tokens. The fallbacks are the brief's values, so this file
+   also works on its own until R1's index.css lands. */
+
+.gp-day,
+.gp-find {
+  --_bg: var(--gp-bg, #fafafa);
+  --_surface: var(--gp-surface, #ffffff);
+  --_ink: var(--gp-ink, #18181b);
+  --_muted: var(--gp-muted, #52525b);
+  --_line: var(--gp-line, #e4e4e7);
+  --_accent: var(--gp-accent, #4f3ff0);
+  --_notice: var(--gp-notice, #9a4a00);
+  --_notice-bg: var(--gp-notice-bg, #fff7ed);
+  --_ok: var(--gp-ok, #15803d);
+  --_ok-bg: var(--gp-ok-bg, #ecfdf3);
+  --_field-line: var(--gp-field-line, #71717a);
+  --_notice-line: var(--gp-notice-line, #f5d9a8);
+  --_accent-soft: var(--gp-accent-soft, color-mix(in srgb, var(--_accent) 14%, white));
+  --_hair: var(--gp-hair, #e4e4e7);
+  --_chip: var(--gp-chip, #f4f4f5);
+  --_chip-ink: var(--gp-chip-ink, #3f3f46);
+  --_ok-ink: var(--gp-ok-ink, #166534);
+  --_btn: var(--gp-btn, #18181b);
+  --_btn-ink: var(--gp-btn-ink, #ffffff);
+  --_accent-ink: var(--gp-accent-ink, #ffffff);
+  --_bad: #b42318;
+  --_bad-bg: #fef2f2;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  /* Home sections are cards (Pro Product). */
+  background: var(--_surface);
+  border-radius: 14px;
+  box-shadow: 0 0 0 1px var(--_line), 0 1px 2px rgba(9, 9, 11, 0.05);
+  padding: 1rem;
+  font-family: var(--font-sans, "Geist Variable", system-ui, sans-serif);
+  color: var(--_ink);
+}
+@media (prefers-color-scheme: dark) {
+  .gp-day,
+  .gp-find {
+    --_bad: #ff9c8a;
+    --_bad-bg: #3a1414;
+  }
+}
+.gp-mono {
+  font-family: var(--font-mono, "Geist Mono Variable", ui-monospace, Menlo, monospace);
+}
+
+/* Cards and rows */
+.gp-card {
+  padding: 0;
+  list-style: none;
+}
+:is(.gp-day, .gp-find) .gp-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 3.25rem;
+  padding: 0.5rem 0;
+}
+.gp-card > li + li {
+  border-top: 1px solid var(--_hair);
+}
+.gp-time {
+  width: 3.5rem;
+  flex: none;
+  font-size: 0.75rem;
+  color: var(--_muted);
+}
+.gp-title {
+  flex: 1 1 10rem;
+  min-width: 0;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  line-height: 1.35;
+}
+.gp-sub {
+  display: block;
+  margin-top: 0.125rem;
+  font-size: 0.8125rem;
+  font-weight: 400;
+  color: var(--_muted);
+  line-height: 1.4;
+}
+:is(.gp-day, .gp-find) .gp-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  min-height: 1.5rem;
+  padding: 0 0.5rem;
+  border-radius: 6px;
+  background: var(--_chip);
+  color: var(--_chip-ink);
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+:is(.gp-day, .gp-find) .gp-tag-moved {
+  background: var(--_notice-bg);
+  color: var(--_notice);
+  box-shadow: inset 0 0 0 1px var(--_notice-line);
+}
+:is(.gp-day, .gp-find) .gp-tag-bad {
+  background: var(--_bad-bg);
+  color: var(--_bad);
+}
+:is(.gp-day, .gp-find) .gp-tag-ok {
+  background: var(--_ok-bg);
+  color: var(--_ok-ink);
+}
+
+/* Sponsor credit chip: plain text, no logo */
+:is(.gp-day, .gp-find) .gp-credit {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3125rem;
+  align-self: flex-start;
+  min-height: 1.5rem;
+  padding: 0 0.5rem;
+  border-radius: 6px;
+  background: var(--_chip);
+  color: var(--_muted);
+  font-size: 0.75rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+:is(.gp-day, .gp-find) .gp-credit b {
+  color: var(--_ink);
+  font-weight: 600;
+}
+
+/* Heading row */
+.gp-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+.gp-h {
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  line-height: 1.3;
+}
+.gp-meta {
+  margin-top: 0.25rem;
+  font-size: 0.8125rem;
+  color: var(--_muted);
+  line-height: 1.4;
+}
+.gp-summary {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--_muted);
+  line-height: 1.45;
+}
+
+/* Switch */
+.gp-switch {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.75rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  flex-wrap: wrap;
+  max-width: 100%;
+}
+.gp-sw {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 2.5rem;
+  height: 1.5rem;
+  border-radius: 999px;
+  /* 3:1 against the page for the control edge */
+  background: #8b8b95;
+  position: relative;
+  margin: 0;
+  flex: none;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.gp-sw::before {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(9, 9, 11, 0.25);
+  transition: transform 0.2s cubic-bezier(0.3, 0.7, 0.2, 1);
+}
+.gp-sw:checked {
+  background: var(--_accent);
+}
+.gp-sw:checked::before {
+  transform: translateX(1rem);
+}
+.gp-sw:focus-visible,
+.gp-btn:focus-visible,
+.gp-input:focus-visible,
+.gp-select:focus-visible,
+.gp-term:focus-visible {
+  outline: 2px solid var(--_accent);
+  outline-offset: 2px;
+}
+
+/* Moved-talk notice (Pro Product amber) */
+.gp-notice {
+  border-radius: 12px;
+  padding: 0.75rem 0.875rem;
+  background: var(--_notice-bg);
+  box-shadow: 0 0 0 1px var(--_notice-line);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  list-style: none;
+}
+.gp-notice-top {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--_notice);
+}
+.gp-notice-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--_notice);
+}
+.gp-notice-age {
+  margin-left: auto;
+  font-size: 0.75rem;
+  color: var(--_notice);
+}
+.gp-notice-body {
+  margin: 0;
+  font-size: 0.84375rem;
+  line-height: 1.45;
+  color: var(--_ink);
+}
+:is(.gp-day, .gp-find) .gp-notice .gp-credit {
+  background: var(--_surface);
+  color: var(--_muted);
+}
+.gp-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  list-style: none;
+  padding: 0;
+}
+
+/* kubectl view (Control Plane look) */
+.gp-term {
+  --_t-bg: var(--gp-term-bg, #0d1117);
+  --_t-ink: var(--gp-term-ink, #e6edf3);
+  background: var(--_t-bg);
+  color: var(--_t-ink);
+  border: 1px solid #232c3a;
+  border-radius: 14px;
+  padding: 0.875rem;
+  overflow-x: auto;
+  font-size: 0.75rem;
+  line-height: 1.7;
+  white-space: pre;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+.gp-term-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin: 0 0 0.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #232c3a;
+  font-size: 0.75rem;
+  color: #a1acbb;
+}
+.gp-term-dots {
+  display: inline-flex;
+  gap: 0.375rem;
+}
+.gp-term-dots i {
+  width: 0.5625rem;
+  height: 0.5625rem;
+  border-radius: 50%;
+  background: #3f4a5a;
+}
+.gp-t-prompt {
+  color: var(--gp-term-green, #4ade9b);
+}
+.gp-t-head {
+  color: #a1acbb;
+}
+.gp-t-ok {
+  color: var(--gp-term-green, #4ade9b);
+}
+.gp-t-warn {
+  color: var(--gp-term-amber, #f5c065);
+}
+.gp-t-bad {
+  color: #ff9c8a;
+}
+.gp-t-info {
+  color: var(--gp-term-blue, #7cc4ff);
+}
+
+/* Search */
+.gp-label {
+  display: block;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.gp-find h3.gp-label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--_muted);
+}
+.gp-hint {
+  margin-top: 0.125rem;
+  font-size: 0.8125rem;
+  color: var(--_muted);
+}
+.gp-searchbox {
+  outline: 2px solid transparent;
+  display: flex;
+  flex-wrap: wrap; /* the credit chip drops below the input when space is tight */
+  align-items: center;
+  gap: 0.25rem 0.5rem;
+  padding-block: 0.25rem;
+  min-height: 3rem;
+  padding: 0 0.5rem 0 0.75rem;
+  border-radius: 10px;
+  background: var(--_surface);
+  box-shadow: 0 0 0 1px var(--_field-line);
+}
+.gp-searchbox:focus-within {
+  box-shadow: 0 0 0 2px var(--_accent);
+}
+.gp-searchbox svg {
+  flex: none;
+  color: var(--_muted);
+}
+.gp-input {
+  flex: 1 1 8rem;
+  min-width: 0;
+  min-height: 2.75rem;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--_ink);
+  font: inherit;
+  font-size: 0.9375rem;
+}
+.gp-searchbox .gp-input:focus-visible {
+  outline: 0;
+}
+.gp-field {
+  display: block;
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0 0.75rem;
+  border: 0;
+  border-radius: 10px;
+  background: var(--_surface);
+  box-shadow: 0 0 0 1px var(--_field-line);
+  color: var(--_ink);
+  font: inherit;
+  font-size: 0.9375rem;
+}
+.gp-field:focus-visible {
+  outline: 2px solid var(--_accent);
+  outline-offset: 2px;
+}
+.gp-chip {
+  min-height: 2.75rem;
+  padding: 0 0.875rem;
+  border: 0;
+  border-radius: 10px;
+  background: var(--_surface);
+  box-shadow: 0 0 0 1px var(--_line);
+  color: var(--_ink);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+.gp-chip:hover {
+  box-shadow: 0 0 0 1px var(--_accent);
+}
+.gp-chip:focus-visible {
+  outline: 2px solid var(--_accent);
+  outline-offset: 2px;
+}
+.gp-chip[aria-pressed="true"]::before {
+  content: "\2713\00a0" / "";
+}
+.gp-chip[aria-pressed="true"] {
+  background: var(--_accent);
+  color: var(--_accent-ink);
+  box-shadow: none;
+}
+.gp-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  min-height: 2.875rem;
+  border: 0;
+  border-radius: 10px;
+  padding: 0 1rem;
+  font: inherit;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: var(--_btn);
+  color: var(--_btn-ink);
+  box-shadow:
+    0 1px 2px rgba(9, 9, 11, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+.gp-result {
+  background: var(--_bg);
+  border-radius: 14px;
+  box-shadow:
+    0 0 0 1px var(--_line),
+    0 1px 2px rgba(9, 9, 11, 0.05);
+  padding: 0.875rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  list-style: none;
+}
+.gp-result h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+}
+.gp-result mark {
+  background: var(--_accent-soft);
+  color: inherit;
+  font-weight: 700;
+  border-radius: 0.2em;
+  padding: 0 0.1em;
+}
+.gp-result p {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.45;
+}
+.gp-where {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.375rem 0.5rem;
+  color: var(--_muted);
+  font-size: 0.8125rem;
+}
+.gp-status {
+  min-height: 1.25rem;
+  font-size: 0.8125rem;
+  color: var(--_muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gp-sw,
+  .gp-sw::before {
+    transition: none;
+  }
+}
+
+/* Long room names wrap instead of widening the page. */
+:is(.gp-day, .gp-find) .gp-tag {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  height: auto;
+  min-height: 1.5rem;
+  max-width: 100%;
+}
+.gp-day,
+.gp-find,
+.gp-card,
+.gp-card > li,
+.gp-result,
+.gp-where,
+.gp-notice,
+.gp-title {
+  min-width: 0;
+}
+.gp-result,
+.gp-notice-body,
+.gp-sub {
+  overflow-wrap: anywhere;
+}
