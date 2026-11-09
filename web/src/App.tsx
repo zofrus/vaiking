@@ -264,6 +264,9 @@ function Calm({
 
       {planResult}
 
+      {/* Always visible on calm: the one place the Focus switch is shown here. */}
+      <div className="panel"><FocusToggle /></div>{/* mount: FocusToggle (calm) */}
+
       {/* Everything optional sits behind one disclosure, under the essentials. */}
       <details className="panel more-support">
         <summary>More support</summary>
@@ -272,7 +275,6 @@ function Calm({
           {/* mount: VenueHelp */}<VenueHelp />
           {/* mount: Breathe */}<Breathe />
           {/* mount: SoundPanel */}<SoundPanel />
-          <FocusToggle />{/* mount: FocusToggle (calm) */}
           <div><ReplayTour /></div>{/* mount: ReplayTour */}
         </div>
       </details>
