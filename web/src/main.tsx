@@ -1,10 +1,19 @@
 import { StrictMode, Suspense, lazy } from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App";
+import { reloadOnceForNewBuild } from "./lib/staleBuild";
 import { initTelemetry } from "./telemetry";
 import "./index.css";
 
 void initTelemetry();
+
+// After a deploy, an open tab's lazy chunks are gone from the server. Reload once.
+addEventListener("vite:preloadError", () => {
+  reloadOnceForNewBuild(
+    () => sessionStorage,
+    () => location.reload(),
+  );
+});
 
 // Two pages, so a path check is enough. /board is the organizer page.
 const Board = lazy(() => import("./pages/Board"));
