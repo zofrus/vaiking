@@ -26,6 +26,7 @@ export function PlanSection({
   const [q, setQ] = useState("");
   const [results, setResults] = useState<Talk[] | null>(null);
   const [status, setStatus] = useState("");
+  const [bufferInput, setBufferInput] = useState(String(buffer));
 
   const mark = (t: Talk, priority: PlanItem["priority"]) => {
     const current = plan.find((p) => p.id === t.id);
@@ -44,7 +45,8 @@ export function PlanSection({
       const body = (await res.json()) as { results: Talk[] };
       setResults(body.results);
       setStatus(`${body.results.length} talks found.`);
-    } catch {
+    } catch (err) {
+      console.warn("Search failed", err instanceof Error ? err.name : "unknown");
       setResults(null);
       setStatus("Search is not available right now. The break button still works.");
     }
@@ -90,8 +92,26 @@ export function PlanSection({
             ))}
           </ul>
           <label htmlFor="buffer" className="block text-lg">Minutes you want between talks</label>
-          <input id="buffer" type="number" min={5} max={120} value={buffer} onChange={(e) => setBuffer(Number(e.target.value) || 15)} className="field" />
-          <p className="text-sm text-ink-soft">Your reasons stay on this phone. Only talk numbers are ever sent for search.</p>
+          <input
+            id="buffer"
+            type="number"
+            min={5}
+            max={120}
+            value={bufferInput}
+            onChange={(e) => setBufferInput(e.target.value)}
+            onBlur={() => {
+              const minutes = Number(bufferInput);
+              if (bufferInput === "" || !Number.isFinite(minutes)) {
+                setBufferInput(String(buffer));
+                return;
+              }
+              const boundedMinutes = Math.min(120, Math.max(5, minutes));
+              setBuffer(boundedMinutes);
+              setBufferInput(String(boundedMinutes));
+            }}
+            className="field"
+          />
+          <p className="text-sm text-ink-soft">Your plan stays on this phone. The words you search for are sent to find talks.</p>
         </div>
       )}
     </section>

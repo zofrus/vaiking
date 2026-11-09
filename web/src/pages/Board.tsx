@@ -57,11 +57,13 @@ export default function BoardPage() {
         if (!res.ok) throw new Error();
         const board = (await res.json()) as Board;
         if (current) setLoad({ state: "ready", board });
-      } catch {
-        if (current)
+      } catch (err) {
+        if (current) {
+          console.warn("Board load failed", err instanceof Error ? err.name : "unknown");
           setLoad((prev) =>
             prev.state === "ready" ? prev : { state: "error" },
           );
+        }
       }
     };
     void run();
