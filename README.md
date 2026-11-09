@@ -2,24 +2,24 @@
 
 **A phone app for KubeCon attendees who need a break: one button with zero setup, and a day plan that keeps itself in line with the real schedule.** Built by team vAIking at the Cloud Native Hackathon, November 9, 2026.
 
-- App: <https://vaiking.cnh.radarhq.io> (also <https://grace.effulgentpoint.com>)
-- Judge view, the app beside four live tool columns: <https://vaiking.cnh.radarhq.io/demo>
-- Organizer board, counts only: <https://vaiking.cnh.radarhq.io/board>
+- App: <https://grace.effulgentpoint.com>
+- Judge view, the app beside four live tool columns: <https://grace.effulgentpoint.com/demo>
+- Organizer board, counts only: <https://grace.effulgentpoint.com/board>
 
 ## Why it's different
 
 - **Care in one tap.** For the attendee who is overwhelmed: one large "I need a break" button, no account, no plan and no reason asked. It shows the quiet room, the all-gender restrooms and a card to show staff.
 - **Works when the venue network doesn't.** After the first visit the button works offline, and the app installs on a phone.
 - **Your day, reconciled like a Kubernetes controller.** You declare what you came for. A reconciler compares the real schedule with it every 2 minutes, and the app tells you in one plain sentence what moved, what still fits, and the closest talk you can still reach.
-- **Four sponsor tools, live.** [/demo](https://vaiking.cnh.radarhq.io/demo) shows the app next to live numbers from Elasticsearch, Dash0, Radar and Gitar.
+- **Four sponsor tools, live.** [/demo](https://grace.effulgentpoint.com/demo) shows the app next to live numbers from Elasticsearch, Dash0, Radar and Gitar.
 
 ## 30-second tour
 
-1. Open the app on a phone and press **I need a break**: Quiet Room 260A, the all-gender restrooms and **Show this to staff**, with no sign-up.
+1. Open <https://grace.effulgentpoint.com> on a phone and press **I need a break**: Quiet Room 260A, the all-gender restrooms and **Show this to staff**, with no sign-up.
 2. Open the staff card, then **Close card** and **Back to the start**.
 3. Under **Find your talks**, search for what you came for (try "kubernetes"). Each result says whether it matched your words or your meaning. Mark one **Must-see**.
 4. Read **Your day**, and turn on **Show as kubectl** to see the same facts as `kubectl get` and `describe` output.
-5. Open the [preview of Tuesday](https://vaiking.cnh.radarhq.io/?preview=2026-11-10T15:25:00-07:00&sample=1) for a sample saved plan, labelled as simulated, and press the button there. Then open [/demo](https://vaiking.cnh.radarhq.io/demo).
+5. Open the [preview of Tuesday](https://grace.effulgentpoint.com/?preview=2026-11-10T15:25:00-07:00&sample=1) for a sample saved plan, labelled as simulated, and press the button there. Then open [/demo](https://grace.effulgentpoint.com/demo).
 
 <!--
 Screenshots. TODO owner: add these images, then turn this comment into visible image lines.
@@ -82,16 +82,18 @@ flowchart LR
 | Telemetry | OpenTelemetry to Dash0 | Traces, logs and metrics. Attendee identity and access needs stay out of them. |
 | Delivery | `deploy/`, Argo CD, Radar | A push to `main` builds an image, and Argo CD syncs the `team-vaiking` namespace. |
 
+The public address, <https://grace.effulgentpoint.com>, is a proxy in front of the team cluster's own address, <https://vaiking.cnh.radarhq.io>, which the platform routes to Service `app` in `team-vaiking`. Both serve the same build.
+
 Semantic search through Elasticsearch's embeddings is the only AI in the product. Nothing on the break-button path calls a model.
 
 ## Sponsor tools: evidence
 
 | Tool | What we used it for | Evidence |
 |---|---|---|
-| Elasticsearch | The data layer. 582 talks in the `talks` alias with hybrid search: typo-tolerant keyword search plus `semantic_text` embeddings, fused with RRF, with facets and per-result match reasons. Also the reconciler's `changes` index. Facilities are bundled with the app instead, so the break screen works offline. | [`app/lib/search.js`](app/lib/search.js), [`scripts/ingest-sessionize.mjs`](scripts/ingest-sessionize.mjs), PRs [#6](https://github.com/zofrus/vaiking/pull/6), [#34](https://github.com/zofrus/vaiking/pull/34) and [#15](https://github.com/zofrus/vaiking/pull/15), and the Elasticsearch column on [/demo](https://vaiking.cnh.radarhq.io/demo) |
-| Dash0 | OpenTelemetry traces, logs and metrics from the API and the reconciler, browser RUM, and metrics read back for `/board` and `/demo`. Agent0 found a false error report in our browser telemetry. | [`app/otel.js`](app/otel.js), [`web/src/telemetry.ts`](web/src/telemetry.ts), [`dash0/README.md`](dash0/README.md), PRs [#16](https://github.com/zofrus/vaiking/pull/16) and [#48](https://github.com/zofrus/vaiking/pull/48), the [Agent0 note on #38](https://github.com/zofrus/vaiking/pull/38#issuecomment-6751879772), and the Dash0 column on [/demo](https://vaiking.cnh.radarhq.io/demo) |
-| Radar | Watching GitOps deploys to `team-vaiking`. Checks went from 4 medium findings to 1, `diagnose` found a real crash loop in one call, and the AI investigation is told honestly, including that it was wrong. | [`STORY.md`](STORY.md), PRs [#19](https://github.com/zofrus/vaiking/pull/19), [#23](https://github.com/zofrus/vaiking/pull/23), [#27](https://github.com/zofrus/vaiking/pull/27) and [#40](https://github.com/zofrus/vaiking/pull/40), and the Radar column on [/demo](https://vaiking.cnh.radarhq.io/demo) |
-| Gitar | Reviews our pull requests against rules we wrote in [`.gitar/`](.gitar/), and pushes fix commits that we read before merging. | [How Gitar was used to build this](#how-gitar-was-used-to-build-this), the [Gitar review on #13](https://github.com/zofrus/vaiking/pull/13#issuecomment-6750912301), fix commit [c4ef373](https://github.com/zofrus/vaiking/commit/c4ef373), and the Gitar column on [/demo](https://vaiking.cnh.radarhq.io/demo) |
+| Elasticsearch | The data layer. 582 talks in the `talks` alias with hybrid search: typo-tolerant keyword search plus `semantic_text` embeddings, fused with RRF, with facets and per-result match reasons. Also the reconciler's `changes` index. Facilities are bundled with the app instead, so the break screen works offline. | [`app/lib/search.js`](app/lib/search.js), [`scripts/ingest-sessionize.mjs`](scripts/ingest-sessionize.mjs), PRs [#6](https://github.com/zofrus/vaiking/pull/6), [#34](https://github.com/zofrus/vaiking/pull/34) and [#15](https://github.com/zofrus/vaiking/pull/15), and the Elasticsearch column on [/demo](https://grace.effulgentpoint.com/demo) |
+| Dash0 | OpenTelemetry traces, logs and metrics from the API and the reconciler, browser RUM, and metrics read back for `/board` and `/demo`. Agent0 found a false error report in our browser telemetry. | [`app/otel.js`](app/otel.js), [`web/src/telemetry.ts`](web/src/telemetry.ts), [`dash0/README.md`](dash0/README.md), PRs [#16](https://github.com/zofrus/vaiking/pull/16) and [#48](https://github.com/zofrus/vaiking/pull/48), the [Agent0 note on #38](https://github.com/zofrus/vaiking/pull/38#issuecomment-6751879772), and the Dash0 column on [/demo](https://grace.effulgentpoint.com/demo) |
+| Radar | Watching GitOps deploys to `team-vaiking`. Checks went from 4 medium findings to 1, `diagnose` found a real crash loop in one call, and the AI investigation is told honestly, including that it was wrong. | [`STORY.md`](STORY.md), PRs [#19](https://github.com/zofrus/vaiking/pull/19), [#23](https://github.com/zofrus/vaiking/pull/23), [#27](https://github.com/zofrus/vaiking/pull/27) and [#40](https://github.com/zofrus/vaiking/pull/40), and the Radar column on [/demo](https://grace.effulgentpoint.com/demo) |
+| Gitar | Reviews our pull requests against rules we wrote in [`.gitar/`](.gitar/), and pushes fix commits that we read before merging. | [How Gitar was used to build this](#how-gitar-was-used-to-build-this), the [Gitar review on #13](https://github.com/zofrus/vaiking/pull/13#issuecomment-6750912301), fix commit [c4ef373](https://github.com/zofrus/vaiking/commit/c4ef373), and the Gitar column on [/demo](https://grace.effulgentpoint.com/demo) |
 
 ## Who it helps
 
