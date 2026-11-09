@@ -15,12 +15,24 @@ import {
 } from "./lib/reconcile";
 import "./day.css";
 
-const TAG: Record<DayStatus, { text: string; cls: string }> = {
-  kept: { text: "Kept", cls: "gp-tag-ok" },
-  "moved-fits": { text: "Moved", cls: "gp-tag-moved" },
-  "no-longer-fits": { text: "No longer fits", cls: "gp-tag-bad" },
-  "set-aside": { text: "Set aside", cls: "" },
+// Colour only. The words come from STATUS_LABEL.
+const TAG_CLASS: Record<DayStatus, string> = {
+  kept: "gp-tag-ok",
+  "moved-fits": "gp-tag-moved",
+  "no-longer-fits": "gp-tag-bad",
+  "set-aside": "",
 };
+
+// Start time for a talk: the live schedule first, then the saved plan. A
+// cancelled talk is in no live list, so it falls back to the plan.
+export function startTimeFor(
+  id: string,
+  live: { id: string; starts_at: string }[],
+  plan: { id: string; starts_at: string }[],
+): string | undefined {
+  return (live.find((l) => l.id === id) ?? plan.find((p) => p.id === id))
+    ?.starts_at;
+}
 
 // Colour for one line of kubectl output. The text itself is never altered.
 function termLine(line: string): ReactNode {
@@ -68,12 +80,11 @@ export function DayViewSection({
   if (plan.length === 0) return null;
   const view = buildDayView(plan, changes, result, { now, bufferMinutes });
   const live = [...result.kept, ...result.dropped];
-  const startOf = (id: string) =>
-    (live.find((l) => l.id === id) ?? plan.find((p) => p.id === id))?.starts_at;
   const movedNow = view.entries.filter(
     (e) =>
       e.moved && (e.status === "moved-fits" || e.status === "no-longer-fits"),
   );
+  const inNotice = new Set(movedNow.map((e) => e.id));
 
   return (
     <section aria-labelledby="day-h" className="gp-day space-y-4">
@@ -146,7 +157,33 @@ export function DayViewSection({
       )}
 
       {/* mount: AddToCalendar */}
-      {kubectl ? (
+      <ul className="gp-card">
+        {view.entries.map((e) => {
+          const start = startTimeFor(e.id, live, plan);
+          return (
+            <li key={e.id} className="gp-row">
+              <span className="gp-time gp-mono">
+                {start ? formatTime(start) : ""}
+              </span>
+              <span className="gp-title">
+                {e.title}
+                {/* The notice above already says this; hide the repeat from screen readers. */}
+                <span
+                  className="gp-sub"
+                  aria-hidden={inNotice.has(e.id) || undefined}
+                >
+                  {e.reason}
+                </span>
+              </span>
+              <span className={`gp-tag ${TAG_CLASS[e.status]}`}>
+                {STATUS_LABEL[e.status]}
+              </span>
+            </li>
+          );
+        })}
+      </ul>
+
+      {kubectl && (
         <pre
           tabIndex={0}
           role="region"
@@ -175,25 +212,6 @@ export function DayViewSection({
             <span className="gp-cursor">▍</span>
           </span>
         </pre>
-      ) : (
-        <ul className="gp-card">
-          {view.entries.map((e) => {
-            const start = startOf(e.id);
-            const tag = TAG[e.status];
-            return (
-              <li key={e.id} className="gp-row">
-                <span className="gp-time gp-mono">
-                  {start ? formatTime(start) : ""}
-                </span>
-                <span className="gp-title">
-                  {e.title}
-                  <span className="gp-sub">{e.reason}</span>
-                </span>
-                <span className={`gp-tag ${tag.cls}`}>{tag.text}</span>
-              </li>
-            );
-          })}
-        </ul>
       )}
     </section>
   );
