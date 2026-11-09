@@ -174,7 +174,27 @@ The one CI failure: [run 42695403818](https://github.com/zofrus/vaiking/actions/
 
 ## AI use
 
-_To be written by the project owner before submission._
+AI agents wrote most of the code in this repo. I directed the work, reviewed it, ran the acceptance tests and decided what merged.
+
+**What I did myself.**
+- Chose the problem and the product: Grace Period, a break button for overwhelmed attendees. Then kept steering. I pushed back on a search-only app, asked for the kubectl day view and the four-tools demo page, called a redesign at 2:52 PM after realizing, on my way to a bio break, that other teams were probably building similar search apps, and picked the Pro Product design out of five. I asked for Focus mode, calendar transition reminders, a replayable tour, background sound and breathing, read aloud, and neurodivergent-friendly defaults.
+- Set up every account and integration: this GitHub repo and its Actions (enabled for this repo only), Elastic Cloud Serverless, Dash0, the Radar cluster and Argo CD GitOps, Gitar, a Vercel proxy and Cloudflare DNS for grace.effulgentpoint.com, and Google Drive for the video.
+- Approved the merges and the security trade-offs. Tested on my phone and in the room.
+- Built the setup the agents ran on: two of my Macs, linked over Tailscale and SSH.
+
+**How the AI was used.** Claude Code ran as a coordinator over parallel agent sessions on both Macs, sharing a work board, session logs and a watchdog. A merge loop merged only pull requests with green CI. Forge agents did intake, a devil's-advocate review, planning, building in separate clones, accessibility and code-review gates, and merge resolution. Research agents read the rules and sponsor docs. A design agent drew five directions. AI-assisted commits carry a `Co-Authored-By` line naming the model.
+
+Gitar reviewed every pull request against our rules and pushed fixes under its own name ([How Gitar was used](#how-gitar-was-used-to-build-this)). I read each fix before merging. One would have wiped the search index on an empty feed. Dash0's Agent0 found a false error report in our browser telemetry. Radar's AI investigation called a crash loop "transient". Radar's `diagnose` and the pod logs found the real cause ([STORY.md](STORY.md)).
+
+**In the product.** The only AI is semantic search: Elasticsearch embeds talk titles and abstracts. No language model is called, and nothing on the break-button path uses AI.
+
+**Guardrails I set.**
+- No secrets in chat or the repo. Keys live in a cluster Secret I applied myself.
+- Venue facts are quoted verbatim with a source and date. A test fails without them.
+- Anything simulated, including the drill, is labelled on screen.
+- A break press sends a floor and a mode. Counts only, nothing identifying.
+- No force pushes, rebases or `rm`. A local hook blocks them.
+- Accessibility gates: axe in CI and an accessibility review on UI changes.
 
 ## Credits
 
