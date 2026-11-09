@@ -63,7 +63,7 @@ describe("reconcile", () => {
   });
 
   it("names a rescheduled talk by its planned time, then gives the new time", () => {
-    const change: Change = { id: "6", talk_id: "c", kind: "rescheduled", before: { starts_at: c.starts_at }, after: { starts_at: at("16:30"), ends_at: at("17:00") }, detected_at: at("13:05") };
+    const change: Change = { id: "6", talk_id: "c", kind: "rescheduled", before: { starts_at: c.starts_at }, after: { starts_at: at("16:30"), ends_at: at("17:00"), room: c.room }, detected_at: at("13:05") };
     expect(reconcile([c], [change], opts).notices[0].text).toBe("Your 4:00 PM MST talk moved to 4:30 PM MST. It still fits.");
   });
 

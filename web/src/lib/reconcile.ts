@@ -81,7 +81,7 @@ export function reconcile(plan: PlanItem[], changes: Change[], opts: Options) {
     // Name the talk by the time the person planned for, then say what is new.
     const planned = plan.find((p) => p.id === item.id)!;
     const time = ms(item.starts_at) !== ms(planned.starts_at) ? `${formatTime(item.starts_at)} MST` : "";
-    const room = change.after?.room ?? "";
+    const room = change.after?.room && change.after.room !== planned.room ? change.after.room : "";
     const what =
       time && room ? `moved to ${time} in ${room}`
       : time ? `moved to ${time}`
