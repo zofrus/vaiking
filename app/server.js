@@ -1,45 +1,170 @@
-// A tiny conference schedule service. Replace it with your own app: keep
-// listening on $PORT and keep /healthz and /readyz, and the manifests in
-// deploy/ keep working.
-const http = require('node:http');
+// HTTP entry point. Keep listening on $PORT and keep /healthz and /readyz: the
+// manifests in deploy/ depend on them.
+const fs = require("node:fs");
+const path = require("node:path");
+const Fastify = require("fastify");
+const fastifyStatic = require("@fastify/static");
+const { createElastic } = require("./lib/elastic");
 
-const port = Number(process.env.PORT || 8080);
-const team = process.env.TEAM_NAME || 'your-team';
-const version = process.env.APP_VERSION || 'dev';
+const SESSIONIZE_URL = "https://sessionize.com/api/v2/svi82w6c/view/All";
+const DEEP_CACHE_MS = 30_000;
+const CHECK_TIMEOUT_MS = 3_000;
 
-const sessions = [
-  { id: 1, time: '10:00', room: 'Main', title: 'Kickoff and sponsor talks' },
-  { id: 2, time: '11:00', room: 'Everywhere', title: 'Build' },
-  { id: 3, time: '14:00', room: 'Main', title: 'Panel' },
-  { id: 4, time: '17:30', room: 'Main', title: 'Submissions close' },
-];
+const LOGGER_OPTIONS = {
+  level: process.env.LOG_LEVEL || "info",
+  redact: ["req.headers.authorization", "req.headers.cookie"],
+};
 
-const server = http.createServer((req, res) => {
-  let url;
+async function timed(check) {
+  const started = performance.now();
+  let result;
   try {
-    url = new URL(req.url, 'http://localhost');
-  } catch {
-    res.writeHead(400, { 'content-type': 'text/plain' });
-    return res.end('bad request\n');
+    result = await check();
+  } catch (err) {
+    // Only a numeric status leaves here: error messages can contain URLs.
+    const status = Number.isInteger(err?.statusCode) ? err.statusCode : null;
+    result = { ok: false, status };
   }
-  if (url.pathname === '/healthz' || url.pathname === '/readyz') {
-    res.writeHead(200, { 'content-type': 'text/plain' });
-    return res.end('ok\n');
-  }
-  if (url.pathname === '/api/sessions') {
-    res.writeHead(200, { 'content-type': 'application/json' });
-    return res.end(JSON.stringify({ version, sessions }));
-  }
-  if (url.pathname === '/') {
-    res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
-    const rows = sessions.map((s) => `<li>${s.time} · ${s.room} · ${s.title}</li>`).join('');
-    return res.end(`<!doctype html><title>${team}</title><h1>${team}</h1><p>version ${version}</p><ul>${rows}</ul>`);
-  }
-  res.writeHead(404, { 'content-type': 'text/plain' });
-  res.end('not found\n');
-});
+  return { ...result, durationMs: Math.round(performance.now() - started) };
+}
 
-server.listen(port, () => console.log(`listening on :${port}, version ${version}`));
+async function headCheck(fetchImpl, url, isOk) {
+  const res = await fetchImpl(url, {
+    method: "HEAD",
+    redirect: "manual",
+    signal: AbortSignal.timeout(CHECK_TIMEOUT_MS),
+  });
+  return { ok: isOk(res.status), status: res.status };
+}
 
-// Exit cleanly when Kubernetes stops the pod, so rollouts don't drop requests.
-process.on('SIGTERM', () => server.close(() => process.exit(0)));
+function runDeepChecks({ elastic, env, fetchImpl }) {
+  const elasticCheck = elastic.configured
+    ? timed(async () => {
+        const res = await elastic.client.info(
+          {},
+          { requestTimeout: CHECK_TIMEOUT_MS, maxRetries: 0, meta: true },
+        );
+        return { ok: true, status: res.statusCode };
+      })
+    : { ok: false, skipped: true };
+
+  let dash0Check = { ok: false, skipped: true };
+  if (env.OTEL_EXPORTER_OTLP_ENDPOINT) {
+    dash0Check = timed(() => {
+      const { origin } = new URL(env.OTEL_EXPORTER_OTLP_ENDPOINT);
+      // Any HTTP answer proves the host is reachable; no token is sent.
+      return headCheck(fetchImpl, origin, (status) => status < 500);
+    });
+  }
+
+  const sessionizeCheck = timed(() =>
+    headCheck(
+      fetchImpl,
+      SESSIONIZE_URL,
+      (status) => status >= 200 && status < 300,
+    ),
+  );
+
+  return Promise.all([elasticCheck, dash0Check, sessionizeCheck]).then(
+    ([elasticsearch, dash0, sessionize]) => ({
+      elasticsearch,
+      dash0,
+      sessionize,
+    }),
+  );
+}
+
+function build(opts = {}) {
+  const env = opts.env ?? process.env;
+  const elastic = opts.elastic ?? createElastic(env);
+  const fetchImpl = opts.fetch ?? globalThis.fetch;
+  const publicDir = opts.publicDir ?? path.join(__dirname, "public");
+  const version = env.APP_VERSION || "dev";
+
+  const app = Fastify({ logger: opts.logger ?? false });
+
+  if (elastic.client) app.addHook("onClose", () => elastic.client.close());
+
+  const probe = { logLevel: "warn" };
+  app.get("/healthz", probe, async () => "ok\n");
+  app.get("/readyz", probe, async () => "ok\n");
+
+  // One shared run, reused for 30 seconds, so the public endpoint cannot be
+  // used to multiply outbound requests.
+  let deepRun = null;
+  let deepExpires = 0;
+  function deepChecks() {
+    if (deepRun && (deepExpires === 0 || Date.now() < deepExpires))
+      return deepRun;
+    deepExpires = 0;
+    deepRun = runDeepChecks({ elastic, env, fetchImpl }).finally(() => {
+      deepExpires = Date.now() + DEEP_CACHE_MS;
+    });
+    return deepRun;
+  }
+
+  app.get("/api/status", async (request) => {
+    const status = {
+      version,
+      elastic: { configured: elastic.configured },
+      telemetry: {
+        configured: Boolean(
+          env.OTEL_EXPORTER_OTLP_ENDPOINT && env.DASH0_AUTH_TOKEN,
+        ),
+      },
+    };
+    if (request.query.deep === "1") status.checks = await deepChecks();
+    return status;
+  });
+
+  app.get("/api/public-config", async () => {
+    const endpoint = env.DASH0_RUM_ENDPOINT;
+    const token = env.DASH0_RUM_TOKEN;
+    return {
+      version,
+      rum:
+        endpoint && token
+          ? { endpoint, token, dataset: env.DASH0_DATASET || null }
+          : null,
+    };
+  });
+
+  const hasPublicDir = fs.existsSync(path.join(publicDir, "index.html"));
+  if (hasPublicDir) app.register(fastifyStatic, { root: publicDir });
+
+  app.setNotFoundHandler((request, reply) => {
+    const { pathname } = new URL(request.url, "http://localhost");
+    const isPage =
+      request.method === "GET" &&
+      hasPublicDir &&
+      !pathname.startsWith("/api/") &&
+      path.extname(pathname) === "";
+    if (isPage) return reply.sendFile("index.html");
+    return reply.code(404).send({ error: "not found" });
+  });
+
+  return app;
+}
+
+async function main() {
+  const app = build({ logger: LOGGER_OPTIONS });
+  const shutdown = () => {
+    app.close().then(
+      () => process.exit(0),
+      () => process.exit(1),
+    );
+  };
+  // Exit cleanly when Kubernetes stops the pod, so rollouts don't drop requests.
+  process.once("SIGTERM", shutdown);
+  process.once("SIGINT", shutdown);
+  await app.listen({ port: Number(process.env.PORT || 8080), host: "0.0.0.0" });
+}
+
+if (require.main === module) {
+  main().catch((err) => {
+    console.error("startup failed:", err.code || err.name);
+    process.exit(1);
+  });
+}
+
+module.exports = { build };
