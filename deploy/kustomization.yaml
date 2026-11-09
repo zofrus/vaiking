@@ -6,9 +6,11 @@ kind: Kustomization
 namespace: team-vaiking
 resources:
   - deployment.yaml
+  - reconciler.yaml
   - service.yaml
   - httproute.yaml
+  - pdb.yaml
 images:
   - name: app
     newName: ghcr.io/zofrus/vaiking
-    newTag: "e667702"
+    newTag: "1d4fd18"

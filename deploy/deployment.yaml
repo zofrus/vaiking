@@ -16,6 +16,16 @@ spec:
       labels:
         app: app
     spec:
+      # The app never talks to the Kubernetes API.
+      automountServiceAccountToken: false
+      # Keep the two replicas on different nodes when the cluster can.
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: app
       containers:
         - name: app
           image: app
@@ -118,6 +128,7 @@ spec:
             periodSeconds: 10
           securityContext:
             runAsNonRoot: true
+            readOnlyRootFilesystem: true
             allowPrivilegeEscalation: false
             seccompProfile:
               type: RuntimeDefault

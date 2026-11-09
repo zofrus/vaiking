@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "lint": "eslint . && tsc --noEmit",
-    "build": "tsc --noEmit && vite build"
+    "build": "tsc --noEmit && vite build",
+    "test": "vitest run"
   },
   "dependencies": {
     "@dash0/sdk-web": "^0.30.0",
@@ -25,6 +26,7 @@
     "tailwindcss": "^4.3.5",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.72.2",
-    "vite": "^8.3.7"
+    "vite": "^8.3.7",
+    "vitest": "^3.2.7"
   }
 }
