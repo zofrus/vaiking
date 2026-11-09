@@ -87,6 +87,18 @@ spec:
                   name: app-credentials
                   key: dataset
                   optional: true
+            - name: DASH0_READ_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: app-credentials
+                  key: dash0-read-token
+                  optional: true
+            - name: DASH0_API_URL
+              valueFrom:
+                secretKeyRef:
+                  name: app-credentials
+                  key: dash0-api-url
+                  optional: true
           resources:
             requests:
               cpu: 100m
