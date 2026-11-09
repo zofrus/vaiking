@@ -3,16 +3,30 @@ const assert = require("node:assert/strict");
 const path = require("node:path");
 const os = require("node:os");
 const { build } = require("../../app/server");
+const { createElastic } = require("../../app/lib/elastic");
 const s = require("../../app/lib/search");
 
 const NO_PUBLIC = path.join(os.tmpdir(), "vaiking-no-public-dir");
+const GOLDEN_RELEVANCE = [
+  {
+    q: "platform engineering for beginners",
+    id: "1289832",
+    title: "OpenChoreo: Developer Platform for Both Humans and Agents",
+  },
+  { q: "ebpf networking", id: "1289758", title: "CiliumCon Hosted by CNCF - Half Day Event" },
+  {
+    q: "kuberntes securty",
+    id: "1356273",
+    title: "Building, Scaling + Running Secure Agents on Kubernetes with AWS",
+  },
+];
 
 function legs(req) {
   return req.retriever.rrf.retrievers;
 }
 
-for (const q of ["platform engineering for beginners", "ebpf networking", "kuberntes securty"]) {
-  test(`golden: "${q}" builds a hybrid query with shared filters`, () => {
+for (const { q } of GOLDEN_RELEVANCE) {
+  test(`request: "${q}" builds a hybrid query with shared filters`, () => {
     const req = s.buildSearchRequest({ q, limit: 10 });
     const [kw, sem] = legs(req);
     assert.equal(kw.standard.query.multi_match.query, q);
@@ -26,6 +40,38 @@ for (const q of ["platform engineering for beginners", "ebpf networking", "kuber
     assert.ok(req.timeout);
   });
 }
+
+test(
+  "live golden relevance: expected talks rank in the top 10",
+  {
+    skip:
+      !process.env.ELASTICSEARCH_URL || !process.env.ELASTICSEARCH_API_KEY
+        ? "set Elasticsearch credentials to verify live relevance"
+        : false,
+  },
+  async () => {
+    const elastic = createElastic();
+    assert.equal(elastic.configured, true, "Elasticsearch must be configured");
+    try {
+      for (const { q, id, title } of GOLDEN_RELEVANCE) {
+        const response = await elastic.client.search(s.buildSearchRequest({ q, limit: 10 }), {
+          requestTimeout: 10_000,
+          maxRetries: 0,
+        });
+        const hits = response.hits.hits;
+        const ids = hits.map((hit) => hit._source.id);
+        assert.ok(
+          ids.includes(id),
+          `expected ${title} (${id}) in the top 10 for "${q}"; got ${hits
+            .map((hit) => `${hit._source.id} ${hit._source.title}`)
+            .join(", ")}`,
+        );
+      }
+    } finally {
+      await elastic.client.close();
+    }
+  },
+);
 
 test("day filter is added in Denver time", () => {
   const filter = s.buildSearchRequest({ q: "x", day: "2026-11-10", limit: 5 }).retriever.rrf.filter;
