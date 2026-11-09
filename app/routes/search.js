@@ -1,5 +1,7 @@
+const { SpanStatusCode, trace } = require("@opentelemetry/api");
 const { buildSearchRequest, cleanQuery, isDay, parseLimit, shapeResponse } = require("../lib/search");
 
+const tracer = trace.getTracer("vaiking-search");
 const REQUEST_OPTIONS = { requestTimeout: 3000, maxRetries: 0 };
 
 module.exports = async function search(app, { elastic }) {
@@ -14,11 +16,27 @@ module.exports = async function search(app, { elastic }) {
       return reply.code(503).send({ error: "search is not available right now" });
     }
     try {
-      const res = await elastic.client.search(
-        buildSearchRequest({ q, day, limit: parseLimit(request.query.limit) }),
-        REQUEST_OPTIONS,
-      );
-      return shapeResponse(res);
+      // The span records the operation only, never the query text.
+      const body = await tracer.startActiveSpan("elasticsearch.search", async (span) => {
+        span.setAttribute("db.system.name", "elasticsearch");
+        span.setAttribute("db.operation.name", "search");
+        try {
+          const res = await elastic.client.search(
+            buildSearchRequest({ q, day, limit: parseLimit(request.query.limit) }),
+            REQUEST_OPTIONS,
+          );
+          const shaped = shapeResponse(res);
+          span.setAttribute("search.result_count", shaped.results.length);
+          return shaped;
+        } catch (err) {
+          span.recordException({ name: err?.name ?? "Error" });
+          span.setStatus({ code: SpanStatusCode.ERROR });
+          throw err;
+        } finally {
+          span.end();
+        }
+      });
+      return body;
     } catch (err) {
       // Status only: client errors can carry the endpoint or the query.
       request.log.error({ status: err?.statusCode ?? null }, "search failed");
