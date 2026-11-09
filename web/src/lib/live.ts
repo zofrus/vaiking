@@ -1,5 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Change, PlanItem } from "./reconcile";
+import { reachWindow, type Talk } from "./reach";
+import { now } from "./clock";
 import { reportRequestFailure } from "../telemetry";
 
 // Ask the server what changed, once a minute while online. Never blocks the UI.
@@ -50,4 +52,33 @@ export function useSimilar(talk: PlanItem | undefined): string | null {
       .catch((error: unknown) => reportRequestFailure("/api/similar", error));
   }, [id, after]);
   return line && line.id === id ? line.title : null;
+}
+
+// For each notice that says a talk no longer fits, ask once for similar talks
+// later that day. The caller picks one that still fits at render time. Same
+// rules as above: no spinner, and if the answer is late or missing, the notice
+// stays as it is.
+export function useAlternatives(notices: { changeId: string; talkId: string }[], bufferMinutes: number): Record<string, Talk[]> {
+  const [found, setFound] = useState<Record<string, Talk[]>>({});
+  const asked = useRef(new Set<string>());
+  const key = JSON.stringify(notices.map((n) => [n.changeId, n.talkId]));
+  useEffect(() => {
+    if (!navigator.onLine) return;
+    for (const [changeId, talkId] of JSON.parse(key) as [string, string][]) {
+      if (asked.current.has(changeId)) continue;
+      const { after, before } = reachWindow(now(), bufferMinutes);
+      if (Date.parse(after) >= Date.parse(before)) continue;
+      asked.current.add(changeId);
+      fetch(`/api/similar?talk_id=${encodeURIComponent(talkId)}&after=${encodeURIComponent(after)}&before=${encodeURIComponent(before)}&limit=3`, {
+        signal: AbortSignal.timeout(2000),
+      })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((b: { results?: Talk[] } | null) => {
+          const results = b?.results ?? [];
+          if (results.length) setFound((old) => ({ ...old, [changeId]: results }));
+        })
+        .catch((error: unknown) => reportRequestFailure("/api/similar", error));
+    }
+  }, [key, bufferMinutes]);
+  return found;
 }
