@@ -64,6 +64,28 @@ function termLine(line: string): ReactNode {
   return tone ? <span className={tone}>{line}</span> : line;
 }
 
+// True when the newest change to this talk is a simulated drill.
+export function isDrillFor(id: string, changes: Change[]): boolean {
+  let newest: Change | undefined;
+  for (const c of changes) {
+    if (c.talk_id !== id) continue;
+    if (!newest || new Date(c.detected_at) >= new Date(newest.detected_at)) newest = c;
+  }
+  return newest?.drill === true;
+}
+
+// Radar is only credited for real changes. A drill is made up by the demo, so
+// it says so in words and never names a tool.
+export function NoticeCredit({ drill }: { drill: boolean }) {
+  return drill ? (
+    <span className="gp-credit">Drill · simulated</span>
+  ) : (
+    <span className="gp-credit">
+      Change detected by <b>Radar</b>
+    </span>
+  );
+}
+
 export function DayViewSection({
   plan,
   changes,
@@ -149,9 +171,7 @@ export function DayViewSection({
               <p className="gp-notice-body">
                 <strong>{e.title}</strong>. {e.reason}
               </p>
-              <span className="gp-credit">
-                Change detected by <b>Radar</b>
-              </span>
+              <NoticeCredit drill={isDrillFor(e.id, changes)} />
             </li>
           ))}
         </ul>
