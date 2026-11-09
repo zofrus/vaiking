@@ -44,7 +44,8 @@ const KUBECTL_KEY = "grace-kubectl-v1";
 export function loadKubectl(): boolean {
   try {
     return localStorage.getItem(KUBECTL_KEY) === "1";
-  } catch {
+  } catch (error) {
+    console.warn("Could not read kubectl preference", error);
     return false;
   }
 }
@@ -52,7 +53,7 @@ export function loadKubectl(): boolean {
 export function saveKubectl(on: boolean): void {
   try {
     localStorage.setItem(KUBECTL_KEY, on ? "1" : "0");
-  } catch {
-    // Falls back to off on the next visit.
+  } catch (error) {
+    console.warn("Could not save kubectl preference", error);
   }
 }

@@ -46,6 +46,12 @@ describe("buildDayView", () => {
     expect(v.summary).toBe("You wanted 2 talks. 1 still fits. 1 moved. 1 no longer fits.");
   });
 
+  it("describes a short gap before the next talk as an end gap", () => {
+    const v = run([b, c], [move("b", { starts_at: at("15:20"), ends_at: at("15:50") })]);
+    const e = v.entries.find((x) => x.id === "b")!;
+    expect(e.event.message).toBe("0/1 slots fit: ends 10m before the next talk, you asked for 25m");
+  });
+
   it("reports overlap rather than a negative gap", () => {
     const v = run([a, b], [move("b", { starts_at: at("13:45"), ends_at: at("14:15") })]);
     const e = v.entries.find((x) => x.id === "b")!;
@@ -62,7 +68,7 @@ describe("buildDayView", () => {
   it("reports talks set aside by the button, with the must-see time", () => {
     const v = run([a, b, c], [], true);
     expect(v.entries.map((e) => e.status)).toEqual(["set-aside", "kept", "kept"]);
-    expect(v.entries[0].reason).toContain("until your must-see at 2:30 PM MST");
+    expect(v.entries[0].reason).toBe('You pressed the break button. This nice-to-have is set aside until your must-see at 2:30 PM MST. To bring it back, press "I need a break" and choose "Put them back".');
     expect(v.summary).toBe("You wanted 3 talks. 2 still fit. 1 set aside by you.");
   });
 

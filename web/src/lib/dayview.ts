@@ -88,12 +88,12 @@ export function buildDayView(
       const until = result.clearUntil ? `until your must-see at ${at(result.clearUntil)}` : "for the rest of your plan";
       entries.push({
         id: item.id, title: item.title, status: "set-aside", moved, ageMs: age(item.id),
-        reason: `You pressed the break button. This nice-to-have is set aside ${until}. Put them back to bring it back.`,
+        reason: `You pressed the break button. This nice-to-have is set aside ${until}. To bring it back, press "I need a break" and choose "Put them back".`,
         event: { type: "Normal", reason: "Preempted", message: `Set aside by you ${until}` },
       });
     } else if (moved && !noticeFor.get(item.id)!.fits) {
       const c = clashWith(now, live, bufferMs);
-      const gap = c ? (c.gapMin < 0 ? `overlaps ${c.other.title} by ${Math.abs(c.gapMin)}m` : `starts ${c.gapMin}m ${c.before ? "after the previous" : "before the next"} talk`) : "does not leave your buffer";
+      const gap = c ? (c.gapMin < 0 ? `overlaps ${c.other.title} by ${Math.abs(c.gapMin)}m` : c.before ? `starts ${c.gapMin}m after the previous talk` : `ends ${c.gapMin}m before the next talk`) : "does not leave your buffer";
       const gapPlain = c
         ? c.gapMin < 0
           ? `It overlaps ${c.other.title} by ${mins(Math.abs(c.gapMin))}`
