@@ -204,7 +204,17 @@ check(
 );
 await dlg.getByRole("button", { name: "Sound alert (loud)" }).click();
 await dlg.getByText("The sound alert is on.").waitFor();
-await dlg.getByRole("button", { name: "Stop sound alert" }).click();
+check(
+  "two Stop buttons while ringing, one in the footer above Close",
+  (await dlg.getByRole("button", { name: "Stop sound alert" }).count()) === 2 &&
+    (await dlg.locator("footer").getByRole("button", { name: "Stop sound alert" }).isVisible()),
+);
+const stopBox = await dlg.locator("footer").getByRole("button", { name: "Stop sound alert" }).boundingBox();
+const closeBox = await dlg.locator("footer").getByRole("button", { name: "Close" }).boundingBox();
+check("footer Stop is above Close and on screen", stopBox.y + stopBox.height <= closeBox.y && closeBox.y + closeBox.height <= 844);
+check("card is exactly the screen height", (await dlg.boundingBox()).height === 844);
+await dlg.locator("footer").getByRole("button", { name: "Stop sound alert" }).click();
+check("footer Stop turns the alert off and the footer button goes", (await dlg.getByText("The sound alert is on.").count()) === 0 && (await dlg.getByRole("button", { name: "Stop sound alert" }).count()) === 0);
 check(
   "Stop turns the alert off",
   (await dlg.getByText("The sound alert is on.").count()) === 0,
@@ -288,6 +298,10 @@ if (focusOn) {
   check(
     "Focus mode: Call 911 still visible",
     await dlg.getByRole("link", { name: "Call 911" }).isVisible(),
+  );
+  check(
+    "Focus mode: card borders stay 4px",
+    (await dlg.locator("footer").getByRole("button", { name: "Close" }).evaluate((e) => getComputedStyle(e).borderTopWidth)) === "4px",
   );
   await page.keyboard.press("Escape");
 } else console.log("skip Focus mode: toggle not found");

@@ -2,6 +2,7 @@ import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { venueFacts, VENUE_SOURCE_LINE } from "./data/facilities";
 import { SEIZURE_BLOCKS, SEIZURE_SOURCE_LINE } from "./data/seizureFirstAid";
 import { createAlarm } from "./lib/alarm";
+import "./emergency.css";
 import {
   ABOUT_PRESETS,
   CALL_911,
@@ -79,6 +80,7 @@ export function EmergencyButton() {
   const closed = () => {
     alarm.stop();
     setRinging(false);
+    setAlarmFailed(false);
     setEditing(false);
     setConfirmDelete(false);
   };
@@ -152,7 +154,7 @@ export function EmergencyButton() {
           // Escape closes only this card, not the staff card underneath it.
           if (e.key === "Escape") e.stopPropagation();
         }}
-        className="m-0 h-full max-h-none w-full max-w-none border-0 bg-white p-0 text-black backdrop:bg-black/80 open:flex open:flex-col"
+        className="emergency-dialog m-0 h-[100dvh] max-h-none w-full max-w-none border-0 bg-white p-0 text-black backdrop:bg-black/80 open:flex open:flex-col"
       >
         <header
           className="shrink-0 px-5 py-5 text-white"
@@ -460,7 +462,13 @@ export function EmergencyButton() {
           </Section>
         </div>
 
-        <footer className="shrink-0 border-t-4 border-black bg-white px-5 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4">
+        <footer className="shrink-0 space-y-3 border-t-4 border-black bg-white px-5 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4">
+          {/* Stop is always on screen while the alert is ringing. */}
+          {ringing && (
+            <button type="button" onClick={() => void toggleAlarm()} className={solid}>
+              Stop sound alert
+            </button>
+          )}
           <button
             type="button"
             onClick={() => dialog.current?.close()}
