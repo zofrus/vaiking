@@ -1,6 +1,7 @@
 // POST /api/grace: counts one press of the break button. The body carries only
 // the floor of the last planned talk and live/preview. Nothing identifying is
 // read, stored or logged, and the request log line is hidden (warn level) for this route.
+const { SpanStatusCode, trace } = require("@opentelemetry/api");
 const { FLOORS, MODES, getMetrics, normalizeFloor } = require("../lib/metrics");
 
 const WINDOW_MS = 60_000;
@@ -9,14 +10,7 @@ const MAX_TRACKED = 5_000;
 // Backstop in case the per-IP key can be spoofed through forwarded headers.
 const MAX_TOTAL_PER_WINDOW = 1_200;
 
-// Behind the platform gateway request.ip is the gateway for everyone, so use the
-// first forwarded address when present. The key is used in memory only.
-function clientKey(request) {
-  const fwd = request.headers["x-forwarded-for"];
-  if (typeof fwd === "string" && fwd) return fwd.split(",")[0].trim();
-  return request.ip;
-}
-
+// Fastify resolves request.ip using only the proxy hops trusted by TRUST_PROXY.
 module.exports = async function grace(app, opts) {
   const metrics = opts.metrics ?? getMetrics();
   // Per-IP counts live in memory only, are never logged, and are dropped each window.
@@ -55,7 +49,7 @@ module.exports = async function grace(app, opts) {
       },
     },
     async (request, reply) => {
-      if (limited(clientKey(request))) {
+      if (limited(request.ip)) {
         return reply.code(429).header("retry-after", "60").send({
           error: "too many requests",
         });
@@ -69,8 +63,12 @@ module.exports = async function grace(app, opts) {
   app.setErrorHandler((err, request, reply) => {
     const status =
       err.statusCode >= 400 && err.statusCode < 500 ? err.statusCode : 500;
-    if (status === 500)
+    if (status >= 500) {
       request.log.error({ err: err.code ?? err.name }, "grace failed");
+      const span = trace.getActiveSpan();
+      span?.recordException({ name: err.name, message: err.code ?? err.name });
+      span?.setStatus({ code: SpanStatusCode.ERROR });
+    }
     reply.code(status).send({
       error: status === 400 ? "invalid request" : "request failed",
     });
