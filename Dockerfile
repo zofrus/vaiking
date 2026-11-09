@@ -11,7 +11,7 @@ FROM node:22-alpine
 WORKDIR /app
 COPY app/package.json app/package-lock.json ./
 RUN npm ci --omit=dev --no-audit --no-fund
-COPY app/server.js ./
+COPY app/server.js app/reconciler.js ./
 COPY app/lib ./lib
 COPY app/routes ./routes
 COPY --from=web /web/dist ./public
