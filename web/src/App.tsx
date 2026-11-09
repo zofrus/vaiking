@@ -16,6 +16,7 @@ import { formatTime, reconcile, type Notice, type PlanItem } from "./lib/reconci
 import { closestReachable } from "./lib/reach";
 import { placeLabel } from "./lib/place";
 import { Sticker } from "./Sticker";
+import { ShareQR } from "./ShareQR";
 import { ReplayTour, Tour, TourInvite } from "./Tour";
 import { VenueHelp } from "./VenueHelp";
 import { SoundPanel } from "./SoundPanel";
@@ -64,6 +65,7 @@ function Footer() {
         Foundation, CC BY 3.0.
       </p>
       <div className="mt-3"><ReplayTour /><Tour /></div>{/* mount: Tour */}
+      <div><ShareQR /></div>{/* mount: ShareQR */}
       <a className="mt-2 inline-block underline" href="/board">
         Organizer board
       </a>
