@@ -189,15 +189,15 @@ export default function App() {
   const clearUntil = result.clearUntil && Date.parse(result.clearUntil) > now().getTime() ? result.clearUntil : null;
   const similar = useSimilar(grace ? result.dropped[0] : undefined);
   const alternatives = useAlternatives(result.notices.filter((n) => !n.fits), buffer);
-  // A notice that no longer fits names the closest talk the person can still
-  // reach, once /api/similar has answered. Until then it says only what changed.
+  // A notice that no longer fits names the first similar talk the person still
+  // has time for, once /api/similar has answered. Until then it says only what changed.
   const noticeLine = (n: Notice) => {
     const reach = n.fits
       ? null
       : closestReachable(alternatives[n.changeId] ?? [], [...result.kept, ...result.dropped], n.talkId, now(), buffer);
     return {
       text: reach
-        ? `${n.text} Closest talk you can still reach: ${reach.title}, ${formatTime(reach.starts_at)} MST, ${placeLabel(reach.room)}.`
+        ? `${n.text} Similar talk you still have time for: ${reach.title}, ${formatTime(reach.starts_at)} MST, ${placeLabel(reach.room)}.`
         : n.text,
       reach: reach !== null,
     };
