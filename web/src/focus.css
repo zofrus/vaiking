@@ -22,7 +22,7 @@
   height: 1.5rem;
   border-radius: 999px;
   border: 2px solid var(--color-deep);
-  background: #fff;
+  background: var(--gp-surface, #fff);
   transition: background-color 120ms ease;
 }
 .focus-switch-thumb {
@@ -36,7 +36,7 @@
   transition: transform 120ms ease;
 }
 .focus-switch[aria-checked="true"] .focus-switch-track { background: var(--color-deep); }
-.focus-switch[aria-checked="true"] .focus-switch-thumb { background: #fff; transform: translateX(1.25rem); }
+.focus-switch[aria-checked="true"] .focus-switch-thumb { background: var(--gp-btn-ink, #fff); transform: translateX(1.25rem); }
 .focus-switch-state { min-width: 2rem; color: var(--color-ink-soft); }
 .focus-hint { margin: 0; font-size: 0.875rem; color: var(--color-ink-soft); }
 
@@ -90,8 +90,9 @@ html[data-focus="on"] .gp-secondary,
 html[data-focus="on"] .gp-credit,
 html[data-focus="on"] .brand-mark,
 html[data-focus="on"] .gp-icon,
+html[data-focus="on"] .break-icon,
 html[data-focus="on"] .c-ring,
-html[data-focus="on"] svg[aria-hidden="true"] {
+html[data-focus="on"] svg[aria-hidden="true"]:not(footer svg) {
   display: none !important;
 }
 /* Home shows the break button, Your day and the search box, plus any
@@ -125,6 +126,11 @@ html[data-focus="on"] select,
 html[data-focus="on"] textarea,
 html[data-focus="on"] summary {
   border: 2px solid var(--gp-ink, var(--color-ink));
+}
+
+html[data-focus="on"] summary {
+  padding: 0.75rem 1rem;
+  min-height: 2.75rem;
 }
 
 /* Links read as links without relying on colour. */

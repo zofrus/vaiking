@@ -1,3 +1,4 @@
+/* global document, getComputedStyle, innerWidth */
 // Visual check for Focus mode and the easier-to-read font on the built app.
 // Asserts computed styles (so a restyle that stops the modes working fails loudly)
 // and saves 390x844 screenshots. Usage: start `vite preview`, then
@@ -74,7 +75,8 @@ for (const [name, mode] of Object.entries(modes)) {
       check(`${tag}: no secondary or sponsor chips shown`, !s.secondaryShown && !s.creditShown);
       check(`${tag}: no shadow on cards`, !s.panelShadow || s.panelShadow === "none", s.panelShadow);
       check(`${tag}: no animation running`, s.anim === 0, String(s.anim));
-      check(`${tag}: visible "Focus mode is on" line`, s.onLine);
+      // On calm the redesign keeps the toggle behind a "More support" disclosure.
+      if (screen === "home") check(`${tag}: visible "Focus mode is on" line`, s.onLine);
       if (s.linkDeco) check(`${tag}: links underlined`, s.linkDeco.includes("underline"), s.linkDeco);
       if (screen === "home") {
         check(`${tag}: intro, calendar hidden`, !s.introShown && !s.calShown);
