@@ -1,6 +1,11 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { quietRoom, restrooms } from "./data/facilities";
 import { countPress } from "./lib/grace";
+import { PlanSection } from "./Plan";
+import { loadBuffer, loadPlan, saveBuffer, savePlan } from "./lib/plan";
+import { isPreview, now, samplePlan, useSample } from "./lib/clock";
+import { useChanges, useSimilar } from "./lib/live";
+import { formatTime, reconcile, type PlanItem } from "./lib/reconcile";
 
 type View = "home" | "calm" | "card";
 
@@ -42,7 +47,9 @@ function Footer() {
 function Calm({
   onCard,
   staffBtn,
+  planResult,
 }: {
+  planResult: ReactNode;
   onCard: () => void;
   staffBtn: { current: HTMLButtonElement | null };
 }) {
@@ -68,6 +75,8 @@ function Calm({
           Nothing here needs an answer from you.
         </p>
       </div>
+
+      {planResult}
 
       <div className="panel">
         <h3 className="text-2xl font-semibold">{quietRoom.name}</h3>
@@ -159,8 +168,26 @@ export default function App() {
     prev.current = view;
   }, [view]);
 
+  const [plan, setPlanState] = useState<PlanItem[]>(() => (useSample ? [...samplePlan] : loadPlan()));
+  const [buffer, setBufferState] = useState(loadBuffer);
+  const [grace, setGrace] = useState(false);
+  const setPlan = (p: PlanItem[]) => {
+    setPlanState(p);
+    if (!isPreview) savePlan(p); // a preview never overwrites the real plan
+  };
+  const setBuffer = (n: number) => {
+    setBufferState(n);
+    if (!isPreview) saveBuffer(n);
+  };
+  const changes = useChanges();
+  const result = reconcile(plan, changes, { now: now(), bufferMinutes: buffer, graceActive: grace });
+  const clearUntil = result.clearUntil && Date.parse(result.clearUntil) > now().getTime() ? result.clearUntil : null;
+  const similar = useSimilar(grace ? result.dropped[0] : undefined);
+  const noticeText = result.notices.map((n) => n.text).join(" ");
+
   const press = () => {
-    countPress("live");
+    setGrace(true);
+    countPress(isPreview ? "preview" : "live");
     setAnnounce((current) =>
       current === "Quiet room details are on screen."
         ? "Quiet room details are still on screen."
@@ -184,8 +211,14 @@ export default function App() {
         Skip to main content
       </a>
       <p role="status" aria-live="polite" className="sr-only">
-        {announce}
+        {announce} {noticeText}
       </p>
+      {isPreview && (
+        <p className="bg-black px-5 py-3 text-center font-semibold text-white">
+          Preview of Tuesday. Times are real, the moment is simulated.
+          {useSample && " The plan below is a sample."}
+        </p>
+      )}
 
       <div aria-hidden={showCard || undefined} inert={showCard || undefined}>
         <header className="mx-auto max-w-xl px-5 pt-6">
@@ -200,6 +233,7 @@ export default function App() {
           <h1 className="sr-only">Grace Period</h1>
           <BreakButton onPress={press} />
           {view === "home" ? (
+            <>
             <section aria-labelledby="home-h" className="space-y-3">
               <h2 id="home-h" className="text-2xl font-semibold">
                 One tap, no setup.
@@ -210,8 +244,47 @@ export default function App() {
                 works with no account and no signal.
               </p>
             </section>
+            {result.notices.length > 0 && (
+              <section aria-labelledby="news-h" className="panel space-y-2">
+                <h2 id="news-h" className="text-xl font-semibold">What changed</h2>
+                {result.notices.map((n) => (
+                  <p key={n.changeId}>{n.text}</p>
+                ))}
+              </section>
+            )}
+            <PlanSection plan={plan} setPlan={setPlan} buffer={buffer} setBuffer={setBuffer} />
+            </>
           ) : (
-            <Calm onCard={() => go("card")} staffBtn={staffBtn} />
+            <Calm
+              onCard={() => go("card")}
+              staffBtn={staffBtn}
+              planResult={
+                plan.length > 0 && (
+                  <div className="panel space-y-3" aria-labelledby="clear-h" role="group">
+                    <h3 id="clear-h" className="text-2xl font-semibold">
+                      {clearUntil ? `You're clear until ${formatTime(clearUntil)} MST.` : "You're clear for the rest of your plan."}
+                    </h3>
+                    <p>Nothing is cancelled. Your plan is saved.</p>
+                    {result.notices.map((n) => (
+                      <p key={n.changeId} className="font-semibold">{n.text}</p>
+                    ))}
+                    {similar && <p className="text-ink-soft">Similar talk later today: {similar}.</p>}
+                    {result.dropped.length > 0 && (
+                      <>
+                        <ul className="list-disc pl-6 text-ink-soft">
+                          {result.dropped.map((d) => (
+                            <li key={d.id}>Set aside: {d.title}</li>
+                          ))}
+                        </ul>
+                        <button type="button" className="staff-button" onClick={() => setGrace(false)}>
+                          Put them back
+                        </button>
+                      </>
+                    )}
+                  </div>
+                )
+              }
+            />
           )}
         </main>
         <Footer />
