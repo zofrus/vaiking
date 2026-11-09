@@ -1,6 +1,7 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import { FocusToggle } from "./FocusToggle";
+import { setFocus } from "./lib/focusMode";
 
 const HINT = "Fewer things on screen, no motion, larger text";
 
@@ -21,4 +22,20 @@ describe("FocusToggle", () => {
     expect(html).toMatch(new RegExp(`<p id="[^"]+" class="sr-only">${HINT}</p>`));
     expect(html).toContain("aria-describedby");
   });
+
+  it("says so in a visible line when on, and not when off", () => {
+    expect(renderToStaticMarkup(<FocusToggle />)).not.toContain("Focus mode is on");
+    vi.stubGlobal("localStorage", { getItem: () => null, setItem: () => {} });
+    vi.stubGlobal("document", { documentElement: { setAttribute: () => {}, removeAttribute: () => {} } });
+    setFocus(true);
+    for (const compact of [false, true]) {
+      const html = renderToStaticMarkup(<FocusToggle compact={compact} />);
+      expect(html).toContain("Focus mode is on: fewer things, bigger text, no motion.");
+      expect(html).toContain('aria-checked="true"');
+      expect(html).toContain("Easier-to-read font");
+    }
+    setFocus(false);
+  });
 });
+
+afterEach(() => vi.unstubAllGlobals());

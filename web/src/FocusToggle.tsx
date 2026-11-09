@@ -5,8 +5,8 @@ import { isFocusOn, setFocus, subscribeFocus } from "./lib/focusMode";
 // A native switch. The label and hint are the button's accessible name and
 // description, so a screen reader says what it does before it is pressed.
 export function FocusToggle({ compact = false }: { compact?: boolean }) {
-  const on = useSyncExternalStore(subscribeFocus, isFocusOn, () => false);
-  const readable = useSyncExternalStore(subscribeReadableFont, isReadableFont, () => false);
+  const on = useSyncExternalStore(subscribeFocus, isFocusOn, isFocusOn);
+  const readable = useSyncExternalStore(subscribeReadableFont, isReadableFont, isReadableFont);
   const hintId = useId();
   return (
     <div className="focus-toggle">
@@ -25,7 +25,8 @@ export function FocusToggle({ compact = false }: { compact?: boolean }) {
         </span>
         <span className="focus-switch-state">{on ? "On" : "Off"}</span>
       </button>
-      <p id={hintId} className={compact ? "sr-only" : "focus-hint"}>Fewer things on screen, no motion, larger text</p>
+      <p id={hintId} className={compact || on ? "sr-only" : "focus-hint"}>Fewer things on screen, no motion, larger text</p>
+      {on && <p className="focus-on-line">Focus mode is on: fewer things, bigger text, no motion.</p>}
       {on && (
         <button
           type="button"
