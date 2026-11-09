@@ -10,7 +10,8 @@ const queryFor = (mode) =>
   `round(sum by (scheduled_floor) (increase(grace_requests_total{mode="${mode}"}[${WINDOW}])))`;
 
 // Standard Prometheus instant-query shape: data.result[{metric, value:[ts, "n"]}].
-// The exact Dash0 response has not been confirmed against a live token yet.
+// Confirmed against a live read token: GET {DASH0_API_URL}/api/prometheus/api/v1/query
+// returns {status, data:{resultType, result}}; bare /api/v1/query is a 404.
 function parseRows(body) {
   const result = body?.data?.result;
   if (!Array.isArray(result)) throw new Error("unexpected response shape");
@@ -41,7 +42,7 @@ module.exports = async function board(app, { env, fetch: fetchImpl }) {
   let inflight = null;
 
   async function query(mode) {
-    const url = `${base}/api/v1/query?${new URLSearchParams({ query: queryFor(mode) })}`;
+    const url = `${base}/api/prometheus/api/v1/query?${new URLSearchParams({ query: queryFor(mode) })}`;
     const res = await fetchImpl(url, {
       headers: { authorization: `Bearer ${token}` },
       signal: AbortSignal.timeout(TIMEOUT_MS),

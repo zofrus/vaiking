@@ -62,6 +62,7 @@ test("reads live and preview, sorts, drops zeros, flags small samples, sends tok
   assert.equal(calls.length, 2);
   assert.ok(calls.every((c) => !c.url.includes("token")));
   assert.equal(calls[0].init.headers.authorization, "Bearer t");
+  assert.match(calls[0].url, /\/api\/prometheus\/api\/v1\/query\?/);
   assert.match(
     decodeURIComponent(calls[0].url).replace(/\+/g, " "),
     /round\(sum by \(scheduled_floor\)/,
