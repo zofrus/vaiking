@@ -1,6 +1,9 @@
 const { withSpan } = require("../lib/search-trace");
 
+const { createGuard } = require("../lib/guard");
+
 const MAX_CHANGES = 100;
+const CACHE_MS = 5_000;
 const UNAVAILABLE = "schedule changes are not available right now";
 
 function buildChangesRequest(sinceMs) {
@@ -17,7 +20,8 @@ function buildChangesRequest(sinceMs) {
   };
 }
 
-module.exports = async function changes(app, { elastic }) {
+module.exports = async function changes(app, { elastic, env }) {
+  const guarded = createGuard({ env, ttlMs: CACHE_MS });
   app.get("/api/changes", async (request, reply) => {
     const { since } = request.query;
     const sinceMs = since === undefined ? null : Date.parse(since);
@@ -28,14 +32,17 @@ module.exports = async function changes(app, { elastic }) {
       return reply.code(503).send({ error: UNAVAILABLE });
 
     try {
-      const now = new Date().toISOString();
-      const res = await withSpan("elasticsearch.search", "search", () =>
-        elastic.client.search(buildChangesRequest(sinceMs), {
-          requestTimeout: 3000,
-          maxRetries: 0,
-        }),
-      );
-      return { now, changes: res.hits.hits.map((hit) => hit._source) };
+      // "now" is part of the cached answer, so it can be up to 5 seconds old.
+      return await guarded(request, reply, String(sinceMs), async () => {
+        const now = new Date().toISOString();
+        const res = await withSpan("elasticsearch.search", "search", () =>
+          elastic.client.search(buildChangesRequest(sinceMs), {
+            requestTimeout: 3000,
+            maxRetries: 0,
+          }),
+        );
+        return { now, changes: res.hits.hits.map((hit) => hit._source) };
+      });
     } catch (err) {
       request.log.error(
         { status: err?.statusCode ?? null },

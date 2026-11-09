@@ -131,3 +131,18 @@ test("serves recent cached counts as stale and rejects cache older than ten minu
     Date.now = originalNow;
   }
 });
+
+test("after a failure the board backs off instead of calling Dash0 again", async () => {
+  let calls = 0;
+  const app = await make(ENV, async () => {
+    calls += 1;
+    return { ok: false, status: 503 };
+  });
+  assert.equal((await app.inject({ url: "/api/board" })).statusCode, 502);
+  const afterFirst = calls;
+  assert.ok(afterFirst > 0);
+  for (let i = 0; i < 5; i++) {
+    assert.equal((await app.inject({ url: "/api/board" })).statusCode, 502);
+  }
+  assert.equal(calls, afterFirst, "no upstream calls while backing off");
+});
