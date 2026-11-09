@@ -83,6 +83,18 @@ function cached(ttl, load) {
 module.exports = async function demo(app, { elastic, env, fetch: fetchImpl }) {
   const log = app.log;
   const stamp = () => new Date().toISOString();
+  // Last good value per cluster stat. When Prometheus answers with no series (a
+  // kube-state-metrics pod moving, a scrape gap), the projector shows the last
+  // good number marked stale with its time, not a blank tile. Memory only.
+  const lastGood = new Map();
+  const orLastGood = (name, s) => {
+    if (s.status === "live") {
+      lastGood.set(name, { value: s.value, as_of: stamp() });
+      return s;
+    }
+    const prev = lastGood.get(name);
+    return prev ? { value: prev.value, status: "stale", as_of: prev.as_of } : s;
+  };
 
   async function loadElastic() {
     if (!elastic.configured) {
@@ -161,16 +173,16 @@ module.exports = async function demo(app, { elastic, env, fetch: fetchImpl }) {
     const [ready, restarts, memory, changes] = await Promise.all([
       stat(log, "pods_ready", () =>
         prom(`sum(kube_pod_status_ready{${ns},condition="true"})`),
-      ),
+      ).then((s) => orLastGood("pods_ready", s)),
       stat(log, "restarts", () =>
         prom(`sum(kube_pod_container_status_restarts_total{${ns}})`),
-      ),
+      ).then((s) => orLastGood("restarts", s)),
       stat(log, "memory_mib", async () => {
         const v = await prom(
           `sum(container_memory_working_set_bytes{${ns},container!=""})`,
         );
         return v === null ? null : Math.round(v / 1048576);
-      }),
+      }).then((s) => orLastGood("memory_mib", s)),
       stat(log, "schedule_changes", async () => {
         if (!elastic.configured) throw new Error("no elastic");
         const res = await elastic.client.count(

@@ -157,3 +157,26 @@ test("button presses count only mode=live", async () => {
     .find((x) => x.includes("grace_requests_total"));
   assert.match(q, /grace_requests_total\{mode="live"\}/);
 });
+
+test("a cluster stat with no series keeps its last good value, marked stale with its time", async () => {
+  let empty = false;
+  const fetch = router({ radar: () => (empty ? json({ data: { result: [] } }) : prom(3)) });
+  const app = await make(fetch);
+  const first = (await app.inject({ url: "/api/demo" })).json();
+  assert.equal(first.radar.stats.pods_ready.status, "live");
+  empty = true;
+  const realNow = Date.now;
+  Date.now = () => realNow() + 60_000; // past the response cache
+  try {
+    const b = (await app.inject({ url: "/api/demo" })).json();
+    for (const name of ["pods_ready", "restarts", "memory_mib"]) {
+      const s = b.radar.stats[name];
+      assert.equal(s.status, "stale", name);
+      assert.equal(typeof s.as_of, "string", name);
+    }
+    assert.equal(b.radar.stats.pods_ready.value, 3);
+    assert.equal(b.radar.stats.restarts.value, 3);
+  } finally {
+    Date.now = realNow;
+  }
+});
