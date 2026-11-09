@@ -49,7 +49,10 @@ export function useSimilar(talk: PlanItem | undefined): string | null {
         const first = b?.results?.[0];
         setLine(first ? { id, title: first.title } : null);
       })
-      .catch((error: unknown) => reportRequestFailure("/api/similar", error));
+      .catch(() => {
+        // Not reported on purpose: this request follows a button press, so a
+        // failure report would reveal the press. Offline or slow just means no line.
+      });
   }, [id, after]);
   return line && line.id === id ? line.title : null;
 }
@@ -77,7 +80,11 @@ export function useAlternatives(notices: { changeId: string; talkId: string }[],
           const results = b?.results ?? [];
           if (results.length) setFound((old) => ({ ...old, [changeId]: results }));
         })
-        .catch((error: unknown) => reportRequestFailure("/api/similar", error));
+        .catch(() => {
+          // Not reported on purpose: /api/similar stays out of telemetry because it
+          // also runs right after a break press (see useSimilar). Offline or slow just
+          // means no alternatives are shown.
+        });
     }
   }, [key, bufferMinutes]);
   return found;

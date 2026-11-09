@@ -66,19 +66,19 @@ test("/api/similar searches once, then serves repeats from cache", async () => {
 });
 
 test("/api/similar shares its request budget across a cold lookup and search", async () => {
-  let getTimeout;
-  let searchTimeout;
+  let getOptions;
+  let searchOptions;
   let getElapsed;
   const app = appWith({
     get: async (_request, options) => {
-      getTimeout = options.requestTimeout;
+      getOptions = options;
       const started = Date.now();
       await new Promise((resolve) => setTimeout(resolve, 30));
       getElapsed = Date.now() - started;
       return { _source: { title: "Mesh", abstract: "about meshes" } };
     },
     search: async (_request, options) => {
-      searchTimeout = options.requestTimeout;
+      searchOptions = options;
       return { hits: { hits: [] } };
     },
   });
@@ -86,9 +86,11 @@ test("/api/similar shares its request budget across a cold lookup and search", a
   const res = await app.inject({ url: "/api/similar?talk_id=1" });
   assert.equal(res.statusCode, 200);
   // Budget is 800ms; the clock may have ticked a few ms before the call.
-  assert.ok(getTimeout <= 800 && getTimeout >= 790, `getTimeout ${getTimeout}`);
-  assert.ok(searchTimeout > 0);
-  assert.ok(searchTimeout <= getTimeout - getElapsed + 2);
+  assert.ok(getOptions.requestTimeout <= 800 && getOptions.requestTimeout >= 790, `getTimeout ${getOptions.requestTimeout}`);
+  assert.ok(searchOptions.requestTimeout > 0);
+  assert.ok(searchOptions.requestTimeout <= getOptions.requestTimeout - getElapsed + 2);
+  assert.deepEqual(getOptions.openTelemetry, { enabled: false });
+  assert.deepEqual(searchOptions.openTelemetry, { enabled: false });
 });
 
 test("/api/similar explains when no similar results are available", async () => {

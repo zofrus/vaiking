@@ -22,6 +22,28 @@ export function reportRequestFailure(endpoint: string, error: unknown): void {
     });
 }
 
+export function reportInstallEvent(name: string, attributes: Record<string, string>): void {
+  void import("@dash0/sdk-web")
+    .then(({ sendEvent }) => {
+      sendEvent(name, { title: name, attributes });
+    })
+    .catch(() => {
+      // Telemetry must never break the page.
+    });
+}
+
+export function reportInstallError(error: unknown): void {
+  const reportedError = error instanceof Error ? error : new Error("Install prompt failed");
+  console.error("Install prompt failed", error);
+  void import("@dash0/sdk-web")
+    .then(({ reportError }) => {
+      reportError(reportedError, { attributes: { "app.feature": "install_prompt" } });
+    })
+    .catch(() => {
+      // Telemetry must never break the page.
+    });
+}
+
 export async function initTelemetry(): Promise<void> {
   try {
     const res = await fetch("/api/public-config");
@@ -37,10 +59,11 @@ export async function initTelemetry(): Promise<void> {
         authToken: rum.token,
         ...(rum.dataset ? { dataset: rum.dataset } : {}),
       },
-      // The grace-count beacon and search requests never get a span or trace
-      // header, so the button press and the words typed in search stay out of
-      // browser telemetry.
-      ignoreUrls: [/\/api\/grace(?:[?#]|$)/, /\/api\/search(?:[?#/]|$)/],
+      // The grace-count beacon, search and similar-talk requests never get a
+      // span or trace header, so the button press and the words typed in
+      // search stay out of browser telemetry. /api/similar fires right after
+      // a press, so its timing alone could reveal one.
+      ignoreUrls: [/\/api\/grace(?:[?#]|$)/, /\/api\/search(?:[?#/]|$)/, /\/api\/similar(?:[?#/]|$)/],
       sessionInactivityTimeoutMillis: 30 * 60 * 1000,
       sessionTerminationTimeoutMillis: 4 * 60 * 60 * 1000,
     });
