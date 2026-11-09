@@ -6,6 +6,7 @@ kind: Kustomization
 namespace: team-vaiking
 resources:
   - deployment.yaml
+  - reconciler.yaml
   - service.yaml
   - httproute.yaml
 images:
