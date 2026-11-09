@@ -35,19 +35,18 @@ self.addEventListener("fetch", (event) => {
   if (req.mode === "navigate") {
     event.respondWith(
       caches.match("/").then((hit) => {
-        const refresh = fetch("/").then(async (res) => {
-          if (res.ok) {
-            const copy = res.clone();
-            const html = await res.clone().text();
-            const urls = [...html.matchAll(/(?:src|href)="(\/[^"]+\.(?:js|css|svg|png|webmanifest))"/g)].map((m) => m[1]);
-            const c = await caches.open(CACHE);
-            await c.addAll(urls);
-            await c.put("/", copy);
-          }
-          return res;
+        const network = fetch("/");
+        const update = network.then(async (res) => {
+          if (!res.ok) return;
+          const copy = res.clone();
+          const html = await res.clone().text();
+          const urls = [...html.matchAll(/(?:src|href)="(\/[^"]+\.(?:js|css|svg|png|webmanifest))"/g)].map((m) => m[1]);
+          const c = await caches.open(CACHE);
+          await c.addAll(urls);
+          await c.put("/", copy);
         });
-        event.waitUntil(refresh.catch(() => {}));
-        return hit || refresh;
+        event.waitUntil(update.catch(() => {}));
+        return hit || network;
       }),
     );
     return;
