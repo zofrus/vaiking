@@ -20,8 +20,12 @@ function buildChangesRequest(sinceMs) {
   };
 }
 
-module.exports = async function changes(app, { elastic, env, totalLimiter }) {
-  const guarded = createGuard({ env, ttlMs: CACHE_MS, totalLimiter });
+// Every phone polls with its own since=, so polls rarely share a cache entry and
+// a room of phones would use up the total that search and similar share. Changes
+// get a total of their own instead (same size): the query is a small range
+// lookup, and the per-client limit still applies.
+module.exports = async function changes(app, { elastic, env }) {
+  const guarded = createGuard({ env, ttlMs: CACHE_MS });
   app.get("/api/changes", async (request, reply) => {
     const { since } = request.query;
     const sinceMs = since === undefined ? null : Date.parse(since);

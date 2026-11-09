@@ -246,7 +246,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.75rem;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.75rem;
   min-height: 2.75rem;
 }
 .brand {
@@ -256,6 +257,7 @@
   font-size: 1rem;
   font-weight: 600;
   letter-spacing: -0.01em;
+  white-space: nowrap;
 }
 .brand-mark {
   display: flex;
@@ -282,6 +284,7 @@
   font-size: 0.75rem;
   font-weight: 600;
   line-height: 1;
+  white-space: nowrap;
 }
 .app-header p[aria-live]:not(.sr-only)::before {
   content: "";

@@ -7,6 +7,7 @@ import { PlanSection } from "./Plan";
 import { AddToCalendar } from "./AddToCalendar";
 import { DayViewSection } from "./DayView";
 import { InstallPrompt } from "./InstallPrompt";
+import { FocusToggle } from "./FocusToggle";
 import { OfflineChip } from "./OfflineChip";
 import { loadBreak, loadBuffer, loadPlan, saveBreak, saveBuffer, savePlan } from "./lib/plan";
 import { isDrill, isPreview, now, samplePlan, useSample } from "./lib/clock";
@@ -248,8 +249,8 @@ function Calm({
         </span>
       </div>
 
-      {/* mount: FocusToggle (calm) */}
       {/* mount: Sticker */}<Sticker />
+      <FocusToggle />{/* mount: FocusToggle (calm) */}
       <div className="panel"><ReplayTour /></div>{/* mount: ReplayTour */}
       {/* mount: VenueHelp */}<VenueHelp />
       {/* mount: Breathe */}<Breathe />
@@ -458,8 +459,8 @@ export default function App() {
             </span>
             Grace Period
           </h1>
-          <span className="flex items-center gap-2">
-            {/* mount: FocusToggle (header) */}
+          <span className="ml-auto flex flex-wrap items-center justify-end gap-x-3 gap-y-1">
+            <FocusToggle compact />{/* mount: FocusToggle (header) */}
             <OfflineChip />{/* mount: OfflineChip */}
           </span>
         </header>
