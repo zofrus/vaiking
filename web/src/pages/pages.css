@@ -357,10 +357,12 @@
   display: flex;
   align-items: flex-end;
   min-height: 1em;
-  font-size: clamp(1.5rem, 26cqw, 3rem);
+  /* A mono digit is about 0.6em wide: --gp-len characters fill the tile at
+     100cqw / (len * 0.64), capped at 3rem. Wrapping is only a last resort. */
+  font-size: clamp(1.25rem, calc(100cqw / (var(--gp-len, 3) * 0.64)), 3rem);
   font-weight: 500;
   line-height: 1;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.02em;
   overflow-wrap: anywhere;
 }
 .gp-value-word {

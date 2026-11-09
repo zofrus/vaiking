@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import DemoQr from "./DemoQr";
 import { reportRequestFailure } from "../telemetry";
 import "./pages.css";
@@ -140,13 +140,17 @@ function StatBlock({
   loading: boolean;
 }) {
   const live = stat?.status === "live" && stat.value !== null;
+  const text = live ? stat.value!.toLocaleString("en-US") : "";
+  // The number's size follows its length, so a long count shrinks to fit its
+  // tile instead of wrapping or running past it (see .gp-value).
+  const fit = { "--gp-len": Math.max(3, text.length) } as CSSProperties;
   return (
     <div className="gp-tile">
       <p className="gp-tile-label gp-muted">{label}</p>
       {/* The dash holds the number's height while loading, so nothing jumps. */}
-      <p className="gp-value gp-mono">
+      <p className="gp-value gp-mono" style={fit}>
         {live ? (
-          stat.value!.toLocaleString("en-US")
+          text
         ) : loading ? (
           <>
             <span aria-hidden="true">—</span>
