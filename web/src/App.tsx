@@ -39,11 +39,17 @@ function Footer() {
   );
 }
 
-function Calm({ onCard }: { onCard: () => void }) {
+function Calm({ onCard, showCard }: { onCard: () => void; showCard: boolean }) {
   const heading = useRef<HTMLHeadingElement>(null);
+  const cardButton = useRef<HTMLButtonElement>(null);
+  const wasShowingCard = useRef(showCard);
   useEffect(() => {
     heading.current?.focus();
   }, []);
+  useEffect(() => {
+    if (wasShowingCard.current && !showCard) cardButton.current?.focus();
+    wasShowingCard.current = showCard;
+  }, [showCard]);
 
   const byVenue = (venue: string) => restrooms.filter((r) => r.venue === venue);
 
@@ -72,7 +78,7 @@ function Calm({ onCard }: { onCard: () => void }) {
         <p className="mt-1 text-ink-soft">
           Estimated. Confirm routes with event staff.
         </p>
-        <button type="button" onClick={onCard} className="staff-button mt-6">
+        <button ref={cardButton} type="button" onClick={onCard} className="staff-button mt-6">
           Show this to staff
         </button>
         <p className="mt-3 text-ink-soft">
@@ -178,7 +184,7 @@ export default function App() {
               </p>
             </section>
           ) : (
-            <Calm onCard={() => go("card")} />
+            <Calm onCard={() => go("card")} showCard={showCard} />
           )}
         </main>
         <Footer />

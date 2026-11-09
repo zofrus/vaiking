@@ -35,8 +35,15 @@ self.addEventListener("fetch", (event) => {
   if (req.mode === "navigate") {
     event.respondWith(
       caches.match("/").then((hit) => {
-        const refresh = fetch("/").then((res) => {
-          if (res.ok) caches.open(CACHE).then((c) => c.put("/", res.clone()));
+        const refresh = fetch("/").then(async (res) => {
+          if (res.ok) {
+            const copy = res.clone();
+            const html = await res.clone().text();
+            const urls = [...html.matchAll(/(?:src|href)="(\/[^"]+\.(?:js|css|svg|png|webmanifest))"/g)].map((m) => m[1]);
+            const c = await caches.open(CACHE);
+            await c.addAll(urls);
+            await c.put("/", copy);
+          }
           return res;
         });
         event.waitUntil(refresh.catch(() => {}));
@@ -51,7 +58,10 @@ self.addEventListener("fetch", (event) => {
     event.respondWith(
       fetch(req)
         .then((res) => {
-          if (res.ok) caches.open(CACHE).then((c) => c.put(req, res.clone()));
+          if (res.ok) {
+            const copy = res.clone();
+            event.waitUntil(caches.open(CACHE).then((c) => c.put(req, copy)));
+          }
           return res;
         })
         .catch(() => caches.match(req).then((hit) => hit || Response.error())),
@@ -66,7 +76,10 @@ self.addEventListener("fetch", (event) => {
         (hit) =>
           hit ||
           fetch(req).then((res) => {
-            if (res.ok) caches.open(CACHE).then((c) => c.put(req, res.clone()));
+            if (res.ok) {
+              const copy = res.clone();
+              event.waitUntil(caches.open(CACHE).then((c) => c.put(req, copy)));
+            }
             return res;
           }),
       ),

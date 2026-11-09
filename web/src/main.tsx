@@ -15,7 +15,8 @@ createRoot(document.getElementById("root")!).render(
 // Register after load so it never competes with the first render.
 if ("serviceWorker" in navigator && import.meta.env.PROD) {
   addEventListener("load", () => {
-    navigator.serviceWorker.register("/sw.js").catch(() => {
+    navigator.serviceWorker.register("/sw.js").catch((error: unknown) => {
+      console.warn("Service worker registration failed", error);
       // Offline support is a bonus. The app works without it.
     });
   });
