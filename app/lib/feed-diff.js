@@ -32,16 +32,16 @@ function kindOf(before, after) {
 }
 
 // Stable across retries, so a crash between writes cannot record a change twice.
-function changeId(talkId, kind, before, after) {
+function changeId(talkId, kind, before, after, storedHash) {
   return createHash("sha256")
-    .update(JSON.stringify([talkId, kind, before, after]))
+    .update(JSON.stringify([talkId, kind, storedHash ?? null, before, after]))
     .digest("hex")
     .slice(0, 24);
 }
 
-function change(talkId, kind, before, after) {
+function change(talkId, kind, before, after, storedHash) {
   return {
-    id: changeId(talkId, kind, before, after),
+    id: changeId(talkId, kind, before, after, storedHash),
     talk_id: talkId,
     kind,
     before,
@@ -75,19 +75,22 @@ function diffTalks(current, docs) {
     upserts.push(doc);
     const after = snapshot(doc);
     if (!stored) {
-      changes.push(change(doc.id, "added", null, after));
+      changes.push(change(doc.id, "added", null, after, null));
       continue;
     }
     const before = snapshot(stored);
     const kind = kindOf(before, after);
-    if (kind) changes.push(change(doc.id, kind, before, after));
+    if (kind)
+      changes.push(change(doc.id, kind, before, after, stored.content_hash));
   }
 
   const removals = [];
   for (const [id, stored] of current) {
     if (incoming.has(id)) continue;
     removals.push(id);
-    changes.push(change(id, "cancelled", snapshot(stored), null));
+    changes.push(
+      change(id, "cancelled", snapshot(stored), null, stored.content_hash),
+    );
   }
 
   return { changes, upserts, removals };

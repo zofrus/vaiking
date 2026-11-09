@@ -105,8 +105,17 @@ async function applyDiff({ client, diff, now, countChange }) {
       if (upserts.has(entry.talk_id))
         await writeTalk(client, upserts.get(entry.talk_id));
       if (removals.has(entry.talk_id)) await removeTalk(client, entry.talk_id);
-    } catch {
+    } catch (err) {
       failed += 1;
+      trace.getActiveSpan()?.recordException({ name: err?.name ?? "Error" });
+      console.error(
+        JSON.stringify({
+          msg: "reconcile write failed",
+          talk_id: entry.talk_id,
+          error: err?.name ?? "Error",
+          status: err?.statusCode ?? null,
+        }),
+      );
     }
     upserts.delete(entry.talk_id);
   }
@@ -115,8 +124,17 @@ async function applyDiff({ client, diff, now, countChange }) {
   for (const doc of upserts.values()) {
     try {
       await writeTalk(client, doc);
-    } catch {
+    } catch (err) {
       failed += 1;
+      trace.getActiveSpan()?.recordException({ name: err?.name ?? "Error" });
+      console.error(
+        JSON.stringify({
+          msg: "reconcile write failed",
+          talk_id: doc.id,
+          error: err?.name ?? "Error",
+          status: err?.statusCode ?? null,
+        }),
+      );
     }
   }
   return { recorded, failed };

@@ -2,6 +2,7 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const { reconcileOnce } = require("../reconciler");
 const { normalize } = require("../lib/feed");
+const { diffTalks } = require("../lib/feed-diff");
 
 const NOW = "2026-11-10T20:00:00.000Z";
 
@@ -81,6 +82,21 @@ function withChange(id, overrides) {
     doc.id === id ? { ...doc, content_hash: "new-hash", ...overrides } : doc,
   );
 }
+
+test("change ids deduplicate retries but distinguish repeated transitions from different stored hashes", () => {
+  const before = talk("7", { content_hash: "stored-hash" });
+  const after = talk("7", {
+    content_hash: "incoming-hash",
+    room: "C | Level 3 | 355F",
+  });
+  const first = diffTalks(new Map([[before.id, before]]), [after]).changes[0];
+  const retry = diffTalks(new Map([[before.id, before]]), [after]).changes[0];
+  const laterBefore = { ...before, content_hash: "later-stored-hash" };
+  const later = diffTalks(new Map([[before.id, laterBefore]]), [after]).changes[0];
+
+  assert.equal(first.id, retry.id);
+  assert.notEqual(first.id, later.id);
+});
 
 test("an unchanged feed writes nothing", async () => {
   const client = fakeClient();
@@ -190,9 +206,25 @@ test("an empty index waits for ingest instead of adding every talk", async () =>
 test("a retry after a failed talk write records the change once", async () => {
   const docs = withChange("7", { room: "C" });
   const failing = fakeClient({ failTalkWrites: true });
-  const first = await run(failing, docs);
+  const errors = [];
+  const originalError = console.error;
+  let first;
+  console.error = (message) => errors.push(JSON.parse(message));
+  try {
+    first = await run(failing, docs);
+  } finally {
+    console.error = originalError;
+  }
   assert.equal(first.failed, 1);
   assert.equal(failing.state.changes.size, 1);
+  assert.deepEqual(errors, [
+    {
+      msg: "reconcile write failed",
+      talk_id: "7",
+      error: "Error",
+      status: null,
+    },
+  ]);
 
   const counted = [];
   const client = fakeClient();
@@ -201,6 +233,31 @@ test("a retry after a failed talk write records the change once", async () => {
   assert.equal(client.state.changes.size, 1);
   assert.deepEqual(counted, []);
   assert.deepEqual(client.state.talkWrites, ["7"]);
+});
+
+test("a failed update without a schedule change is logged", async () => {
+  const errors = [];
+  const originalError = console.error;
+  console.error = (message) => errors.push(JSON.parse(message));
+  let result;
+  try {
+    result = await run(
+      fakeClient({ failTalkWrites: true }),
+      withChange("7", { abstract: "Rewritten" }),
+    );
+  } finally {
+    console.error = originalError;
+  }
+
+  assert.equal(result.failed, 1);
+  assert.deepEqual(errors, [
+    {
+      msg: "reconcile write failed",
+      talk_id: "7",
+      error: "Error",
+      status: null,
+    },
+  ]);
 });
 
 test("normalize keeps talks, drops breaks and hashes deterministically", () => {
