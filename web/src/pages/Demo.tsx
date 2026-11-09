@@ -1,5 +1,5 @@
 import { useEffect, useState, type CSSProperties } from "react";
-import DemoQr from "./DemoQr";
+import DemoShare from "./DemoShare";
 import { reportRequestFailure } from "../telemetry";
 import "./pages.css";
 
@@ -246,18 +246,14 @@ export default function Demo() {
         </div>
       </section>
       <div className="gp-demo-tools">
-        {/* The QR sits in the header so the four columns fit a 1280x800
-            projector without scrolling. The brand text repeats the h1, so
-            screen readers skip it. */}
+        {/* The brand text repeats the h1, so screen readers skip it. The QR
+            card is the last item in the grid below. */}
         <header className="gp-header">
           <p className="gp-brand" aria-hidden="true">
             <Mark />
             Grace Period
             <span className="gp-muted">Live demo</span>
           </p>
-          <div className="gp-qr">
-            <DemoQr />
-          </div>
         </header>
         <div className="gp-demo-grid">
           {COLUMNS.map((col) => {
@@ -325,6 +321,7 @@ export default function Demo() {
               </section>
             );
           })}
+          <DemoShare />{/* mount: DemoShare */}
         </div>
       </div>
     </main>

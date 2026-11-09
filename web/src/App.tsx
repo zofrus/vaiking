@@ -16,6 +16,9 @@ import { formatTime, reconcile, type Notice, type PlanItem } from "./lib/reconci
 import { closestReachable } from "./lib/reach";
 import { placeLabel } from "./lib/place";
 import { Sticker } from "./Sticker";
+import { ShareQR } from "./ShareQR";
+import { ChangesChecked } from "./ChangesChecked";
+import { nextRoom } from "./lib/nextRoom";
 import { BreakBar } from "./BreakBar";
 import { ReplayTour, Tour, TourInvite } from "./Tour";
 import { VenueHelp } from "./VenueHelp";
@@ -148,7 +151,7 @@ function Footer({ showReplay }: { showReplay: boolean }) {
       <a className="self-start font-medium underline" href="/board">
         Organizer board
       </a>
-      {/* mount: ShareQR */}
+      <div className="mt-2"><ShareQR /></div>{/* mount: ShareQR */}
     </footer>
   );
 }
@@ -262,6 +265,9 @@ function Calm({
 
       {planResult}
 
+      {/* Always visible on calm: the one place the Focus switch is shown here. */}
+      <div className="panel"><FocusToggle /></div>{/* mount: FocusToggle (calm) */}
+
       {/* Everything optional sits behind one disclosure, under the essentials. */}
       <details className="panel more-support">
         <summary>More support</summary>
@@ -270,7 +276,6 @@ function Calm({
           {/* mount: VenueHelp */}<VenueHelp />
           {/* mount: Breathe */}<Breathe />
           {/* mount: SoundPanel */}<SoundPanel />
-          <FocusToggle />{/* mount: FocusToggle (calm) */}
           <div><ReplayTour /></div>{/* mount: ReplayTour */}
         </div>
       </details>
@@ -284,7 +289,7 @@ function Calm({
 
 // Held up to someone else, so it is sized for arm's length: vmin keeps the
 // words large in portrait and still on screen when the phone is turned.
-function StaffCard({ onClose }: { onClose: () => void }) {
+function StaffCard({ onClose, nextRoom }: { onClose: () => void; nextRoom: string | null }) {
   const heading = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
     heading.current?.focus();
@@ -305,7 +310,7 @@ function StaffCard({ onClose }: { onClose: () => void }) {
     >
       {/* Auto margins centre the words but drop to 0 if they overflow, so the
           first line can always be scrolled back into view. */}
-      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-6 py-8">
+      <div tabIndex={0} className="flex min-h-0 flex-1 flex-col overflow-y-auto px-6 py-8">
         <div className="my-auto">
           <h2
             id="card-h"
@@ -321,11 +326,16 @@ function StaffCard({ onClose }: { onClose: () => void }) {
           <p className="mt-[6vmin] text-[clamp(1.5rem,7.5vmin,2.75rem)] font-semibold leading-tight">
             {quietRoom.venue}
           </p>
+          {nextRoom && (
+            <p className="mt-[6vmin] border-t-2 border-black pt-[4vmin] text-[clamp(1.5rem,7.5vmin,2.75rem)] font-semibold leading-tight">
+              Please point me to: {nextRoom}
+            </p>
+          )}
         </div>
       </div>
       <div className="border-t-2 border-black px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
         {/* mount: EmergencyCard (staff card) */}<div className="mb-3"><EmergencyButton /></div>
-        {/* mount: ReadAloud */}<div className="mb-3 text-black"><ReadAloud text={`Please point me to ${quietRoom.name}, Level ${quietRoom.level}. I may not be able to talk right now. ${quietRoom.venue}.`} /></div>
+        {/* mount: ReadAloud */}<div className="mb-3 text-black"><ReadAloud text={`Please point me to ${quietRoom.name}, Level ${quietRoom.level}. I may not be able to talk right now. ${quietRoom.venue}.${nextRoom ? ` Please point me to: ${nextRoom}.` : ""}`} /></div>
         <button type="button" onClick={onClose} className="close-button">
           Close card
         </button>
@@ -518,6 +528,7 @@ export default function App() {
             </div>
             <PlanSection plan={plan} setPlan={setPlan} buffer={buffer} setBuffer={setBuffer} />
             <DayViewSection plan={plan} changes={changes} result={result} now={now()} bufferMinutes={buffer} />
+            {plan.length > 0 && <ChangesChecked />}
             <AddToCalendar talks={[...result.kept, ...result.dropped]} />{/* mount: AddToCalendar */}
             </>
           ) : (
@@ -561,7 +572,7 @@ export default function App() {
         <Footer showReplay={view !== "calm"} />
       </div>
 
-      {showCard && <StaffCard onClose={() => go("calm")} />}
+      {showCard && <StaffCard onClose={() => go("calm")} nextRoom={nextRoom(result.kept, now())} />}
     </div>
   );
 }

@@ -10,13 +10,46 @@ function memoryStore() {
   };
 }
 
+const BUILD_A = "https://grace.test/assets/index-AAAA.js";
+const BUILD_B = "https://grace.test/assets/index-BBBB.js";
+
 describe("reloadOnceForNewBuild", () => {
-  it("reloads the first time and never again in the same tab", () => {
+  it("reloads once for a build and never again for that same build", () => {
     const store = memoryStore();
     const reload = vi.fn();
-    expect(reloadOnceForNewBuild(() => store, reload)).toBe(true);
-    expect(reloadOnceForNewBuild(() => store, reload)).toBe(false);
+    expect(reloadOnceForNewBuild(() => store, reload, BUILD_A)).toBe(true);
+    expect(reloadOnceForNewBuild(() => store, reload, BUILD_A)).toBe(false);
+    expect(reloadOnceForNewBuild(() => store, reload, BUILD_A)).toBe(false);
     expect(reload).toHaveBeenCalledTimes(1);
+  });
+
+  it("reloads once more after a second deploy in the same tab", () => {
+    const store = memoryStore();
+    const reload = vi.fn();
+    expect(reloadOnceForNewBuild(() => store, reload, BUILD_A)).toBe(true);
+    // A later deploy removes build B's chunks while the tab is still open.
+    expect(reloadOnceForNewBuild(() => store, reload, BUILD_B)).toBe(true);
+    expect(reload).toHaveBeenCalledTimes(2);
+  });
+
+  it("never loops when a rolling deploy serves two builds in turn", () => {
+    const store = memoryStore();
+    const reload = vi.fn();
+    const results = [BUILD_A, BUILD_B, BUILD_A, BUILD_B, BUILD_A].map((b) =>
+      reloadOnceForNewBuild(() => store, reload, b),
+    );
+    expect(results).toEqual([true, true, false, false, false]);
+    expect(reload).toHaveBeenCalledTimes(2);
+  });
+
+  it("treats a damaged or old-format value as no builds yet, so it still recovers", () => {
+    for (const old of ["1", "{not json", '{"a":1}']) {
+      const store = memoryStore();
+      store.setItem("grace-reloaded-builds-v1", old);
+      const reload = vi.fn();
+      expect(reloadOnceForNewBuild(() => store, reload, BUILD_A)).toBe(true);
+      expect(reloadOnceForNewBuild(() => store, reload, BUILD_A)).toBe(false);
+    }
   });
 
   it("does not reload when storage is blocked, since nothing could stop a loop", () => {
@@ -24,7 +57,7 @@ describe("reloadOnceForNewBuild", () => {
     const blocked = () => {
       throw new Error("SecurityError");
     };
-    expect(reloadOnceForNewBuild(blocked, reload)).toBe(false);
+    expect(reloadOnceForNewBuild(blocked, reload, BUILD_A)).toBe(false);
     expect(reload).not.toHaveBeenCalled();
   });
 });

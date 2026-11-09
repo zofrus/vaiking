@@ -40,65 +40,137 @@
 .focus-switch-state { min-width: 2rem; color: var(--color-ink-soft); }
 .focus-hint { margin: 0; font-size: 0.875rem; color: var(--color-ink-soft); }
 
-/* Everything below applies only when focus mode is on. */
-[data-focus="on"] {
-  font-size: 112%;
+/* ---- Focus mode: a clearly calmer screen ----
+   Only html[data-focus="on"] rules below. They use classes, ARIA attributes and
+   the --gp-* tokens, never markup edits, so the redesign can restyle freely. */
+
+.focus-on-line {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-ink, #0f2328);
 }
-[data-focus="on"] body {
-  line-height: 1.8;
+
+html[data-focus="on"] {
+  font-size: 118%;
+  /* Every Tailwind gap, margin and padding is a multiple of this: 1.5x the air. */
+  --spacing: 0.375rem;
+  /* Flat: cards sit on the page colour. The calm view keeps its own ground. */
+  --gp-surface: var(--gp-bg, var(--color-ground));
+  --color-panel: var(--gp-bg, var(--color-ground));
+}
+html[data-focus="on"] [data-view] {
+  --gp-surface: var(--gp-bg, var(--color-ground));
+}
+html[data-focus="on"] body {
+  line-height: 1.75;
   letter-spacing: 0.01em;
 }
-[data-focus="on"] *,
-[data-focus="on"] *::before,
-[data-focus="on"] *::after {
+
+/* No motion, anywhere. */
+html[data-focus="on"] *,
+html[data-focus="on"] *::before,
+html[data-focus="on"] *::after {
   animation: none !important;
   transition: none !important;
   scroll-behavior: auto !important;
 }
-/* Fewer things on screen: anything marked secondary goes. */
-[data-focus="on"] .gp-secondary {
+
+/* No shadows, gradients or glows. Focus rings are drawn with outline, so they stay. */
+html[data-focus="on"] *,
+html[data-focus="on"] *::before,
+html[data-focus="on"] *::after {
+  box-shadow: none !important;
+  text-shadow: none !important;
+  background-image: none !important;
+}
+
+/* Fewer things: anything marked secondary, plus the decoration. */
+html[data-focus="on"] .gp-secondary,
+html[data-focus="on"] .gp-credit,
+html[data-focus="on"] .brand-mark,
+html[data-focus="on"] .gp-icon,
+html[data-focus="on"] .break-icon,
+html[data-focus="on"] .c-ring,
+html[data-focus="on"] svg[aria-hidden="true"]:not(footer svg) {
   display: none !important;
 }
-/* One column, more air. */
-[data-focus="on"] main,
-[data-focus="on"] header {
+/* Home shows the break button, Your day and the search box, plus any
+   "what changed" notice. The intro, tour invite and calendar panel step aside. */
+html[data-focus="on"] [aria-labelledby="home-h"],
+html[data-focus="on"] [role="group"][aria-label="Tour"],
+html[data-focus="on"] [aria-labelledby="cal-h"] {
+  display: none !important;
+}
+
+/* One column, a calm measure. */
+html[data-focus="on"] main,
+html[data-focus="on"] header {
   max-width: 36rem;
 }
-[data-focus="on"] main {
-  display: flex;
-  flex-direction: column;
-  gap: 2.25rem;
-}
-[data-focus="on"] main ul > li + li {
-  margin-top: 0.5rem;
-}
-[data-focus="on"] [class*="grid-cols"],
-[data-focus="on"] .grid {
+html[data-focus="on"] [class*="grid-cols"],
+html[data-focus="on"] .grid {
   grid-template-columns: 1fr !important;
 }
-[data-focus="on"] .panel {
-  padding: 1.25rem;
+
+/* Edges you can see: flat surfaces get a plain line, controls a strong one. */
+html[data-focus="on"] .panel,
+html[data-focus="on"] .notice,
+html[data-focus="on"] .gp-card,
+html[data-focus="on"] .gp-notice {
+  border: 1px solid var(--gp-line, var(--color-line));
 }
+html[data-focus="on"] button:not(.focus-switch):not(.link-button),
+html[data-focus="on"] input:not([type="checkbox"]):not([type="radio"]),
+html[data-focus="on"] select,
+html[data-focus="on"] textarea,
+html[data-focus="on"] summary {
+  border: 2px solid var(--gp-ink, var(--color-ink));
+}
+
+html[data-focus="on"] summary {
+  padding: 0.75rem 1rem;
+  min-height: 2.75rem;
+}
+
+/* Links read as links without relying on colour. */
+html[data-focus="on"] a:not(.skip-link) {
+  text-decoration: underline !important;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 2px;
+}
+
 /* Stronger focus rings. */
-[data-focus="on"] :focus-visible {
-  outline: 5px solid #1d4ed8;
+html[data-focus="on"] :focus-visible {
+  outline: 4px solid var(--gp-accent, #1d4ed8);
   outline-offset: 4px;
-  box-shadow: 0 0 0 9px #fff;
 }
 
 /* The staff card is already as large and plain as it can be. Its sizes are in rem,
-   so the root size goes back to normal while the card is open. Otherwise its words
-   outgrow the screen and the card starts to scroll. */
+   so the root size and spacing go back to normal while the card is open. */
 html[data-focus="on"]:has([aria-modal="true"]) {
   font-size: 100%;
+  --spacing: 0.25rem;
 }
-[data-focus="on"] [aria-modal="true"] {
+html[data-focus="on"] [aria-modal="true"] {
   line-height: 1.1;
   letter-spacing: normal;
 }
 
-/* Easier-to-read font, inside Focus mode only. Atkinson Hyperlegible is bundled. */
-[data-focus="on"][data-font="readable"],
-[data-focus="on"][data-font="readable"] body {
+/* ---- Easier-to-read font, inside Focus mode only ----
+   Atkinson Hyperlegible is bundled. The variables cover the redesign's type
+   tokens; the universal rule covers anything that sets its own family. The
+   kubectl terminal stays monospaced. */
+html[data-focus="on"][data-font="readable"] {
+  --font-sans: "Atkinson Hyperlegible", system-ui, sans-serif;
+  --font-mono: "Atkinson Hyperlegible", system-ui, sans-serif;
   font-family: "Atkinson Hyperlegible", system-ui, sans-serif;
+}
+html[data-focus="on"][data-font="readable"] body {
+  line-height: 1.6;
+  word-spacing: 0.04em;
+}
+html[data-focus="on"][data-font="readable"] *:not(pre):not(pre *):not(.gp-term):not(.gp-term *) {
+  font-family: "Atkinson Hyperlegible", system-ui, sans-serif !important;
+  letter-spacing: 0.01em;
 }

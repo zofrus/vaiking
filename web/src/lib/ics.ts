@@ -1,7 +1,9 @@
 // Turns the planned talks into a calendar file (RFC 5545) the phone can import.
 // Pure: same plan in, same text out. Nothing is sent anywhere.
 //
-// Each talk becomes one event with two display alarms, 10 and 2 minutes before.
+// Each talk becomes one event with three display alarms, 20, 10 and 2 minutes before.
+// The 20 minute one says seating is first come, first served: that wording is the
+// official NA 2026 schedule page's own.
 // Times are written in UTC with a Z, converted from the plan's own offsets, so
 // Denver's clock change never matters.
 
@@ -70,6 +72,7 @@ export function buildIcs(plan: readonly PlanItem[], stamp: Date = new Date()): s
       `DTEND:${utc(t.ends_at)}`,
       `SUMMARY:${escapeText(t.title)}`,
       `LOCATION:${escapeText(t.room)}`,
+      ...alarm("-PT20M", `Popular rooms fill early. Seating is first come, first served: head to ${t.room} now.`),
       ...alarm("-PT10M", `Next talk in 10 minutes: ${t.title}, ${t.room}`),
       ...alarm("-PT2M", `Time to head to ${t.room}`),
       "END:VEVENT",
