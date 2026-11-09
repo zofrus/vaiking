@@ -97,6 +97,16 @@ function build(opts = {}) {
 
   const app = Fastify({ logger: opts.logger ?? false });
 
+  // On every response, pages and API alike. frame-ancestors is the only CSP
+  // directive, so the inline rollout guard in index.html and everything else on
+  // the page is unaffected; 'self' keeps /demo's same-origin iframe working.
+  app.addHook("onSend", async (request, reply, payload) => {
+    reply.header("x-content-type-options", "nosniff");
+    reply.header("referrer-policy", "strict-origin-when-cross-origin");
+    reply.header("content-security-policy", "frame-ancestors 'self'");
+    return payload;
+  });
+
   if (elastic.client) app.addHook("onClose", () => elastic.client.close());
 
   const probe = { logLevel: "warn" };

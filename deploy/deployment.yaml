@@ -37,6 +37,11 @@ spec:
           env:
             - name: TEAM_NAME
               value: "vaiking"
+            # Visitors through grace.effulgentpoint.com share one rate-limit bucket at
+            # this many times the per-client cap (app/lib/guard.js). 10 keeps one
+            # address there from using the whole Elasticsearch total.
+            - name: GRACE_PROXY_MULTIPLIER
+              value: "10"
             # Order matters: $(VAR) only expands variables defined earlier.
             # Every secretKeyRef is optional so pods start before the Secret exists.
             - name: DASH0_AUTH_TOKEN

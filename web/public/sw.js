@@ -11,7 +11,8 @@ async function saveShell(res) {
   const html = await res.clone().text();
   const urls = [
     ...html.matchAll(
-      /(?:src|href)="(\/[^"]+\.(?:js|css|svg|png|webmanifest))"/g,
+      // (?!\/): a protocol-relative "//host/x.js" is another site, never ours to cache.
+      /(?:src|href)="(\/(?!\/)[^"]+\.(?:js|css|svg|png|webmanifest))"/g,
     ),
   ].map((m) => m[1]);
   const cache = await caches.open(CACHE);
