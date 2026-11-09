@@ -11,7 +11,7 @@ export function QueryShape() {
   const { after, before } = shape.window;
   return (
     <details className="text-sm text-ink-soft">
-      <summary className="cursor-pointer font-semibold">How this was found</summary>
+      <summary className="min-h-6 cursor-pointer font-semibold">How this was found</summary>
       <ul className="mt-2 list-disc space-y-1 pl-5">
         <li>Searched by {shape.method}: the words in {shape.keyword_fields.join(", ")}, and the meaning of the talk.</li>
         <li>It started from {shape.seed}.</li>
