@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { formatTime, type PlanItem } from "./lib/reconcile";
 import { placeLabel } from "./lib/place";
+import "./day.css";
 
 interface Talk {
   id: string;
@@ -119,36 +120,40 @@ export function PlanSection({
   };
 
   return (
-    <section aria-labelledby="plan-h" className="space-y-4">
-      <h2 id="plan-h" className="text-2xl font-semibold">Your day</h2>
+    <section aria-labelledby="plan-h" className="gp-find space-y-4">
+      <h2 id="plan-h" className="gp-h">Find your talks</h2>
       <form onSubmit={search} className="space-y-3">
-        <label htmlFor="q" className="block text-lg font-semibold">What's the one thing you came for?</label>
-        <p id="q-hint" className="text-ink-soft">Any topic, project or speaker works.</p>
-        <input id="q" type="search" value={q} onChange={(e) => setQ(e.target.value)} aria-describedby="q-hint" className="field" autoComplete="off" />
+        <label htmlFor="q" className="gp-label">What's the one thing you came for?</label>
+        <p id="q-hint" className="gp-hint">Any topic, project or speaker works.</p>
+        <div className="gp-searchbox">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
+          <input id="q" type="search" value={q} onChange={(e) => setQ(e.target.value)} aria-describedby="q-hint" className="gp-input" autoComplete="off" />
+          <span className="gp-credit">Search by <b>Elastic</b></span>
+        </div>
         <div role="group" aria-labelledby="q-examples" className="flex flex-wrap items-center gap-3">
-          <span id="q-examples" className="text-ink-soft">Try one:</span>
+          <span id="q-examples" className="gp-hint">Try one:</span>
           {SEARCH_EXAMPLES.map((text) => (
-            <button key={text} type="button" aria-label={`Search for ${text}`} onClick={() => tryExample(text)} className="choice">
+            <button key={text} type="button" aria-label={`Search for ${text}`} onClick={() => tryExample(text)} className="gp-chip">
               {text}
             </button>
           ))}
         </div>
-        <button type="submit" className="staff-button">Search talks</button>
+        <button type="submit" className="gp-btn">Search talks</button>
       </form>
-      <p role="status" aria-live="polite" className="text-ink-soft">{status}</p>
+      <p role="status" aria-live="polite" className="gp-status">{status}</p>
 
       {results && facets && (
         <div className="grid gap-3 sm:grid-cols-2">
           <div>
-            <label htmlFor="f-day" className="block font-semibold">Day</label>
-            <select id="f-day" className="field" value={day} onChange={(e) => pick(track, e.target.value)}>
+            <label htmlFor="f-day" className="gp-label">Day</label>
+            <select id="f-day" className="gp-field" value={day} onChange={(e) => pick(track, e.target.value)}>
               <option value="">All days</option>
               {facets.days.map((d) => <option key={d.value} value={d.value}>{dayLabel(d.value)} ({d.count})</option>)}
             </select>
           </div>
           <div>
-            <label htmlFor="f-track" className="block font-semibold">Track</label>
-            <select id="f-track" className="field" value={track} onChange={(e) => pick(e.target.value, day)}>
+            <label htmlFor="f-track" className="gp-label">Track</label>
+            <select id="f-track" className="gp-field" value={track} onChange={(e) => pick(e.target.value, day)}>
               <option value="">All tracks</option>
               {facets.tracks.map((t) => <option key={t.value} value={t.value}>{t.value} ({t.count})</option>)}
             </select>
@@ -157,17 +162,16 @@ export function PlanSection({
       )}
 
       {results && (
-        <ul className="space-y-3">
+        <ul className="space-y-3 p-0">
           {results.map((t) => {
             const mine = plan.find((p) => p.id === t.id)?.priority;
             return (
-              <li key={t.id} className="panel space-y-3">
+              <li key={t.id} className="gp-result">
                 <h3 className="text-lg font-semibold">{t.title}</h3>
-                <p className="text-ink-soft">{when(t)}</p>
-                <p className="text-ink-soft">{placeLabel(t.room)}</p>
-                {t.highlight && <p className="text-base"><Highlight html={t.highlight} /></p>}
+                <p className="gp-where"><span className="gp-mono">{when(t)}</span><span className="gp-tag">{placeLabel(t.room)}</span></p>
+                {t.highlight && <p><Highlight html={t.highlight} /></p>}
                 {t.why && (t.why.keyword_rank || t.why.semantic_rank) && (
-                  <p className="text-base text-ink-soft">
+                  <p className="gp-hint">
                     {t.why.keyword_rank ? "Matched your words" : ""}
                     {t.why.keyword_rank && t.why.semantic_rank ? " and " : ""}
                     {t.why.semantic_rank ? (t.why.keyword_rank ? "your meaning" : "Matched your meaning") : ""}
@@ -175,8 +179,8 @@ export function PlanSection({
                   </p>
                 )}
                 <div className="flex flex-wrap gap-3">
-                  <button type="button" aria-label={`Must-see: ${t.title}`} aria-pressed={mine === "must"} onClick={() => mark(t, "must")} className="choice">Must-see</button>
-                  <button type="button" aria-label={`Nice to have: ${t.title}`} aria-pressed={mine === "nice"} onClick={() => mark(t, "nice")} className="choice">Nice to have</button>
+                  <button type="button" aria-label={`Must-see: ${t.title}`} aria-pressed={mine === "must"} onClick={() => mark(t, "must")} className="gp-chip">Must-see</button>
+                  <button type="button" aria-label={`Nice to have: ${t.title}`} aria-pressed={mine === "nice"} onClick={() => mark(t, "nice")} className="gp-chip">Nice to have</button>
                 </div>
               </li>
             );
@@ -186,18 +190,20 @@ export function PlanSection({
 
       {plan.length > 0 && (
         <div className="space-y-3">
-          <h3 className="text-xl font-semibold">Saved on this phone</h3>
-          <ul className="space-y-2">
+          <h3 className="gp-label">Saved on this phone</h3>
+          <ul className="gp-card">
             {[...plan].sort((a, b) => a.starts_at.localeCompare(b.starts_at)).map((p) => (
-              <li key={p.id} className="panel">
-                <p className="font-semibold">{p.title}</p>
-                <p className="text-ink-soft">{p.priority === "must" ? "Must-see" : "Nice to have"}, {formatTime(p.starts_at)} MST</p>
-                <p className="text-ink-soft">{placeLabel(p.room)}</p>
+              <li key={p.id} className="gp-row">
+                <span className="gp-title">
+                  {p.title}
+                  <span className="gp-sub">{p.priority === "must" ? "Must-see" : "Nice to have"}, {formatTime(p.starts_at)} MST</span>
+                  <span className="gp-sub">{placeLabel(p.room)}</span>
+                </span>
               </li>
             ))}
           </ul>
-          <label htmlFor="buffer" className="block text-lg">Minutes you want between talks</label>
-          <p id="buffer-hint" className="text-ink-soft">Any number from 5 to 120.</p>
+          <label htmlFor="buffer" className="gp-label">Minutes you want between talks</label>
+          <p id="buffer-hint" className="gp-hint">Any number from 5 to 120.</p>
           <input
             id="buffer"
             type="number"
@@ -209,9 +215,9 @@ export function PlanSection({
             aria-describedby="buffer-hint"
             onChange={(e) => typeBuffer(e.target.value)}
             onBlur={leaveBuffer}
-            className="field"
+            className="gp-field"
           />
-          <p className="text-base text-ink-soft">Your reasons and your plan are saved only on this phone. The app sends the words you type, and talk numbers to find similar talks. When you press the button, it sends the floor of your current or next talk, if it knows one, and whether this is a preview.</p>
+          <p className="gp-hint">Your reasons and your plan are saved only on this phone. The app sends the words you type, and talk numbers to find similar talks. When you press the button, it sends the floor of your current or next talk, if it knows one, and whether this is a preview.</p>
         </div>
       )}
     </section>
