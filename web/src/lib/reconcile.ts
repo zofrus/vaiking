@@ -21,6 +21,7 @@ export interface Change {
   before: Partial<PlanItem> | null;
   after: Partial<PlanItem> | null;
   detected_at: string;
+  drill?: true; // simulated for the demo, never from the real schedule
 }
 
 export interface Notice {
@@ -89,7 +90,7 @@ export function reconcile(plan: PlanItem[], changes: Change[], opts: Options) {
       : time ? `moved to ${time}`
       : room ? `moved to ${room}`
       : `now ends at ${formatTime(item.ends_at)} MST`;
-    const text = `Your ${formatTime(planned.starts_at)} MST talk ${what}. ` + (fits ? "It still fits." : "It no longer fits.");
+    const text = (change.drill ? "Drill: simulated change, not from the official schedule. " : "") + `Your ${formatTime(planned.starts_at)} MST talk ${what}. ` + (fits ? "It still fits." : "It no longer fits.");
     notices.push({ changeId: change.id, talkId: item.id, fits, text });
   }
 

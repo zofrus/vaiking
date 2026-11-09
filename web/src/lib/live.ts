@@ -1,12 +1,22 @@
 import { useEffect, useRef, useState } from "react";
 import type { Change, PlanItem } from "./reconcile";
 import { reachWindow, type Talk } from "./reach";
-import { now } from "./clock";
+import { now, isDrill, samplePlan } from "./clock";
 import { reportRequestFailure } from "../telemetry";
+
+// Demo drill: the KServe talk (a must-see) shifts to 5:15 PM, inside the buffer after the Lima talk.
+// A reschedule, because the fit check compares times only. Labelled Drill in the notice text.
+function drillChange(): Change {
+  return {
+    id: "drill-1", talk_id: samplePlan[2].id, kind: "rescheduled", drill: true, before: null,
+    after: { starts_at: "2026-11-10T17:15:00-07:00", ends_at: "2026-11-10T17:45:00-07:00" },
+    detected_at: now().toISOString(),
+  };
+}
 
 // Ask the server what changed, once a minute while online. Never blocks the UI.
 export function useChanges(): Change[] {
-  const [changes, setChanges] = useState<Change[]>([]);
+  const [changes, setChanges] = useState<Change[]>(() => (isDrill ? [drillChange()] : []));
   useEffect(() => {
     let since = new Date(0).toISOString();
     const poll = async () => {

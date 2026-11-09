@@ -7,6 +7,9 @@ const loadedAt = Date.now();
 export const isPreview = Number.isFinite(start);
 export const useSample = isPreview && params.get("sample") === "1";
 
+// &drill=1 (preview only) seeds one clearly labelled simulated schedule change.
+export const isDrill = isPreview && params.get("drill") === "1";
+
 export const now = (): Date => (isPreview ? new Date(start + (Date.now() - loadedAt)) : new Date());
 
 // Real Tuesday slots from the real schedule (Salt Palace Level 2). The clock

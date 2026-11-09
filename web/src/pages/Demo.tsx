@@ -7,7 +7,7 @@ import { reportRequestFailure } from "../telemetry";
 // polled together. A stat shows LIVE only when the server read it from the real
 // source on its last fetch; otherwise it says unavailable. Nothing is invented.
 const POLL_MS = 5000;
-const APP_SRC = "/?preview=2026-11-10T15%3A25%3A00-07%3A00&sample=1";
+const APP_SRC = "/?preview=2026-11-10T15%3A25%3A00-07%3A00&sample=1&drill=1";
 
 interface Stat {
   value: number | null;
