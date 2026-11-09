@@ -209,6 +209,8 @@ To deploy on a cluster, create Secret `app-credentials` in the app's namespace w
 
 The hackathon's notes on the team cluster (Radar, Argo CD, kubectl, a local cluster) are in [docs/RADAR-STARTER.md](docs/RADAR-STARTER.md). You don't need them to run the app.
 
+To ship a change, roll one back, or find where secrets live, see [docs/RUNBOOK.md](docs/RUNBOOK.md).
+
 ## How Gitar was used to build this
 
 Gitar reviewed our pull requests against rules we wrote for this product in [`.gitar/review/`](.gitar/review/) and [`.gitar/rules/`](.gitar/rules/): no personal data in telemetry, times always show a time zone, an accessible UI, and a span for every endpoint. [`.gitar/config/apply.md`](.gitar/config/apply.md) lets it push fixes for some kinds of findings, and it pushed each fix commit below itself. We read every Gitar commit before merging.
