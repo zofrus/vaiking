@@ -13,6 +13,7 @@ import { formatTime, reconcile, type Notice, type PlanItem } from "./lib/reconci
 import { closestReachable } from "./lib/reach";
 import { placeLabel } from "./lib/place";
 import { Sticker } from "./Sticker";
+import { ReplayTour, Tour } from "./Tour";
 import { VenueHelp } from "./VenueHelp";
 
 type View = "home" | "calm" | "card";
@@ -56,6 +57,7 @@ function Footer() {
         Schedule data: KubeCon + CloudNativeCon North America 2026, The Linux
         Foundation, CC BY 3.0.
       </p>
+      <div className="mt-3"><ReplayTour /><Tour /></div>{/* mount: Tour */}
       <a className="mt-2 inline-block underline" href="/board">
         Organizer board
       </a>
@@ -141,6 +143,7 @@ function Calm({
       </div>
 
       {/* mount: Sticker */}<Sticker />
+      <div className="panel"><ReplayTour /></div>{/* mount: ReplayTour */}
       {/* mount: VenueHelp */}<VenueHelp />
 
       {planResult}

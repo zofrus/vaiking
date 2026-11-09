@@ -12,12 +12,16 @@ const pages = [
   { name: "staff card", url: "/#/card" },
   { name: "sample plan, after the button", url: sample, press: true },
   { name: "board", url: "/board" },
+  { name: "first-run tour (open)", url: "/", tour: true },
 ];
 
 const browser = await chromium.launch({ channel: process.env.AXE_CHANNEL || undefined });
 let failed = 0;
 for (const p of pages) {
   const page = await (await browser.newContext()).newPage();
+  // The first-run tour opens by itself and blocks the page behind it; every page
+  // except the tour check starts as a returning visitor.
+  if (!p.tour) await page.addInitScript(() => localStorage.setItem("grace-tour-seen-v1", "1"));
   await page.goto(base + p.url);
   await page.waitForSelector("main");
   if (p.press) await page.getByRole("button", { name: "I need a break" }).click();
