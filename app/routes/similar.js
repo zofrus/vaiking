@@ -43,6 +43,7 @@ module.exports = async function similar(app, { elastic }) {
             { index: "talks", id: talkId, _source_includes: ["title", "abstract"] },
             requestOptions(),
           ),
+          { traced: false },
         ).catch((err) => (err?.statusCode === 404 ? null : Promise.reject(err)));
         if (!talk) return reply.code(404).send({ error: "talk not found" });
         text = seedText(talk._source);
@@ -54,6 +55,7 @@ module.exports = async function similar(app, { elastic }) {
           buildSimilarRequest({ talkId, text, after: after.value, before: before.value, limit }),
           requestOptions(),
         ),
+        { traced: false },
       );
       const body = similarResponse((res.hits?.hits ?? []).map((h) => h._source));
       answers.set(key, body);
