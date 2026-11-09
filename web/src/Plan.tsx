@@ -211,7 +211,7 @@ export function PlanSection({
             onBlur={leaveBuffer}
             className="field"
           />
-          <p className="text-base text-ink-soft">Your reasons and your plan are saved only on this phone. The app sends the words you type and talk numbers to find similar talks. When you press the break button, it sends the floor of your current talk or your next talk today (or “unknown” if no floor is available) and whether you’re in live or preview mode.</p>
+          <p className="text-base text-ink-soft">Your reasons and your plan are saved only on this phone. The app sends the words you type, and talk numbers to find similar talks. When you press the button, it sends the floor of your current or next talk, if it knows one, and whether this is a preview.</p>
         </div>
       )}
     </section>
