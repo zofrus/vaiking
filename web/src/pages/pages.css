@@ -201,6 +201,10 @@
   font-size: 0.9375rem;
   font-weight: 500;
 }
+.gp-stat-stale {
+  align-self: flex-start;
+  margin: 0.25rem 0 0;
+}
 .gp-section {
   display: flex;
   flex-direction: column;

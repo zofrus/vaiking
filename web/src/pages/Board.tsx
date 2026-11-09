@@ -50,7 +50,17 @@ function Table({ caption, rows }: { caption: string; rows: Row[] }) {
 // One large count per window. With no rows there is nothing to add up, and
 // "0" would claim a measurement the server may not have made (the status line
 // above says why), so the tile says so in words.
-function StatTile({ label, rows }: { label: string; rows: Row[] }) {
+// A total that failed to refresh says so on the tile itself, not only in the
+// status line, so an old number is never read as the current one.
+function StatTile({
+  label,
+  rows,
+  stale,
+}: {
+  label: string;
+  rows: Row[];
+  stale: boolean;
+}) {
   const total = rows.reduce((sum, r) => sum + r.count, 0);
   return (
     <div className="gp-card gp-stat">
@@ -60,6 +70,11 @@ function StatTile({ label, rows }: { label: string; rows: Row[] }) {
         <p className="gp-stat-none">None counted</p>
       )}
       <p className="gp-stat-label gp-muted">{label}</p>
+      {stale && (
+        <p className="gp-chip gp-chip-partial gp-stat-stale">
+          May be out of date
+        </p>
+      )}
     </div>
   );
 }
@@ -157,10 +172,12 @@ export default function BoardPage() {
               <StatTile
                 label="presses in the last hour, from the venue"
                 rows={load.board.live}
+                stale={Boolean(load.stale || load.board.stale)}
               />
               <StatTile
                 label="preview taps, not from the venue"
                 rows={load.board.preview}
+                stale={Boolean(load.stale || load.board.stale)}
               />
             </div>
             <section aria-labelledby="live-h" className="gp-card gp-section">
