@@ -10,8 +10,7 @@ Live at <https://vaiking.cnh.radarhq.io>. Built at the Cloud Native Hackathon, N
 |---|---|---|
 | Web app | `web/` | React phone UI, built into the server's image. The button path never waits on the network. |
 | API server | `app/server.js`, `app/routes/` | Fastify. Each file in `app/routes/` is an auto-loaded route. |
-| Reconciler | `app/reconciler.js`, `deploy/reconciler.yaml` | Second Deployment on the same image. Every 2 minutes it compares the Sessionize feed with the `talks` index and records what moved. |
-| Search and data | Elasticsearch | `talks` (hybrid keyword and semantic search), `changes`, and `facilities-v1`. |
+| Search and data | Elasticsearch | `talks` (hybrid keyword and semantic search) and `facilities-v1`. |
 | Telemetry | OpenTelemetry to Dash0 | Traces, logs and metrics. Attendee identity and access needs stay out of them. |
 | Delivery | `deploy/`, Argo CD, Radar | A push to `main` builds an image, and Argo CD syncs the `team-vaiking` namespace. |
 
@@ -39,7 +38,6 @@ export ELASTICSEARCH_URL=...      # never commit these
 export ELASTICSEARCH_API_KEY=...
 node scripts/ingest-sessionize.mjs   # add --dry-run to preview without Elasticsearch
 node scripts/ingest-facilities.mjs
-cd app && node reconciler.js         # optional: the schedule loop
 ```
 
 To deploy on a cluster, create Secret `app-credentials` in the app's namespace with the keys `elasticsearch-url`, `elasticsearch-api-key`, `otlp-endpoint`, `dash0-auth-token`, `rum-endpoint`, `rum-token` and `dataset`, then apply `argocd/application.yaml`. Every key is optional, so pods start without it.
