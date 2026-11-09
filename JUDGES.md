@@ -16,7 +16,7 @@
 3. Tap **Show this to staff**. A full-screen card says "Please point me to Quiet Room 260A, Level 2. I may not be able to talk right now.", and it has its own **Read this aloud**.
 4. Under **More support** on the calm screen is the **KubeCon communication sticker card**. Pick Green, Yellow or Red, and the card shows the event's own words: "Open to communicate.", "Only if you know me, please." and "I’m not interested in communicating (or being videotaped or photographed) at this time." The breathing guide and background sound are there too.
 5. The **Focus** switch at the top shows fewer things, with no motion and larger text, and it has an easier-to-read font option (Atkinson Hyperlegible).
-6. **Your day, with a labelled drill:** open the [preview of Tuesday](https://grace.effulgentpoint.com/?preview=2026-11-10T15:25:00-07:00&sample=1). The banner says **DRILL**, and "What changed" says "Drill: simulated change, not from the official schedule.", then which talk moved, whether it still fits and, when one fits your plan, a similar talk you still have time for.
+6. **Your day, with a labelled drill:** open the [preview of Tuesday](https://grace.effulgentpoint.com/?preview=2026-11-10T15%3A25%3A00-07%3A00&sample=1&drill=1). The banner says **DRILL**, and "What changed" says "Drill: simulated change, not from the official schedule.", then which talk moved, whether it still fits and, when one fits your plan, a similar talk you still have time for.
 7. Turn on **Show as kubectl** to see the same plan as `kubectl get` and `describe` output.
 
 ## Sponsor evidence

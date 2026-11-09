@@ -44,7 +44,7 @@ The same code is served by the app at <https://grace.effulgentpoint.com/qr-grace
 2. Open the staff card, then **Close card** and **Back to the start**.
 3. Under **Find your talks**, search for what you came for (try "kubernetes"). Each result says whether it matched your words or your meaning. Mark one **Must-see**.
 4. Read **Your day**, and turn on **Show as kubectl** to see the same facts as `kubectl get` and `describe` output.
-5. Open the [preview of Tuesday](https://grace.effulgentpoint.com/?preview=2026-11-10T15:25:00-07:00&sample=1) for a sample saved plan, labelled as simulated, and press the button there. Then open [/demo](https://grace.effulgentpoint.com/demo).
+5. Open the [preview of Tuesday](https://grace.effulgentpoint.com/?preview=2026-11-10T15%3A25%3A00-07%3A00&sample=1&drill=1) for a sample saved plan, labelled as simulated, and press the button there. Then open [/demo](https://grace.effulgentpoint.com/demo).
 
 ## Features
 
