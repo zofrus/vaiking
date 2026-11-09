@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import DemoQr from "./DemoQr";
 import { reportRequestFailure } from "../telemetry";
 
 // Judge-facing projector page at /demo. Left half: the real app in preview mode
@@ -41,7 +42,7 @@ const COLUMNS: Column[] = [
     key: "dash0",
     name: "Dash0",
     stats: [
-      { key: "button_presses", label: "button presses, 1h" },
+      { key: "button_presses", label: "real button presses, 1h" },
       { key: "plan_requests", label: "plan requests, 1h" },
       { key: "http_rate", label: "HTTP requests/s", unit: "/s" },
     ],
@@ -189,11 +190,15 @@ export default function Demo() {
             <section
               key={col.key}
               aria-labelledby={`h-${col.key}`}
-              className="flex flex-col gap-4 bg-slate-950 p-4"
+              className="flex flex-col gap-4 bg-slate-950 p-4 [container-type:inline-size]"
             >
-              <h2 id={`h-${col.key}`} className="text-3xl font-extrabold">
+              <h2
+                id={`h-${col.key}`}
+                className="text-[clamp(1rem,11cqw,1.875rem)] font-extrabold break-words"
+              >
                 {col.name}
               </h2>
+              {col.key === "gitar" && <DemoQr />}
               {col.stats.map((s) => (
                 <StatBlock
                   key={s.key}
