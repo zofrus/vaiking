@@ -565,7 +565,7 @@
   min-height: 2.75rem;
   padding: 0;
   background: none;
-  color: var(--gp-accent);
+  color: var(--gp-ink);
   font-size: 0.875rem;
   font-weight: 500;
   text-decoration: underline;
@@ -767,4 +767,21 @@ mark {
 }
 .app-header .focus-switch[aria-checked="true"] .focus-switch-thumb {
   transform: translateX(0.75rem);
+}
+
+/* Footer links: one look for the link, the Replay tour and Share buttons. */
+.footer-links a,
+.footer-links button {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  margin: 0;
+  padding: 0;
+  background: none;
+  color: var(--gp-ink);
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
 }

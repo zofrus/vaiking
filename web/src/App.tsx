@@ -142,15 +142,14 @@ function Footer({ showReplay }: { showReplay: boolean }) {
         Schedule data: KubeCon + CloudNativeCon North America 2026, The Linux
         Foundation, CC BY 3.0.
       </p>
-      <div className="mt-3">
-        {/* Calm has its own Replay tour panel, so it shows once there. */}
+      {/* One wrapping row of quiet links, each at least 44px tall. Calm has its own
+          Replay tour panel, so the footer one shows only off calm. */}
+      <div className="footer-links mt-2 flex flex-wrap items-center gap-x-4">
         {showReplay && <ReplayTour />}
-        <Tour />
-      </div>{/* mount: Tour */}
-      <a className="self-start font-medium underline" href="/board">
-        Organizer board
-      </a>
-      <div className="mt-2"><ShareQR /></div>{/* mount: ShareQR */}
+        <ShareQR />{/* mount: ShareQR */}
+        <a href="/board">Organizer board</a>
+      </div>
+      <Tour />{/* mount: Tour */}
     </footer>
   );
 }
