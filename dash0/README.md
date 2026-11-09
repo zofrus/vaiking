@@ -4,7 +4,10 @@ Status: the SLO and dashboard YAML are not exported yet. They must be built in t
 Dash0 UI and exported, because the asset schema has not been verified from here.
 This file records the exact queries so the UI build is copy and paste.
 
-## SLO: "share answered within 1 second"
+## SLO: "plan requests answered within 1 second"
+
+Counts `GET /api/search`, `/api/changes` and `/api/talks`, the requests behind the plan screen.
+`/api/similar` is left out because it follows a break press.
 
 Dash0 SLO queries must be bare vector selectors, and good must be a strict subset of total.
 
@@ -18,7 +21,7 @@ A failed response (5xx) counts as `within_1s="false"`.
 
 - Presses by floor, live: `round(sum by (scheduled_floor) (increase(grace_requests_total{mode="live"}[1h])))`
 - Presses by floor, preview: same with `mode="preview"`
-- Share answered within 1 second: `sum(increase(plan_requests_total{within_1s="true"}[1h])) / sum(increase(plan_requests_total[1h]))`
+- Plan requests answered within 1 second: `sum(increase(plan_requests_total{within_1s="true"}[1h])) / sum(increase(plan_requests_total[1h]))`
 
 ## Reading metrics back (used by `/api/board`)
 
