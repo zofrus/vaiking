@@ -56,7 +56,7 @@ Merge it the same way as any PR. The push to `main` builds a new image of the re
 
 ## Known limits
 
-- **Room changes are polled, not pushed.** The phone checks `/api/changes` every 60 seconds while the app is open and online. The reconciler checks the Sessionize feed every 2 minutes. No real schedule change appeared on November 9, so the moved-talk notice is shown in preview as a labelled DRILL.
+- **Room changes are polled, not pushed.** The phone checks `/api/changes` every 60 seconds while the app is open and online. The reconciler checks the Sessionize feed every 2 minutes. During the hackathon the official schedule really changed, and Grace Period's reconciler detected it: at 4:36 PM a talk was added (Open Cluster Management (OCM): Live Demo Using k3d/KIND, Tue Nov 10 1:40 PM, Salt Palace Level 1 Project Pavilion) and at 4:41 PM a talk was removed from the official feed. The walkthrough still shows a moved talk in preview as a labelled DRILL.
 - **The board's counts include our own testing** during the hackathon, on the live site.
 - **No wayfinding.** There's no map and no "nearest". Routes say "Estimated. Confirm routes with event staff."
 - **One device.** The plan is kept on the phone, with no sync between devices.
