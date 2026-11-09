@@ -172,17 +172,27 @@ The one CI failure: [run 42695403818](https://github.com/zofrus/vaiking/actions/
 
 ## AI use
 
-We used AI heavily to build this, and we say so plainly, as event rule 5 asks.
+AI agents wrote most of the code in this repo. I directed the work, reviewed it, ran the acceptance tests and decided what merged.
 
-**Writing the code.** Claude Code wrote most of the code, running as several parallel sessions, each owning one part of the system (search, reconciler and operations, phone UI, metrics) under a shared contract. Commits made with it carry a `Co-Authored-By` line naming the model, Claude Opus 5.5 or Claude Sonnet 5.5, so `git log` shows which commits had AI help. Every change went through a pull request.
+**What I did myself.**
+- Chose the problem and the product: Grace Period, a break button for overwhelmed attendees. Then kept steering. I pushed back on a search-only app, asked for the kubectl day view and the four-tools demo page, called a redesign at 2:52 PM after seeing other teams' search apps, and picked the Pro Product design out of five. I asked for Focus mode, calendar transition reminders, a replayable tour, background sound and breathing, read aloud, and neurodivergent-friendly defaults.
+- Set up every account and integration: this GitHub repo and its Actions (enabled for this repo only), Elastic Cloud Serverless, Dash0, the Radar cluster and Argo CD GitOps, Gitar, a Vercel proxy and Cloudflare DNS for grace.effulgentpoint.com, and Google Drive for the video.
+- Approved the merges and the security trade-offs. Tested on my phone and in the room.
+- Built the setup the agents ran on: two of my Macs, linked over Tailscale and SSH.
 
-**Reviewing and fixing.** Gitar reviewed the pull requests against our own rules and pushed fix commits, each marked as Gitar's in the history (see [How Gitar was used](#how-gitar-was-used-to-build-this)). We read them before merging and changed one that logged too much.
+**How the AI was used.** Claude Code ran as a coordinator over parallel agent sessions on both Macs, sharing a work board, session logs and a watchdog. A merge loop merged only pull requests with green CI. Forge agents did intake, a devil's-advocate review, planning, building in separate clones, accessibility and code-review gates, and merge resolution. Research agents read the rules and sponsor docs. A design agent drew five directions. AI-assisted commits carry a `Co-Authored-By` line naming the model.
 
-**Operating it.** Claude Code drove deploys and diagnosis through Radar's MCP server. A Radar AI investigation looked at the rollout that stalled; its conclusion was wrong, and we went with the pod logs instead ([STORY.md](STORY.md)). Dash0's Agent0 diagnosed a false browser error report that we then fixed.
+Gitar reviewed every pull request against our rules and pushed fixes under its own name ([How Gitar was used](#how-gitar-was-used-to-build-this)). I read each fix before merging. One would have wiped the search index on an empty feed. Dash0's Agent0 found a false error report in our browser telemetry. Radar's AI investigation called a crash loop "transient". Radar's `diagnose` and the pod logs found the real cause ([STORY.md](STORY.md)).
 
-**In the product.** The only AI is semantic search: Elasticsearch embeds talk titles and abstracts so a search can match by meaning. No language model is called anywhere, and nothing on the break-button path uses AI.
+**In the product.** The only AI is semantic search: Elasticsearch embeds talk titles and abstracts. No language model is called, and nothing on the break-button path uses AI.
 
-**What we did ourselves.** _Owner: replace this line with what you decided and did yourself, for example the idea, the product rules, reviewing and merging each pull request, and the demo._
+**Guardrails I set.**
+- No secrets in chat or the repo. Keys live in a cluster Secret I applied myself.
+- Venue facts are quoted verbatim with a source and date. A test fails without them.
+- Anything simulated, including the drill, is labelled on screen.
+- A break press sends a floor and a mode. Counts only, nothing identifying.
+- No force pushes, rebases or `rm`. A local hook blocks them.
+- Accessibility gates: axe in CI and an accessibility review on UI changes.
 
 ## Credits
 
