@@ -26,6 +26,12 @@ const GOLDEN = [
   "LOCATION:Salt Palace | Level 2 | 251 A-C",
   "BEGIN:VALARM",
   "ACTION:DISPLAY",
+  "DESCRIPTION:Popular rooms fill early. Seating is first come\\, first served:",
+  "  head to Salt Palace | Level 2 | 251 A-C now.",
+  "TRIGGER:-PT20M",
+  "END:VALARM",
+  "BEGIN:VALARM",
+  "ACTION:DISPLAY",
   "DESCRIPTION:Next talk in 10 minutes: Cortex: Surviving High Cardinality Met",
   " rics\\, Salt Palace | Level 2 | 251 A-C",
   "TRIGGER:-PT10M",
@@ -43,6 +49,12 @@ const GOLDEN = [
   "DTEND:20261111T001000Z",
   "SUMMARY:Lima as the Universal AI Sandbox",
   "LOCATION:Salt Palace | Level 2 | 250 D-F",
+  "BEGIN:VALARM",
+  "ACTION:DISPLAY",
+  "DESCRIPTION:Popular rooms fill early. Seating is first come\\, first served:",
+  "  head to Salt Palace | Level 2 | 250 D-F now.",
+  "TRIGGER:-PT20M",
+  "END:VALARM",
   "BEGIN:VALARM",
   "ACTION:DISPLAY",
   "DESCRIPTION:Next talk in 10 minutes: Lima as the Universal AI Sandbox\\, Sal",
@@ -63,6 +75,12 @@ const GOLDEN = [
   "SUMMARY:Who Ran Up the Inference Bill? AI Traffic Control with KServe and G",
   " ateway API In",
   "LOCATION:Salt Palace | Level 2 | 255 EF",
+  "BEGIN:VALARM",
+  "ACTION:DISPLAY",
+  "DESCRIPTION:Popular rooms fill early. Seating is first come\\, first served:",
+  "  head to Salt Palace | Level 2 | 255 EF now.",
+  "TRIGGER:-PT20M",
+  "END:VALARM",
   "BEGIN:VALARM",
   "ACTION:DISPLAY",
   "DESCRIPTION:Next talk in 10 minutes: Who Ran Up the Inference Bill? AI Traf",
@@ -94,12 +112,13 @@ describe("buildIcs", () => {
     }
   });
 
-  it("has one event and two reminders per talk", () => {
+  it("has one event and three reminders per talk", () => {
     const out = buildIcs([...samplePlan], STAMP);
     expect(out.match(/BEGIN:VEVENT/g)).toHaveLength(3);
+    expect(out.match(/TRIGGER:-PT20M/g)).toHaveLength(3);
     expect(out.match(/TRIGGER:-PT10M/g)).toHaveLength(3);
     expect(out.match(/TRIGGER:-PT2M/g)).toHaveLength(3);
-    expect(out.match(/ACTION:DISPLAY/g)).toHaveLength(6);
+    expect(out.match(/ACTION:DISPLAY/g)).toHaveLength(9);
   });
 
   it("keeps the same UID for the same talk, whatever the time or order", () => {
