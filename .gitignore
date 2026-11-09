@@ -9,3 +9,17 @@
 node_modules/
 npm-debug.log*
 .DS_Store
+
+# Agent runtime and local notes: never publish.
+.pipeline/
+.pipeline-*/
+.forge.config.json
+.forge.config.local.json
+SESSION_SUMMARY.md
+.claude/settings.local.json
+
+# Backups can hold old secrets.
+*.back
+*.back/
+*.back-*
+*.bak
