@@ -10,7 +10,7 @@
 
 - **Care in one tap.** For the attendee who is overwhelmed: one large "I need a break" button, no account, no plan and no reason asked. It shows the quiet room, the all-gender restrooms and a card to show staff.
 - **Works when the venue network doesn't.** After the first visit the button works offline, and the app installs on a phone.
-- **Your day, reconciled like a Kubernetes controller.** You declare what you came for. A reconciler compares the real schedule with it every 2 minutes, and the app tells you in one plain sentence what moved, what still fits, and the closest talk you can still reach.
+- **Your day, reconciled like a Kubernetes controller.** You declare what you came for. A reconciler compares the real schedule with it every 2 minutes, and the app tells you in one plain sentence what moved, what still fits, and the closest talk you can still reach. No real schedule change has appeared in the feed yet today, so the moved-talk notice is shown in preview mode as a labelled DRILL.
 - **Four sponsor tools, live.** [/demo](https://grace.effulgentpoint.com/demo) shows the app next to live numbers from Elasticsearch, Dash0, Radar and Gitar.
 
 ## Try it
@@ -29,26 +29,27 @@ Open <https://grace.effulgentpoint.com> on your phone. No account, no install ne
 4. Read **Your day**, and turn on **Show as kubectl** to see the same facts as `kubectl get` and `describe` output.
 5. Open the [preview of Tuesday](https://grace.effulgentpoint.com/?preview=2026-11-10T15:25:00-07:00&sample=1) for a sample saved plan, labelled as simulated, and press the button there. Then open [/demo](https://grace.effulgentpoint.com/demo).
 
-<!--
-Screenshots. TODO owner: add these images, then turn this comment into visible image lines.
-![TODO alt text: Home screen with the large "I need a break" button](docs/screenshots/home.png)
-![TODO alt text: Calm screen with Quiet Room 260A, hours not listed, and the staff card button](docs/screenshots/calm.png)
-![TODO alt text: Staff card asking staff to point the person to Quiet Room 260A](docs/screenshots/staff-card.png)
-![TODO alt text: Your day, with search results, match reasons and the plan against the schedule](docs/screenshots/plan.png)
-![TODO alt text: /demo with the app beside live Elasticsearch, Dash0, Radar and Gitar columns](docs/screenshots/demo.png)
--->
+Screenshots from the live app, Nov 9, 2026, 3:52 PM MST:
+
+<p>
+  <img src="docs/screenshots/home.png" width="220" alt="Home screen with the large &quot;I need a break&quot; button">
+  <img src="docs/screenshots/calm.png" width="220" alt="Calm screen with Quiet Room 260A, hours not listed, and the staff card button">
+  <img src="docs/screenshots/staff-card.png" width="220" alt="Staff card asking staff to point the person to Quiet Room 260A">
+</p>
+
+<img src="docs/screenshots/demo.png" width="720" alt="/demo with the app beside live Elasticsearch, Dash0, Radar and Gitar columns">
 
 ## Features
 
-Everything below is merged and live, unless it says "open PR".
+Everything below is merged and live.
 
-- **A new look.** Redesigned "Your day", kubectl view and plan search ([#70](https://github.com/zofrus/vaiking/pull/70), [#81](https://github.com/zofrus/vaiking/pull/81)), and a redesigned organizer board and live demo ([#75](https://github.com/zofrus/vaiking/pull/75), [#78](https://github.com/zofrus/vaiking/pull/78)). The redesigned home screen and break flow are in open PR [#71](https://github.com/zofrus/vaiking/pull/71), which should land by 4:45 PM MST.
+- **A new look.** Redesigned "Your day", kubectl view and plan search ([#70](https://github.com/zofrus/vaiking/pull/70), [#81](https://github.com/zofrus/vaiking/pull/81)), and a redesigned organizer board and live demo ([#75](https://github.com/zofrus/vaiking/pull/75), [#78](https://github.com/zofrus/vaiking/pull/78)). The home screen and break flow were redesigned in [#71](https://github.com/zofrus/vaiking/pull/71).
 - **Focus mode.** Fewer things on screen, no motion and larger text. It's a display choice saved on this phone ([#69](https://github.com/zofrus/vaiking/pull/69)).
 - **Easier-to-read font.** A switch inside Focus mode to Atkinson Hyperlegible, bundled so it works offline ([#80](https://github.com/zofrus/vaiking/pull/80)).
 - **KubeCon communication sticker card.** Choose the sticker you picked up at registration, and the card shows the event's own words. Green: "Open to communicate." Yellow: "Only if you know me, please." Red: "I’m not interested in communicating (or being videotaped or photographed) at this time." Source: KubeCon + CloudNativeCon NA 2026 Inclusion + Accessibility page, checked Nov 9, 2026. The choice stays on the phone ([#64](https://github.com/zofrus/vaiking/pull/64)).
 - **Sourced venue facts.** The calm screen's quiet room, restrooms and first aid come from the event's [Inclusion + Accessibility page](https://events.linuxfoundation.org/kubecon-cloudnativecon-north-america/attend/inclusion-accessibility/), with the source line shown ([#67](https://github.com/zofrus/vaiking/pull/67)).
 - **Read aloud.** The calm screen and the staff card can read their words out with the phone's own voice ([#72](https://github.com/zofrus/vaiking/pull/72)).
-- **Breathing guide and background sound.** Box breathing (in 4, hold 4, out 4, hold 4) with the words and a count always on screen, and quiet background sound ([#72](https://github.com/zofrus/vaiking/pull/72)). Grouping them under "More support" comes with open PR [#71](https://github.com/zofrus/vaiking/pull/71).
+- **Breathing guide and background sound.** Box breathing (in 4, hold 4, out 4, hold 4) with the words and a count always on screen, and quiet background sound ([#72](https://github.com/zofrus/vaiking/pull/72)). They sit together under **More support** ([#71](https://github.com/zofrus/vaiking/pull/71)).
 - **Calendar reminders.** Add your day to your calendar. The file is built on the phone with no request, and each talk gets reminders 10 and 2 minutes before ([#74](https://github.com/zofrus/vaiking/pull/74)).
 - **A 5-step tour you can replay** from the home screen at any time ([#73](https://github.com/zofrus/vaiking/pull/73)).
 - **Labelled drill.** In preview mode, a simulated reschedule is marked "Drill · simulated", and its notice starts "Drill: simulated change, not from the official schedule." ([#63](https://github.com/zofrus/vaiking/pull/63)).
@@ -222,7 +223,7 @@ AI agents wrote most of the code in this repo. I directed the work, reviewed it,
 
 **How the AI was used.** Claude Code ran as a coordinator over parallel agent sessions on both Macs, sharing a work board, session logs and a watchdog. A merge loop merged only pull requests with green CI. Forge agents did intake, a devil's-advocate review, planning, building in separate clones, accessibility and code-review gates, and merge resolution. Research agents read the rules and sponsor docs. A design agent drew five directions. AI-assisted commits carry a `Co-Authored-By` line naming the model.
 
-Gitar reviewed every pull request against our rules and pushed fixes under its own name ([How Gitar was used](#how-gitar-was-used-to-build-this)). I read each fix before merging. One would have wiped the search index on an empty feed. Dash0's Agent0 found a false error report in our browser telemetry. Radar's AI investigation called a crash loop "transient". Radar's `diagnose` and the pod logs found the real cause ([STORY.md](STORY.md)).
+Gitar reviewed 78 of our 81 merged pull requests against our rules and pushed fixes under its own name ([How Gitar was used](#how-gitar-was-used-to-build-this)). I read each fix before merging. One would have wiped the search index on an empty feed. Dash0's Agent0 found a false error report in our browser telemetry. Radar's AI investigation called a crash loop "transient". Radar's `diagnose` and the pod logs found the real cause ([STORY.md](STORY.md)).
 
 **In the product.** The only AI is semantic search: Elasticsearch embeds talk titles and abstracts. No language model is called, and nothing on the break-button path uses AI.
 
