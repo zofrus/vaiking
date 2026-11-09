@@ -32,7 +32,7 @@ Checked on `main` at 4:40 PM MST on Nov 9, 2026.
 
 **The strongest true line: no merged PR had a failing check on its head commit.** Of 108 merged PRs, 106 have GitHub check runs and every one is green (success or skipped). #1 and #2 merged before CI existed. What this does not show: CI runs lint, tests, the web build and the axe check, but it never builds or starts the container, so the 13:32 crash loop (`MODULE_NOT_FOUND`) got past green CI. Radar caught it, and [#23](https://github.com/zofrus/vaiking/pull/23) fixed it.
 
-Gitar's review was not a binding gate. On 11 merged PRs its final verdict reads "Changes requested". On each of them the Gitar comment was created 0 to 3 minutes before the merge, so there was no time to fix its findings inside the PR. This is what has happened to those 13 findings since: 2 are fixed, 1 is partly mitigated, 2 were left as they are, and 8 are still open. Nobody has decided to accept the open ones.
+Gitar's review was not a binding gate. On 11 merged PRs its final verdict reads "Changes requested". On each of them the final Gitar comment was created 0 to 3 minutes before the merge, so there was no time to fix the findings still open at that point. Of those 13 findings (one was already fixed earlier in its PR): 2 are fixed, 1 is partly mitigated, 2 were left as they are, and 8 are still open. Nobody has decided to accept the open ones.
 
 | PR | Gitar's finding | Status on `main` |
 |---|---|---|
