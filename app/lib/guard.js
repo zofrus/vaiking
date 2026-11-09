@@ -30,6 +30,30 @@ function envInt(value, fallback) {
   return Number.isFinite(n) && n > 0 ? n : fallback;
 }
 
+// grace.effulgentpoint.com is a Vercel rewrite to this app, so everyone who comes
+// through it arrives from Vercel's address and would share one normal-size
+// bucket. Requests that name that host share the bucket "proxy:grace" instead,
+// with GRACE_PROXY_MULTIPLIER times the per-client cap. Forging the header only
+// buys a place in that shared bucket, and the total limits hold for everyone.
+// Either header is accepted: which one reaches the app through the platform
+// gateway could not be checked from outside.
+const PROXY_BUCKET = "proxy:grace";
+const HOST_HEADERS = ["x-forwarded-host", "x-vercel-forwarded-host"];
+
+function viaGraceProxy(request, env) {
+  const want = String(env.GRACE_PROXY_HOST || "grace.effulgentpoint.com").trim().toLowerCase();
+  return HOST_HEADERS.some((name) => {
+    const value = request.headers[name];
+    return value != null && String(value).split(",").some((h) => h.trim().toLowerCase() === want);
+  });
+}
+
+// The limiter bucket for a request, and how many times the per-client cap it gets.
+function clientBucket(request, env = process.env) {
+  if (viaGraceProxy(request, env)) return { key: PROXY_BUCKET, scale: envInt(env.GRACE_PROXY_MULTIPLIER, 20) };
+  return { key: clientKey(request), scale: 1 };
+}
+
 // perClient is per gateway-seen address, so it is deliberately roomy: many
 // attendees can share one address. total is the backstop for the budget and is
 // the limit that still holds if many addresses are used.
@@ -52,7 +76,7 @@ function createLimiter({ perClient, total, windowMs = WINDOW_MS, now = Date.now,
   let hits = new Map();
   let windowEnds = now() + windowMs;
   const totalLimited = totalLimiter ?? createTotalLimiter({ total, windowMs, now });
-  return function limited(key) {
+  return function limited(key, scale = 1) {
     const t = now();
     if (t >= windowEnds) {
       hits = new Map();
@@ -60,7 +84,7 @@ function createLimiter({ perClient, total, windowMs = WINDOW_MS, now = Date.now,
     }
     if (!hits.has(key) && hits.size >= MAX_TRACKED) return true;
     const n = (hits.get(key) ?? 0) + 1;
-    if (n > perClient) return true;
+    if (n > perClient * scale) return true;
     if (totalLimited()) return true;
     hits.set(key, n);
     return false;
@@ -84,7 +108,8 @@ function createGuard({ env = process.env, ttlMs, max = 500, now = Date.now, tota
     if (cached !== undefined) return cached;
     let pending = inflight.get(key);
     if (!pending) {
-      if (limited(clientKey(request))) {
+      const bucket = clientBucket(request, env);
+      if (limited(bucket.key, bucket.scale)) {
         return reply.code(429).header("retry-after", "60").send({
           error: "too many requests, try again in a minute",
         });
@@ -101,4 +126,4 @@ function createGuard({ env = process.env, ttlMs, max = 500, now = Date.now, tota
   };
 }
 
-module.exports = { clientKey, createLimiter, createTotalLimiter, createGuard, envInt };
+module.exports = { clientKey, clientBucket, createLimiter, createTotalLimiter, createGuard, envInt };

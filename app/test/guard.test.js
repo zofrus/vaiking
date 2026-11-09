@@ -3,7 +3,7 @@ const assert = require("node:assert/strict");
 const path = require("node:path");
 const os = require("node:os");
 const { build } = require("../server");
-const { clientKey, createLimiter } = require("../lib/guard");
+const { clientKey, clientBucket, createLimiter } = require("../lib/guard");
 const { normalize, safeHttpUrl } = require("../lib/feed");
 
 const NO_PUBLIC = path.join(os.tmpdir(), "vaiking-no-public-dir");
@@ -184,4 +184,52 @@ test("normalize drops a javascript: slides link and keeps a good one", () => {
   assert.match(normalize(feed("https://example.com/d")).docs[0].url, /^https:\/\//);
   // Decoded entities stay plain text here; the search route escapes them for the page.
   assert.equal(normalize(feed(null)).docs[0].abstract, "<img src=x onerror=alert(1)>");
+});
+
+const PROXIED = (xff) => ({ "x-forwarded-for": xff, "x-forwarded-host": "grace.effulgentpoint.com" });
+
+test("grace proxy: requests naming grace.effulgentpoint.com share one bucket with a larger cap", () => {
+  const req = (headers) => ({ headers, ip: "10.0.0.1" });
+  const shared = { key: "proxy:grace", scale: 20 };
+  assert.deepEqual(clientBucket(req(PROXIED("6.6.6.6, 76.76.21.9"))), shared);
+  assert.deepEqual(clientBucket(req({ "x-vercel-forwarded-host": "Grace.EffulgentPoint.com", "x-forwarded-for": "76.76.21.10" })), shared);
+  assert.deepEqual(clientBucket(req({ "x-forwarded-host": "grace.effulgentpoint.com, vaiking.cnh.radarhq.io" })), shared);
+  // Direct requests are keyed exactly as before.
+  assert.deepEqual(clientBucket(req({ "x-forwarded-for": "6.6.6.6, 203.0.113.5" })), { key: "203.0.113.5", scale: 1 });
+  assert.deepEqual(clientBucket(req({ "x-forwarded-host": "vaiking.cnh.radarhq.io", "x-forwarded-for": "203.0.113.5" })), { key: "203.0.113.5", scale: 1 });
+  assert.deepEqual(clientBucket(req({})), { key: "10.0.0.1", scale: 1 });
+  // Host and multiplier come from env.
+  const env = { GRACE_PROXY_HOST: "grace.example.test", GRACE_PROXY_MULTIPLIER: "5" };
+  assert.deepEqual(clientBucket(req({ "x-forwarded-host": "grace.example.test" }), env), { key: "proxy:grace", scale: 5 });
+  assert.deepEqual(clientBucket(req({ "x-forwarded-host": "grace.effulgentpoint.com", "x-forwarded-for": "203.0.113.5" }), env), { key: "203.0.113.5", scale: 1 });
+});
+
+test("limiter scale raises only that bucket's cap, never the total", () => {
+  const limited = createLimiter({ perClient: 2, total: 100, now: () => 0 });
+  for (let i = 0; i < 6; i++) assert.equal(limited("proxy:grace", 3), false);
+  assert.equal(limited("proxy:grace", 3), true);
+  assert.equal(limited("a"), false);
+  assert.equal(limited("a"), false);
+  assert.equal(limited("a"), true);
+  const tight = createLimiter({ perClient: 10, total: 2, now: () => 0 });
+  assert.equal(tight("proxy:grace", 20), false);
+  assert.equal(tight("proxy:grace", 20), false);
+  assert.equal(tight("proxy:grace", 20), true, "the total cap still holds");
+});
+
+test("search: grace proxy visitors share proxy:grace with the larger cap, direct clients unchanged", async () => {
+  let calls = 0;
+  const app = appWith({ search: async () => (calls++, HITS) }, { RATE_LIMIT_PER_MIN: "2", GRACE_PROXY_MULTIPLIER: "3" });
+  const codes = [];
+  // A different Vercel address each time, still one shared bucket of 2 x 3 = 6.
+  for (let i = 0; i < 7; i++) {
+    codes.push((await app.inject({ url: `/api/search?q=p${i}`, headers: PROXIED(`198.51.100.${i}, 76.76.21.${i}`) })).statusCode);
+  }
+  assert.deepEqual(codes, [200, 200, 200, 200, 200, 200, 429]);
+  const direct = [];
+  for (let i = 0; i < 3; i++) {
+    direct.push((await app.inject({ url: `/api/search?q=d${i}`, headers: { "x-forwarded-for": "203.0.113.5" } })).statusCode);
+  }
+  assert.deepEqual(direct, [200, 200, 429]);
+  assert.equal(calls, 8);
 });
