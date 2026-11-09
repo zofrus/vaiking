@@ -32,7 +32,7 @@ export function AddToCalendar({ talks }: { talks: readonly PlanItem[] }) {
         Add my day to your calendar
       </button>
       <p className="text-ink-soft">
-        Your phone reminds you 10 minutes and 2 minutes before each talk. Nothing leaves this phone.
+        Your phone reminds you 20, 10 and 2 minutes before each talk. Nothing leaves this phone.
       </p>
       <p role="status" aria-live="polite" className={status ? "text-ink-soft" : "sr-only"}>{status}</p>
     </section>
