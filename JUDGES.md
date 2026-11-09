@@ -32,6 +32,32 @@
 - **Radar.** Cluster `vaiking`, namespace `team-vaiking`, deployed by GitOps. The reconciler's loop is visible in Radar's logs on `Deployment/reconciler` every 2 minutes, for example `{"msg":"reconcile cycle","outcome":"reconciled","talks":582,"changes":0,"updated":0,"failed":0}` (3:43 PM MST). Checks went from 4 medium findings to 1 after [#19](https://github.com/zofrus/vaiking/pull/19), and the remaining one is kept on purpose. `diagnose` found a real crash loop in one call ([#23](https://github.com/zofrus/vaiking/pull/23)). The [AI investigation](https://app.radarhq.io/c/5JYX5CP_IYU/investigations/chat_PGWBGa7JZrBMXlTN) reached the wrong conclusion, and we say so. It opens for judges only if the owner has marked it Shared. The full story is in [`STORY.md`](STORY.md).
 - **Gitar.** Gitar reviewed 82 of our 85 merged pull requests (as of 4:02 PM MST). The three without a review are #1 and #2, the setup, and #23, a one-line hotfix. It reviews against our own rules in [`.gitar/`](.gitar/) and pushes fixes that we read before merging; the README's [How Gitar was used](README.md#how-gitar-was-used-to-build-this) section lists them. On [#3](https://github.com/zofrus/vaiking/pull/3), Gitar's cleanup commit [`ef32d4c`](https://github.com/zofrus/vaiking/commit/ef32d4c) pruned stale talks after each ingest, so a short or failed feed would have wiped the index. We caught it in review and added a guard, [`9957b8c`](https://github.com/zofrus/vaiking/commit/9957b8c), which prunes only after a clean write of at least 400 talks.
 
+## Gitar triage: what merged with open findings
+
+Checked on `main` at 4:40 PM MST on Nov 9, 2026.
+
+**The strongest true line: no merged PR had a failing check on its head commit.** Of 108 merged PRs, 106 have GitHub check runs and every one is green (success or skipped). #1 and #2 merged before CI existed. What this does not show: CI runs lint, tests, the web build and the axe check, but it never builds or starts the container, so the 13:32 crash loop (`MODULE_NOT_FOUND`) got past green CI. Radar caught it, and [#23](https://github.com/zofrus/vaiking/pull/23) fixed it.
+
+Gitar's review was not a binding gate. On 11 merged PRs its final verdict reads "Changes requested". On each of them the final Gitar comment was created 0 to 3 minutes before the merge, so there was no time to fix the findings still open at that point. Of those 13 findings (one was already fixed earlier in its PR): 2 are fixed, 1 is partly mitigated, 2 were left as they are, and 8 are still open. Nobody has decided to accept the open ones.
+
+| PR | Gitar's finding | Status on `main` |
+|---|---|---|
+| [#63](https://github.com/zofrus/vaiking/pull/63) | The Day view showed the drill change with no Drill label | Fixed: drill rows carry a "Drill · simulated" tag, [`47d7425`](https://github.com/zofrus/vaiking/commit/47d7425) in [#81](https://github.com/zofrus/vaiking/pull/81) |
+| [#70](https://github.com/zofrus/vaiking/pull/70) | The kubectl switch and search box vanish in forced-colors (high contrast) mode | Open: there is no `forced-colors` rule in `web/src` |
+| [#71](https://github.com/zofrus/vaiking/pull/71) | The "More support" summary loses its disclosure triangle | Open: `.more-support > summary` is still `display: flex` (`web/src/index.css`) |
+| [#71](https://github.com/zofrus/vaiking/pull/71) | In dark mode the Tour and Sticker dialog buttons turn near-white on white | Fixed in the PR: Gitar marked it closed |
+| [#72](https://github.com/zofrus/vaiking/pull/72) | A double tap on Play can leave sound running that Stop cannot stop | Open: `start()` in `web/src/lib/sound.ts` still stops first, then awaits |
+| [#74](https://github.com/zofrus/vaiking/pull/74) | The calendar download does not report to RUM | Open: `AddToCalendar.tsx` has no telemetry call |
+| [#76](https://github.com/zofrus/vaiking/pull/76) | Safe-area padding on `#root` makes the page taller than the screen and shows white strips | Open: unchanged in `web/index.html` |
+| [#76](https://github.com/zofrus/vaiking/pull/76) | With `viewport-fit=cover` the staff card heading can sit under the notch | Open: the staff card only handles the bottom inset (`web/src/App.tsx`) |
+| [#80](https://github.com/zofrus/vaiking/pull/80) | One client forging `X-Forwarded-Host` can use the shared proxy bucket and lock out other visitors | Partly mitigated: [#103](https://github.com/zofrus/vaiking/pull/103) caps that bucket at 10x. The header is still trusted (`app/lib/guard.js`) |
+| [#81](https://github.com/zofrus/vaiking/pull/81) | "Kept" rows show no visible status text | Left as is, on purpose: the code comment says kept talks need no sentence, and screen readers still hear "Kept". Gitar disagrees (`web/src/DayView.tsx`) |
+| [#87](https://github.com/zofrus/vaiking/pull/87) | The 20-minute reminder's "first come, first served" is unsourced and may mislead people with reserved seating | Wording unchanged. The source is outside the repo: the [official schedule page](https://events.linuxfoundation.org/kubecon-cloudnativecon-north-america/program/schedule/) says "Seating is first come, first served." (fetched Nov 9). It has not been reconciled with reserved accessibility seating |
+| [#89](https://github.com/zofrus/vaiking/pull/89) | The readable font makes the kubectl terminal proportional | Open: `--font-mono` is still redefined on `html` (`web/src/focus.css`) |
+| [#95](https://github.com/zofrus/vaiking/pull/95) | The reload guard stays armed after boot and can reload a live page | Open: the listener in `web/index.html` is never removed |
+
+How this was checked: Gitar's final comment on each PR, then each finding against the code on `main`. Status is from reading the code, not from re-running Gitar.
+
 ## Merge Forward and accessibility
 
 - **Defaults:** no account, no plan and no reason asked. The app asks what helps, never what someone has: no diagnosis words, no checkboxes. Focus mode is suggested on when the phone is set to reduce motion. Background sound starts only when you tap Play, and makes no health claims. The buffer between talks is your own number, 15 minutes by default.
