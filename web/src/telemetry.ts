@@ -19,11 +19,9 @@ export async function initTelemetry(): Promise<void> {
         authToken: rum.token,
         ...(rum.dataset ? { dataset: rum.dataset } : {}),
       },
-      // The break-button beacon must never be tied to a browser session. It uses
-      // sendBeacon, which the SDK does not instrument, and this keeps it that way
-      // if the call ever becomes a fetch. Session replay stays off: no recorder is
-      // passed, and the SDK only records when one is provided.
-      ignoreUrls: [/\/api\/grace(\?|$)/],
+      // The grace-count beacon never gets a span or trace header, so the
+      // button press stays out of browser telemetry.
+      ignoreUrls: [/\/api\/grace(?:[?#]|$)/],
       sessionInactivityTimeoutMillis: 30 * 60 * 1000,
       sessionTerminationTimeoutMillis: 4 * 60 * 60 * 1000,
     });

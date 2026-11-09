@@ -1,17 +1,24 @@
-import { StrictMode } from "react";
+import { StrictMode, Suspense, lazy } from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App";
-import BoardPage from "./pages/Board";
 import { initTelemetry } from "./telemetry";
 import "./index.css";
 
 void initTelemetry();
 
-const Page = window.location.pathname === "/board" ? BoardPage : App;
+// Two pages, so a path check is enough. /board is the organizer page.
+const Board = lazy(() => import("./pages/Board"));
+const onBoard = location.pathname.replace(/\/+$/, "") === "/board";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <Page />
+    {onBoard ? (
+      <Suspense fallback={<p className="p-4">Loading.</p>}>
+        <Board />
+      </Suspense>
+    ) : (
+      <App />
+    )}
   </StrictMode>,
 );
 

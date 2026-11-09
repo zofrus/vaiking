@@ -113,3 +113,32 @@ test("POST /api/grace rate limits per IP", async () => {
   });
   assert.equal(other.statusCode, 204);
 });
+
+const post = (app, xff) =>
+  app.inject({
+    method: "POST",
+    url: "/api/grace",
+    headers: { "x-forwarded-for": xff },
+    payload: { mode: "live" },
+  });
+
+test("POST /api/grace ignores a forged left-most forwarded address", async () => {
+  const app = appWith();
+  let last;
+  // Same gateway-appended address, a different forged one each time.
+  for (let i = 0; i < 31; i++) last = await post(app, `6.6.6.${i}, 10.7.7.7`);
+  assert.equal(last.statusCode, 429);
+});
+
+test("rejected requests do not drain the global cap", async () => {
+  const app = appWith();
+  for (let i = 0; i < 500; i++) await post(app, "10.1.1.1"); // 30 accepted, 470 rejected
+  // 39 more clients x 30 = 1170, plus the 30 above = exactly the 1200 cap.
+  for (let c = 0; c < 39; c++) {
+    for (let i = 0; i < 30; i++) {
+      const r = await post(app, `10.2.${c}.1`);
+      assert.equal(r.statusCode, 204);
+    }
+  }
+  assert.equal((await post(app, "10.3.0.1")).statusCode, 429);
+});
