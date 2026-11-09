@@ -2,11 +2,9 @@
 // the floor of the last planned talk and live/preview. The handler stores no
 // identifier: the limiter key lives in memory only for one window, and the
 // request log line is hidden (warn level) for this route.
-// Known limit: the OTel auto-instrumentation set up through NODE_OPTIONS records
-// its own server span for this route, and that span can carry the client IP and
-// User-Agent as standard HTTP attributes. We do not strip them (the auto setup
-// has no simple switch for it), so do not describe this route as having no
-// identifying data in traces.
+// The custom OTel bootstrap excludes this route from server-side HTTP
+// instrumentation so its spans cannot carry identifying request attributes
+// such as the client IP and User-Agent. Other routes retain automatic spans.
 const { FLOORS, MODES, getMetrics, normalizeFloor } = require("../lib/metrics");
 
 const WINDOW_MS = 60_000;

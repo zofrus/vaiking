@@ -12,6 +12,7 @@ WORKDIR /app
 COPY app/package.json app/package-lock.json ./
 RUN npm ci --omit=dev --no-audit --no-fund
 COPY app/server.js ./
+COPY app/otel.js ./otel.js
 COPY app/lib ./lib
 COPY app/routes ./routes
 COPY --from=web /web/dist ./public
