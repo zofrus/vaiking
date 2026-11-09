@@ -3,6 +3,7 @@
 // server reported, and reconcile's own result, so it cannot state a reason the
 // data does not support.
 import { formatTime, type Change, type PlanItem, type reconcile } from "./reconcile";
+import { placeLabel } from "./place";
 
 export type DayStatus = "kept" | "moved-fits" | "no-longer-fits" | "set-aside";
 
@@ -81,8 +82,8 @@ export function buildDayView(
     const now = live.find((l) => l.id === item.id);
     if (!now) continue;
     const moved = noticeFor.has(item.id);
-    const place = `${now.room ? ` in ${now.room}` : ""}`;
-    const movedTo = `Moved to ${now.room ? `${now.room} at ` : ""}${at(now.starts_at)}`;
+    const place = `${now.room ? ` in ${placeLabel(now.room)}` : ""}`;
+    const movedTo = `Moved to ${now.room ? `${placeLabel(now.room)} at ` : ""}${at(now.starts_at)}`;
 
     if (setAsideIds.has(item.id)) {
       const until = result.clearUntil ? `until your must-see at ${at(result.clearUntil)}` : "for the rest of your plan";
