@@ -57,6 +57,21 @@ function buildSimilarRequest({ talkId, text, after, before, limit }) {
   };
 }
 
+// A plain description of how a similar-talk lookup was built, for the "How this
+// was found" disclosure. Only fixed words and the reachable time window go in:
+// never the seed talk's text and never anything typed.
+function describeQuery({ after, before, limit }) {
+  return {
+    method: "keyword and meaning together",
+    keyword_fields: ["title", "abstract", "tags"],
+    meaning_field: "semantic_content",
+    seed: "the title and first part of the abstract of the talk that changed",
+    excludes: ["the talk itself", "breaks", "registration"],
+    window: { after, before },
+    limit,
+  };
+}
+
 function buildMgetRequest(ids) {
   return { index: "talks", ids, _source_excludes: HIDDEN_FIELDS };
 }
@@ -81,4 +96,4 @@ function createCache(max, ttlMs, now = Date.now) {
   };
 }
 
-module.exports = { parseIds, parseWhen, parseLimit, seedText, buildSimilarRequest, buildMgetRequest, createCache, MAX_IDS };
+module.exports = { parseIds, parseWhen, parseLimit, seedText, buildSimilarRequest, describeQuery, buildMgetRequest, createCache, MAX_IDS };
