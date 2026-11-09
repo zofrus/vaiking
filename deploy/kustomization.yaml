@@ -9,6 +9,7 @@ resources:
   - reconciler.yaml
   - service.yaml
   - httproute.yaml
+  - pdb.yaml
 images:
   - name: app
     newName: ghcr.io/zofrus/vaiking
