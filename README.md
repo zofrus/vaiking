@@ -8,11 +8,26 @@
 - Judge view, the app beside four live tool columns: <https://grace.effulgentpoint.com/demo>
 - Organizer board, counts only: <https://grace.effulgentpoint.com/board>
 
+## Screenshots
+
+From the live app, Nov 9, 2026, 4:12 PM MST (build `c52585e`).
+
+<img src="docs/screenshots/hero.png" width="800" alt="Three phone screens: the home screen with the large &quot;I need a break&quot; button, the calm screen with Quiet Room 260A, and Your day with a notice labelled Drill">
+
+<p>
+  <img src="docs/screenshots/home.png" width="200" alt="Home screen with the large &quot;I need a break&quot; button, a Focus switch and a Ready offline chip">
+  <img src="docs/screenshots/calm.png" width="200" alt="Calm screen: Take your time, Quiet Room 260A on Salt Palace Level 2, hours not listed, Read this aloud and Show this to staff">
+  <img src="docs/screenshots/staff-card.png" width="200" alt="Staff card in large black text: Please point me to Quiet Room 260A, Level 2. I may not be able to talk right now.">
+  <img src="docs/screenshots/your-day-drill.png" width="200" alt="Preview of Tuesday with a sample plan: a notice reading Drill: simulated change, not from the official schedule. Your 5:30 PM MST talk moved to 5:15 PM MST. It no longer fits.">
+</p>
+
+<img src="docs/screenshots/demo.png" width="800" alt="/demo at 1280 by 800: the app in a phone frame beside live Elasticsearch, Dash0, Radar and Gitar columns">
+
 ## Why it's different
 
 - **Care in one tap.** For the attendee who is overwhelmed: one large "I need a break" button, no account, no plan and no reason asked. It shows the quiet room, the all-gender restrooms and a card to show staff.
 - **Works when the venue network doesn't.** After the first visit the button works offline, and the app installs on a phone.
-- **Your day, reconciled like a Kubernetes controller.** You declare what you came for. A reconciler compares the real schedule with it every 2 minutes, and the app tells you in one plain sentence what moved, what still fits, and the closest talk you can still reach. No real schedule change has appeared in the feed yet today, so the moved-talk notice is shown in preview mode as a labelled DRILL.
+- **Your day, reconciled like a Kubernetes controller.** You declare what you came for. A reconciler compares the real schedule with it every 2 minutes, and the app tells you in one plain sentence what moved, what still fits, and, when a talk no longer fits, a similar talk you still have time for. No real schedule change has appeared in the feed yet today, so the moved-talk notice is shown in preview mode as a labelled DRILL.
 - **Four sponsor tools, live.** [/demo](https://grace.effulgentpoint.com/demo) shows the app next to live numbers from Elasticsearch, Dash0, Radar and Gitar.
 
 ## Try it
@@ -29,17 +44,7 @@ Open <https://grace.effulgentpoint.com> on your phone. No account, no install ne
 2. Open the staff card, then **Close card** and **Back to the start**.
 3. Under **Find your talks**, search for what you came for (try "kubernetes"). Each result says whether it matched your words or your meaning. Mark one **Must-see**.
 4. Read **Your day**, and turn on **Show as kubectl** to see the same facts as `kubectl get` and `describe` output.
-5. Open the [preview of Tuesday](https://grace.effulgentpoint.com/?preview=2026-11-10T15:25:00-07:00&sample=1) for a sample saved plan, labelled as simulated, and press the button there. Then open [/demo](https://grace.effulgentpoint.com/demo).
-
-Screenshots from the live app, Nov 9, 2026, 3:52 PM MST:
-
-<p>
-  <img src="docs/screenshots/home.png" width="220" alt="Home screen with the large &quot;I need a break&quot; button">
-  <img src="docs/screenshots/calm.png" width="220" alt="Calm screen with Quiet Room 260A, hours not listed, and the staff card button">
-  <img src="docs/screenshots/staff-card.png" width="220" alt="Staff card asking staff to point the person to Quiet Room 260A">
-</p>
-
-<img src="docs/screenshots/demo.png" width="720" alt="/demo with the app beside live Elasticsearch, Dash0, Radar and Gitar columns">
+5. Open the [preview of Tuesday](https://grace.effulgentpoint.com/?preview=2026-11-10T15%3A25%3A00-07%3A00&sample=1&drill=1) for a sample saved plan, labelled as simulated, and press the button there. Then open [/demo](https://grace.effulgentpoint.com/demo).
 
 ## Features
 
@@ -63,10 +68,10 @@ Everything below is merged and live.
 
 What we check, and where it lives:
 
-- **axe in CI on every pull request.** [`web/scripts/axe.mjs`](web/scripts/axe.mjs) runs axe against WCAG 2.0, 2.1 and 2.2 A and AA rules on 13 page states of the built app: home, calm screen, staff card, the sample plan, the board, the first-visit tour, and Focus mode with and without the readable font. It runs in [`.github/workflows/ci.yml`](.github/workflows/ci.yml) ([#22](https://github.com/zofrus/vaiking/pull/22)).
+- **axe in CI on every pull request.** [`web/scripts/axe.mjs`](web/scripts/axe.mjs) runs axe with the `wcag2a`, `wcag2aa`, `wcag21aa` and `wcag22aa` rule sets on 16 page states of the built app: home, calm screen, staff card, the sample plan, the board, the demo page, the share dialog, the first-visit invite and tour, and Focus mode with and without the readable font. It runs in [`.github/workflows/ci.yml`](.github/workflows/ci.yml) ([#22](https://github.com/zofrus/vaiking/pull/22)).
 - **A review gate.** Gitar reports accessibility problems as blocking findings under rules we wrote in [`.gitar/review/accessibility.md`](.gitar/review/accessibility.md). Audit fixes are in [#42](https://github.com/zofrus/vaiking/pull/42).
 - **Reduced motion.** The app honours `prefers-reduced-motion` ([`web/src/index.css`](web/src/index.css), [`web/src/day.css`](web/src/day.css)), and Focus mode turns motion off ([#69](https://github.com/zofrus/vaiking/pull/69)).
-- **200% zoom and narrow screens.** Checked on the live site on Nov 9, 2026 at 15:52 MST: no horizontal scrolling at 640 CSS pixels wide (1280 by 800 at 200% zoom) or at 320 pixels, on the home screen, calm screen, staff card and board. The method is in the pull request that added this line.
+- **200% zoom and narrow screens.** Checked on the live site on Nov 9, 2026 at 15:52 MST: no horizontal scrolling at 640 CSS pixels wide (1280 by 800 at 200% zoom) or at 320 pixels, on the home screen, calm screen, staff card and board. The method is in [#83](https://github.com/zofrus/vaiking/pull/83), which added this line.
 - **Screen-reader names.** Each talk's buttons carry the talk's name ([#37](https://github.com/zofrus/vaiking/pull/37)), and search results are announced ([#35](https://github.com/zofrus/vaiking/pull/35)).
 - **No colour-only meaning.** Sticker colours always come with the word ([`web/src/Sticker.tsx`](web/src/Sticker.tsx)), the breathing guide always shows words and a count ([`web/src/Breathe.tsx`](web/src/Breathe.tsx)), and /demo statuses are words, not dots ([`web/src/pages/Demo.tsx`](web/src/pages/Demo.tsx)).
 - **Venue facts verbatim and sourced.** Sticker wording and venue facts are copied from the event's page, with a source line and the date checked ([`web/src/lib/sticker.ts`](web/src/lib/sticker.ts), [`web/src/data/facilities.ts`](web/src/data/facilities.ts), [#64](https://github.com/zofrus/vaiking/pull/64), [#67](https://github.com/zofrus/vaiking/pull/67)).
@@ -239,7 +244,7 @@ AI agents wrote most of the code in this repo. I directed the work, reviewed it,
 
 **How the AI was used.** Claude Code ran as a coordinator over parallel agent sessions on both Macs, sharing a work board, session logs and a watchdog. A merge loop merged only pull requests with green CI. Forge agents did intake, a devil's-advocate review, planning, building in separate clones, accessibility and code-review gates, and merge resolution. Research agents read the rules and sponsor docs. A design agent drew five directions. AI-assisted commits carry a `Co-Authored-By` line naming the model.
 
-Gitar reviewed 78 of our 81 merged pull requests against our rules and pushed fixes under its own name ([How Gitar was used](#how-gitar-was-used-to-build-this)). I read each fix before merging. One would have wiped the search index on an empty feed. Dash0's Agent0 found a false error report in our browser telemetry. Radar's AI investigation called a crash loop "transient". Radar's `diagnose` and the pod logs found the real cause ([STORY.md](STORY.md)).
+Gitar reviewed 89 of our 92 merged pull requests (counted at 4:10 PM MST on Nov 9, 2026) against our rules and pushed fixes under its own name ([How Gitar was used](#how-gitar-was-used-to-build-this)). I read each fix before merging. One would have wiped the search index on an empty feed. Dash0's Agent0 found a false error report in our browser telemetry. Radar's AI investigation called a crash loop "transient". Radar's `diagnose` and the pod logs found the real cause ([STORY.md](STORY.md)).
 
 **In the product.** The only AI is semantic search: Elasticsearch embeds talk titles and abstracts. No language model is called, and nothing on the break-button path uses AI.
 

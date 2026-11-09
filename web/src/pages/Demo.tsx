@@ -26,6 +26,10 @@ interface Source {
 }
 type Demo = Record<"elastic" | "dash0" | "radar" | "gitar", Source>;
 
+// The PR link comes from the demo data: render it only if it points at GitHub.
+const isGithubUrl = (url: unknown) =>
+  typeof url === "string" && url.startsWith("https://github.com/");
+
 interface Column {
   key: keyof Demo;
   name: string;
@@ -293,7 +297,9 @@ export default function Demo() {
                     ))}
                   </div>
                 )}
-                {col.key === "gitar" && src?.latest_reviewed_pr && (
+                {col.key === "gitar" &&
+                  src?.latest_reviewed_pr &&
+                  isGithubUrl(src.latest_reviewed_pr.url) && (
                   <div className="gp-block">
                     <p className="gp-tile-label gp-muted">
                       latest Gitar-reviewed PR

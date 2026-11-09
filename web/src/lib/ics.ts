@@ -66,7 +66,8 @@ export function buildIcs(plan: readonly PlanItem[], stamp: Date = new Date()): s
     lines.push(
       "BEGIN:VEVENT",
       // Stable per talk, so importing twice updates the event instead of doubling it.
-      `UID:grace-period-${t.id}@effulgentpoint.com`,
+      // Only safe characters: an id with a line break must not add its own iCalendar line.
+      `UID:grace-period-${String(t.id).replace(/[^\w.-]/g, "")}@effulgentpoint.com`,
       `DTSTAMP:${utc(stamp.toISOString())}`,
       `DTSTART:${utc(t.starts_at)}`,
       `DTEND:${utc(t.ends_at)}`,
