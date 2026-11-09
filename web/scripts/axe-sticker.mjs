@@ -25,13 +25,13 @@ const axe = async (name) => {
 
 await page.goto(base + "/");
 await page.waitForSelector("main");
-await page.getByRole("button", { name: "I need a break" }).click();
+await page.locator("#break-main").click();
 await page.getByRole("button", { name: "Choose my sticker" }).waitFor();
 await axe("calm with sticker panel");
 
 await page.getByRole("button", { name: "Choose my sticker" }).click();
 await axe("sticker dialog open");
-const radios = page.getByRole("radio");
+const radios = page.locator("dialog").getByRole("radio");
 check("three native radios", (await radios.count()) === 3);
 await page.getByRole("radio", { name: /Red/ }).check();
 await axe("sticker dialog, red chosen");

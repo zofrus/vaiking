@@ -15,6 +15,7 @@ import { formatTime, reconcile, type Notice, type PlanItem } from "./lib/reconci
 import { closestReachable } from "./lib/reach";
 import { placeLabel } from "./lib/place";
 import { Sticker } from "./Sticker";
+import { BreakBar } from "./BreakBar";
 import { ReplayTour, Tour, TourInvite } from "./Tour";
 import { VenueHelp } from "./VenueHelp";
 import { SoundPanel } from "./SoundPanel";
@@ -104,35 +105,14 @@ function BreakButton({ onPress }: { onPress: () => void }) {
           I need a break
         </span>
         <span id="break-desc" className="break-sub">
-          The quiet room, a card to show staff, and restrooms. Works without signal.
+          The quiet room, a card to show staff, and restrooms. Works without signal after your first visit.
         </span>
       </span>
     </button>
   );
 }
 
-// Shown only once the big button has scrolled out of view, so the page never
-// has two of the same button on screen. Hidden means out of the tab order too.
-function BreakBar({ onPress }: { onPress: () => void }) {
-  const [show, setShow] = useState(false);
-  useEffect(() => {
-    const target = document.getElementById("break-main");
-    if (!target || !("IntersectionObserver" in window)) return;
-    const io = new IntersectionObserver(([entry]) => setShow(!entry.isIntersecting));
-    io.observe(target);
-    return () => io.disconnect();
-  }, []);
-  return (
-    <div className="break-bar" hidden={!show}>
-      <button type="button" onClick={onPress} className="break-bar-button">
-        <MoonIcon size={20} />
-        I need a break
-      </button>
-    </div>
-  );
-}
-
-function Footer() {
+function Footer({ showReplay }: { showReplay: boolean }) {
   return (
     <footer className="mx-auto flex max-w-xl flex-col gap-1.5 px-5 pb-28 pt-6 text-xs leading-relaxed text-ink-soft">
       <span className="gp-credit gp-secondary self-start">
@@ -149,7 +129,11 @@ function Footer() {
         Schedule data: KubeCon + CloudNativeCon North America 2026, The Linux
         Foundation, CC BY 3.0.
       </p>
-      <div className="mt-3"><ReplayTour /><Tour /></div>{/* mount: Tour */}
+      <div className="mt-3">
+        {/* Calm has its own Replay tour panel, so it shows once there. */}
+        {showReplay && <ReplayTour />}
+        <Tour />
+      </div>{/* mount: Tour */}
       <a className="self-start font-medium underline" href="/board">
         Organizer board
       </a>
@@ -242,7 +226,10 @@ function Calm({
                     <PersonIcon />
                   </span>
                   <span className="flex flex-col">
-                    <span className="font-semibold">Level {r.level}</span>
+                    <span className="font-semibold">
+                      Level {r.level}
+                      <span className="sr-only">. </span>
+                    </span>
                     <span className="text-base text-ink-soft">{r.name}</span>
                   </span>
                 </li>
@@ -551,7 +538,7 @@ export default function App() {
           )}
         </main>
         {view === "home" && <BreakBar onPress={press} />}
-        <Footer />
+        <Footer showReplay={view !== "calm"} />
       </div>
 
       {showCard && <StaffCard onClose={() => go("calm")} />}

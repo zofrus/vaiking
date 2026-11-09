@@ -20,6 +20,8 @@
   --gp-ok: #15803d;
   --gp-ok-bg: #ecfdf3;
   --gp-ok-ink: #166534;
+  --gp-bad-bg: #fef2f2;
+  --gp-bad-ink: #b42318;
   --gp-chip: #f4f4f5;
   --gp-chip-ink: #3f3f46;
   --gp-btn: #18181b; /* primary button ground and its text */
@@ -55,7 +57,10 @@
 
 /* Dark: follows the phone's setting. */
 @media (prefers-color-scheme: dark) {
-  :root {
+  /* Only where the app itself is on the page (it sets data-view), so the
+     organizer board and other pages stay as they were. */
+  :root:has([data-view]) {
+    color-scheme: dark;
     --gp-bg: #111113;
     --gp-surface: #1b1b1f;
     --gp-ink: #f4f4f5;
@@ -73,6 +78,8 @@
     --gp-ok: #4ade9b;
     --gp-ok-bg: #0f2a1c;
     --gp-ok-ink: #4ade9b;
+    --gp-bad-bg: #2d1414;
+    --gp-bad-ink: #ff9c8a;
     --gp-chip: #26262b;
     --gp-chip-ink: #d4d4d8;
     --gp-btn: #f4f4f5;
@@ -100,6 +107,32 @@
   }
 }
 
+/* Dialogs (sticker, tour) paint their own light surface, so they keep the light
+   tokens in dark mode and stay readable. */
+@media (prefers-color-scheme: dark) {
+  dialog {
+    color-scheme: light;
+    --gp-bg: #fafafa;
+    --gp-surface: #ffffff;
+    --gp-ink: #18181b;
+    --gp-muted: #52525b;
+    --gp-line: #e4e4e7;
+    --gp-hair: #f0f0f2;
+    --gp-field-line: #858590;
+    --gp-accent: #4f3ff0;
+    --gp-accent-ink: #ffffff;
+    --gp-accent-soft: #eef0ff;
+    --gp-accent-soft-ink: #3a2cc4;
+    --gp-notice: #9a4a00;
+    --gp-notice-bg: #fff7ed;
+    --gp-notice-line: #f5d9a8;
+    --gp-chip: #f4f4f5;
+    --gp-chip-ink: #3f3f46;
+    --gp-btn: #18181b;
+    --gp-btn-ink: #ffffff;
+  }
+}
+
 /* More contrast: stronger text and borders. */
 @media (prefers-contrast: more) {
   :root {
@@ -116,7 +149,7 @@
   }
 }
 @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
-  :root,
+  :root:has([data-view]),
   [data-view="calm"] {
     --gp-muted: #e4e4e7;
     --gp-line: #a1a1aa;
@@ -140,58 +173,68 @@
     sans-serif;
   --font-mono: "Geist Mono Variable", ui-monospace, Menlo, monospace;
 }
-
-html {
-  color-scheme: light dark;
-  font-family: var(--font-sans);
-  -webkit-text-size-adjust: 100%;
-  /* Focused elements are never hidden under the sticky bar. */
-  scroll-padding-bottom: 6rem;
+/* Small text keeps a 1.5 line height. */
+@theme {
+  --text-sm--line-height: 1.5;
+  --text-xs--line-height: 1.5;
 }
 
-body {
-  font-size: 1rem;
-  line-height: 1.55;
-  background: var(--gp-bg);
-  text-align: left;
-  overflow-wrap: break-word;
-  -webkit-font-smoothing: antialiased;
-}
-/* No italics, no justified text, body lines at 1.5 or more. */
-em,
-i,
-cite,
-address {
-  font-style: normal;
-}
-.text-sm,
-.text-xs {
-  line-height: 1.5;
+@layer base {
+  html {
+    font-family: var(--font-sans);
+    -webkit-text-size-adjust: 100%;
+    /* Focused elements are never hidden under the sticky bar. */
+    scroll-padding-bottom: 6rem;
+  }
+  body {
+    font-size: 1rem;
+    line-height: 1.55;
+    text-align: left;
+    overflow-wrap: break-word;
+    -webkit-font-smoothing: antialiased;
+  }
+  /* The app's ground colour only where the app is on the page. */
+  :root:has([data-view]) body {
+    background: var(--gp-bg);
+  }
+  /* No italics, no justified text, body lines at 1.5 or more. */
+  em,
+  i,
+  cite,
+  address {
+    font-style: normal;
+  }
+  [data-view="calm"] {
+    font-size: 1.125rem;
+  }
+  h1,
+  h2,
+  h3 {
+    letter-spacing: -0.02em;
+  }
+  :focus-visible {
+    outline: 2px solid var(--gp-accent);
+    outline-offset: 2px;
+  }
+  /* Headings get focus from code so screen readers start there. They can't be
+     tabbed to, so a ring around them is only noise, on the staff card most. */
+  main[tabindex="-1"]:focus,
+  h1[tabindex="-1"]:focus,
+  h2[tabindex="-1"]:focus,
+  h3[tabindex="-1"]:focus {
+    outline: none;
+  }
+  /* Footer links need a real tap target. */
+  footer a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+    color: var(--gp-accent);
+    text-underline-offset: 3px;
+  }
 }
 [hidden] {
   display: none !important;
-}
-[data-view="calm"] {
-  font-size: 1.125rem;
-}
-
-h1,
-h2,
-h3 {
-  letter-spacing: -0.02em;
-}
-
-:focus-visible {
-  outline: 2px solid var(--gp-accent);
-  outline-offset: 2px;
-}
-/* Headings get focus from code so screen readers start there. They can't be
-   tabbed to, so a ring around them is only noise, on the staff card most. */
-main[tabindex="-1"]:focus,
-h1[tabindex="-1"]:focus,
-h2[tabindex="-1"]:focus,
-h3[tabindex="-1"]:focus {
-  outline: none;
 }
 
 .mono {
@@ -600,15 +643,6 @@ mark {
   box-shadow: none;
 }
 
-/* Footer links need a real tap target. */
-footer a {
-  display: inline-flex;
-  align-items: center;
-  min-height: 2.75rem;
-  color: var(--gp-accent);
-  text-underline-offset: 3px;
-}
-
 /* ---- Calm: two soft rings that breathe over 8 seconds ---- */
 .calm-mark {
   position: relative;
@@ -656,6 +690,9 @@ footer a {
 }
 
 /* ---- Staff card: black on white, maximum contrast, whatever the view ---- */
+.staff-card {
+  color-scheme: light;
+}
 .staff-card h2 {
   letter-spacing: -0.035em;
 }

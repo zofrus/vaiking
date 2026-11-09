@@ -74,23 +74,23 @@
   min-height: 1.5rem;
   padding: 0 0.5rem;
   border-radius: 6px;
-  background: #f4f4f5;
-  color: #3f3f46;
+  background: var(--gp-chip, #f4f4f5);
+  color: var(--gp-chip-ink, #3f3f46);
   font-size: 0.75rem;
   font-weight: 600;
   white-space: nowrap;
 }
 :is(.gp-day, .gp-find) .gp-tag-moved {
-  background: #fff4e5;
+  background: var(--gp-notice-bg, #fff4e5);
   color: var(--_notice);
 }
 :is(.gp-day, .gp-find) .gp-tag-bad {
-  background: #fef2f2;
-  color: #b42318;
+  background: var(--gp-bad-bg, #fef2f2);
+  color: var(--gp-bad-ink, #b42318);
 }
 :is(.gp-day, .gp-find) .gp-tag-ok {
   background: var(--_ok-bg);
-  color: #166534;
+  color: var(--gp-ok-ink, #166534);
 }
 
 /* Sponsor credit chip: plain text, no logo */
@@ -102,7 +102,7 @@
   min-height: 1.5rem;
   padding: 0 0.5rem;
   border-radius: 6px;
-  background: #f4f4f5;
+  background: var(--gp-chip, #f4f4f5);
   color: var(--_muted);
   font-size: 0.75rem;
   font-weight: 500;
@@ -211,7 +211,7 @@
 .gp-notice-title {
   font-size: 0.875rem;
   font-weight: 600;
-  color: #7a3a00;
+  color: var(--_notice);
 }
 .gp-notice-age {
   margin-left: auto;
@@ -222,10 +222,10 @@
   margin: 0;
   font-size: 0.84375rem;
   line-height: 1.45;
-  color: #5c2c00;
+  color: var(--_notice);
 }
 :is(.gp-day, .gp-find) .gp-notice .gp-credit {
-  background: #fff;
+  background: var(--gp-surface, #fff);
 }
 .gp-stack {
   display: flex;

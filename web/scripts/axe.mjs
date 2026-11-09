@@ -26,7 +26,7 @@ for (const p of pages) {
   await page.goto(base + p.url);
   await page.waitForSelector("main");
   if (p.openTour) await page.getByRole("button", { name: "Take the 5-step tour" }).click();
-  if (p.press) await page.getByRole("button", { name: "I need a break" }).click();
+  if (p.press) await page.locator("#break-main").click();
   const { violations } = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"]).analyze();
   console.log(`${p.name}: ${violations.length} violations`);
   for (const v of violations) {
