@@ -6,7 +6,7 @@
 
 1. On a phone, open the [sample day with a labelled drill](https://grace.effulgentpoint.com/?preview=2026-11-10T15%3A25%3A00-07%3A00&sample=1&drill=1). A simulated schedule change moves one of your talks, and the app checks your plan against it the way a controller reconciles desired state.
 2. Tap **I need a break**: the quiet room and a card to show staff, with no account.
-3. Open [/demo](https://grace.effulgentpoint.com/demo) to see Elasticsearch, Dash0, Radar and Gitar numbers, live. During the hackathon the official schedule really changed, and Grace Period's reconciler detected it: at 4:36 PM a talk was added (Open Cluster Management (OCM): Live Demo Using k3d/KIND, Tue Nov 10 1:40 PM, Salt Palace Level 1 Project Pavilion) and at 4:41 PM a talk was removed from the official feed. Step 1 is a labelled drill, so you can see a moved talk at any time.
+3. Open [/demo](https://grace.effulgentpoint.com/demo) to see Elasticsearch, Dash0, Radar and Gitar numbers, live. During the hackathon the official schedule really changed, and Grace Period's reconciler detected it: at 4:36 PM MST a talk was added (Open Cluster Management (OCM): Live Demo Using k3d/KIND, Tue Nov 10 1:40 PM MST, Salt Palace Level 1 Project Pavilion) and at 4:41 PM MST a talk was removed from the official feed. Step 1 is a labelled drill, so you can see a moved talk at any time.
 
 ## Try it
 
@@ -46,6 +46,6 @@
 ## Honest limits
 
 - **No wayfinding.** There's no map and no "nearest", because the app has no location signal. Routes say "Estimated. Confirm routes with event staff." The staff card points to the quiet room, and to your next talk's room when you have one.
-- **Room changes are polled, not pushed.** The phone checks `/api/changes` every 60 seconds while the app is open and online. During the hackathon the official schedule really changed, and Grace Period's reconciler detected it: at 4:36 PM a talk was added (Open Cluster Management (OCM): Live Demo Using k3d/KIND, Tue Nov 10 1:40 PM, Salt Palace Level 1 Project Pavilion) and at 4:41 PM a talk was removed from the official feed. The walkthrough still shows a moved talk in preview as a labelled DRILL.
+- **Room changes are polled, not pushed.** The phone checks `/api/changes` every 60 seconds while the app is open and online. During the hackathon the official schedule really changed, and Grace Period's reconciler detected it: at 4:36 PM MST a talk was added (Open Cluster Management (OCM): Live Demo Using k3d/KIND, Tue Nov 10 1:40 PM MST, Salt Palace Level 1 Project Pavilion) and at 4:41 PM MST a talk was removed from the official feed. The walkthrough still shows a moved talk in preview as a labelled DRILL.
 - **The board's counts include our own testing** during the hackathon. "Real button presses" means presses on the live site, not presses by attendees we have verified.
 - Your plan is kept on one phone, with no sync between devices.
