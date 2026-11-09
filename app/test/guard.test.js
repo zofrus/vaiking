@@ -251,13 +251,15 @@ test("a room of phones polling changes cannot use up the total that search needs
   assert.equal(searches, 3);
 });
 
-test("the total limit defaults to 3000 a minute", async () => {
+test("search is limited at the new default total of 3000 a minute", async () => {
   let calls = 0;
   const app = appWith({ search: async () => (calls++, HITS) });
-  // Far more than the old 600, from enough clients to stay under each per-client cap.
-  for (let i = 0; i < 700; i++) {
-    const r = await app.inject({ url: `/api/search?q=t${i}`, headers: { "x-forwarded-for": `203.0.${Math.floor(i / 100)}.${i % 100}` } });
+  // 30 clients x 100 new queries: each under its per-client cap of 120, 3000 in all.
+  for (let i = 0; i < 3000; i++) {
+    const r = await app.inject({ url: `/api/search?q=t${i}`, headers: { "x-forwarded-for": `203.0.113.${i % 30}` } });
     assert.equal(r.statusCode, 200);
   }
-  assert.equal(calls, 700);
+  const over = await app.inject({ url: "/api/search?q=one-more", headers: { "x-forwarded-for": "198.51.100.1" } });
+  assert.equal(over.statusCode, 429, "a fresh client is refused once the total is spent");
+  assert.equal(calls, 3000);
 });
