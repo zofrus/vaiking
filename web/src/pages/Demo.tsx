@@ -1,11 +1,14 @@
 import { useEffect, useState } from "react";
 import DemoQr from "./DemoQr";
 import { reportRequestFailure } from "../telemetry";
+import "./pages.css";
 
 // Judge-facing projector page at /demo. Left half: the real app in preview mode
 // (Tuesday 3:25 PM Denver, sample plan). Right half: one column per tool, all
-// polled together. A stat shows LIVE only when the server read it from the real
-// source on its last fetch; otherwise it says unavailable. Nothing is invented.
+// polled together. A column says Live only when the server read every stat in
+// it from the real source on its last fetch, and a stat shows a number only
+// when it was; otherwise it says unavailable. Before the first answer it says
+// Loading. Nothing is invented.
 const POLL_MS = 5000;
 const APP_SRC = "/?preview=2026-11-10T15%3A25%3A00-07%3A00&sample=1&drill=1";
 
@@ -26,6 +29,7 @@ type Demo = Record<"elastic" | "dash0" | "radar" | "gitar", Source>;
 interface Column {
   key: keyof Demo;
   name: string;
+  role: string;
   stats: { key: string; label: string; unit?: string }[];
 }
 
@@ -33,6 +37,7 @@ const COLUMNS: Column[] = [
   {
     key: "elastic",
     name: "Elasticsearch",
+    role: "Search",
     stats: [
       { key: "talks", label: "talks indexed" },
       { key: "took_ms", label: "hybrid search", unit: "ms" },
@@ -41,15 +46,17 @@ const COLUMNS: Column[] = [
   {
     key: "dash0",
     name: "Dash0",
+    role: "Telemetry",
     stats: [
       { key: "button_presses", label: "real button presses, 1h" },
       { key: "plan_requests", label: "plan requests, 1h" },
-      { key: "http_rate", label: "HTTP requests/s", unit: "/s" },
+      { key: "http_rate", label: "HTTP requests", unit: "per second" },
     ],
   },
   {
     key: "radar",
     name: "Radar",
+    role: "Cluster",
     stats: [
       { key: "pods_ready", label: "pods ready" },
       { key: "restarts", label: "container restarts" },
@@ -60,6 +67,7 @@ const COLUMNS: Column[] = [
   {
     key: "gitar",
     name: "Gitar",
+    role: "Review",
     stats: [
       { key: "merged_prs", label: "pull requests merged" },
       { key: "gitar_comments", label: "Gitar review comments" },
@@ -67,18 +75,49 @@ const COLUMNS: Column[] = [
   },
 ];
 
-function Badge({ live }: { live: boolean }) {
-  return live ? (
-    <span className="inline-flex items-center gap-2 rounded-full bg-emerald-300 px-3 py-1 text-sm font-bold tracking-wide text-emerald-950">
-      <span
-        aria-hidden="true"
-        className="h-2.5 w-2.5 rounded-full bg-emerald-900 motion-safe:animate-pulse"
-      />
-      LIVE
+type ChipState = Source["status"] | "loading";
+
+const CHIP_TEXT: Record<ChipState, string> = {
+  live: "Live",
+  partial: "Partly live",
+  unavailable: "Unavailable",
+  loading: "Loading",
+};
+
+// Always a word, never colour alone. Only Live gets the green dot.
+function Chip({ state }: { state: ChipState }) {
+  return (
+    <span
+      className={
+        "gp-chip" +
+        (state === "live"
+          ? " gp-chip-live"
+          : state === "partial"
+            ? " gp-chip-partial"
+            : "")
+      }
+    >
+      {state === "live" && <span aria-hidden="true" className="gp-chip-dot" />}
+      {CHIP_TEXT[state]}
     </span>
-  ) : (
-    <span className="inline-flex rounded-full bg-slate-600 px-3 py-1 text-sm font-bold tracking-wide text-white">
-      UNAVAILABLE
+  );
+}
+
+function Mark() {
+  return (
+    <span className="gp-mark" aria-hidden="true">
+      <svg
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      >
+        <path d="M12 3v4M12 17v4M3 12h4M17 12h4" />
+        <circle cx="12" cy="12" r="3" />
+      </svg>
     </span>
   );
 }
@@ -93,35 +132,36 @@ function StatBlock({
   label,
   unit,
   stat,
+  loading,
 }: {
   label: string;
   unit?: string;
   stat?: Stat;
+  loading: boolean;
 }) {
   const live = stat?.status === "live" && stat.value !== null;
   return (
-    <div className="border-t border-slate-600 pt-3">
-      <p className="text-base text-slate-300">{label}</p>
-      <p className="mt-1 text-5xl font-extrabold leading-none text-white xl:text-6xl">
+    <div className="gp-tile">
+      <p className="gp-tile-label gp-muted">{label}</p>
+      {/* The dash holds the number's height while loading, so nothing jumps. */}
+      <p className="gp-value gp-mono">
         {live ? (
+          stat.value!.toLocaleString("en-US")
+        ) : loading ? (
           <>
-            {stat.value!.toLocaleString("en-US")}
-            {unit && (
-              <span className="ml-1 text-xl font-semibold text-slate-300">
-                {unit}
-              </span>
-            )}
+            <span aria-hidden="true">—</span>
+            <span className="sr-only">Loading</span>
           </>
         ) : (
-          <span className="text-2xl font-bold text-slate-300">unavailable</span>
+          <span className="gp-value-word">Unavailable</span>
         )}
       </p>
-      <div className="mt-2 flex flex-wrap items-center gap-2">
-        <Badge live={live} />
-        {live && stat?.window && (
-          <span className="text-sm text-slate-300">{stat.window}</span>
-        )}
-      </div>
+      {unit && (live || loading) && (
+        <p className="gp-unit gp-mono gp-muted">{unit}</p>
+      )}
+      {live && stat?.window && (
+        <p className="gp-unit gp-muted">{stat.window}</p>
+      )}
     </div>
   );
 }
@@ -160,11 +200,11 @@ export default function Demo() {
     };
   }, []);
 
+  // Before the first answer: Loading, not "unavailable".
+  const loading = data === null && !failed;
+
   return (
-    <div className="min-h-screen bg-slate-950 text-white lg:flex lg:h-screen">
-      <h1 className="sr-only">
-        Grace Period live demo: the app and the four tools behind it
-      </h1>
+    <div className="gp-page gp-demo">
       {/* Only a change of overall state is announced, never every poll. */}
       <p className="sr-only" role="status">
         {failed
@@ -173,64 +213,85 @@ export default function Demo() {
             ? "Live data connected."
             : ""}
       </p>
-      <section
-        aria-label="The app"
-        className="h-[70vh] border-b border-slate-600 lg:h-full lg:w-1/2 lg:border-b-0 lg:border-r"
-      >
+      <section aria-label="The app" className="gp-demo-app">
         <iframe
           title="Grace Period app in preview mode, Tuesday 3:25 PM Mountain, with a sample plan"
           src={APP_SRC}
-          className="h-full w-full bg-white"
         />
       </section>
-      <div className="grid grid-cols-1 gap-px overflow-y-auto bg-slate-600 sm:grid-cols-2 lg:h-full lg:w-1/2 lg:grid-cols-4">
-        {COLUMNS.map((col) => {
-          const src = data?.[col.key];
-          return (
-            <section
-              key={col.key}
-              aria-labelledby={`h-${col.key}`}
-              className="flex flex-col gap-4 bg-slate-950 p-4 [container-type:inline-size]"
-            >
-              <h2
-                id={`h-${col.key}`}
-                className="text-[clamp(1rem,11cqw,1.875rem)] font-extrabold break-words"
+      <div className="gp-demo-tools">
+        <header className="gp-header">
+          <div className="gp-brand">
+            <Mark />
+            <h1>
+              Grace Period live demo: the app and the four tools behind it
+            </h1>
+          </div>
+        </header>
+        <div className="gp-demo-grid">
+          {COLUMNS.map((col) => {
+            const src = data?.[col.key];
+            const state: ChipState = loading
+              ? "loading"
+              : (src?.status ?? "unavailable");
+            return (
+              <section
+                key={col.key}
+                aria-labelledby={`h-${col.key}`}
+                className="gp-card gp-col"
               >
-                {col.name}
-              </h2>
-              {col.key === "gitar" && <DemoQr />}
-              {col.stats.map((s) => (
-                <StatBlock
-                  key={s.key}
-                  label={s.label}
-                  unit={s.unit}
-                  stat={src?.stats?.[s.key]}
-                />
-              ))}
-              {col.key === "gitar" && src?.latest_reviewed_pr && (
-                <div className="border-t border-slate-600 pt-3">
-                  <p className="text-base text-slate-300">
-                    latest Gitar-reviewed PR
-                  </p>
-                  <a
-                    href={src.latest_reviewed_pr.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="mt-1 block text-lg font-semibold text-sky-300 underline"
-                  >
-                    #{src.latest_reviewed_pr.number}{" "}
-                    {src.latest_reviewed_pr.title}
-                  </a>
+                <div className="gp-col-head">
+                  <div>
+                    <p className="gp-kicker gp-muted">{col.role}</p>
+                    <h2 id={`h-${col.key}`}>{col.name}</h2>
+                  </div>
+                  <Chip state={state} />
                 </div>
-              )}
-              <p className="mt-auto border-t border-slate-600 pt-3 text-sm text-slate-300">
-                {src?.activity ??
-                  (failed ? "Could not reach the demo data." : "Loading.")}
-                {src?.fetched_at && <> Updated {ago(src.fetched_at, nowMs)}.</>}
-              </p>
-            </section>
-          );
-        })}
+                {col.key === "gitar" && (
+                  <div className="gp-qr">
+                    <DemoQr />
+                  </div>
+                )}
+                <div className="gp-tiles">
+                  {col.stats.map((s) => (
+                    <StatBlock
+                      key={s.key}
+                      label={s.label}
+                      unit={s.unit}
+                      stat={src?.stats?.[s.key]}
+                      loading={loading}
+                    />
+                  ))}
+                </div>
+                {col.key === "gitar" && src?.latest_reviewed_pr && (
+                  <div className="gp-block">
+                    <p className="gp-tile-label gp-muted">
+                      latest Gitar-reviewed PR
+                    </p>
+                    <a
+                      href={src.latest_reviewed_pr.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="gp-pr"
+                    >
+                      #{src.latest_reviewed_pr.number}{" "}
+                      {src.latest_reviewed_pr.title}
+                    </a>
+                  </div>
+                )}
+                <p className="gp-col-foot gp-muted">
+                  {src?.activity ??
+                    (failed ? "Could not reach the demo data." : "Loading.")}
+                  {src?.fetched_at && (
+                    <span className="gp-updated">
+                      Updated {ago(src.fetched_at, nowMs)}.
+                    </span>
+                  )}
+                </p>
+              </section>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
