@@ -19,7 +19,9 @@ let flushed = false;
 function flush() {
   if (flushed) return;
   flushed = true;
-  sdk.shutdown().catch(() => {});
+  sdk.shutdown().catch((err) => {
+    console.error("otel shutdown failed:", err?.message ?? err);
+  });
 }
 process.on("SIGTERM", flush);
 process.once("beforeExit", flush);
