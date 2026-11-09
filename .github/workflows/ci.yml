@@ -34,6 +34,9 @@ jobs:
       - name: Test app
         run: npm test
         working-directory: app
+      - name: Test web
+        run: npm test
+        working-directory: web
       - name: Build web
         run: npm run build
         working-directory: web
