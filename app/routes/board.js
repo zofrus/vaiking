@@ -6,6 +6,10 @@ const MAX_STALE_MS = 10 * 60_000;
 const TIMEOUT_MS = 4_000;
 const SMALL_SAMPLE = 20;
 const WINDOW = "1h";
+// After a failed upstream call, wait before trying again: 5s, 10s, 20s ... up to
+// 60s. Without this every poll during an outage re-calls Dash0.
+const BACKOFF_BASE_MS = 5_000;
+const BACKOFF_MAX_MS = 60_000;
 
 const queryFor = (mode) =>
   `round(sum by (scheduled_floor) (increase(grace_requests_total{mode="${mode}"}[${WINDOW}])))`;
@@ -44,6 +48,8 @@ module.exports = async function board(app, { env, fetch: fetchImpl }) {
   let cached = null;
   let cachedAt = 0;
   let inflight = null;
+  let failures = 0;
+  let retryAt = 0;
 
   async function query(mode) {
     const url = `${base}/api/prometheus/api/v1/query?${new URLSearchParams({ query: queryFor(mode) })}`;
@@ -80,14 +86,23 @@ module.exports = async function board(app, { env, fetch: fetchImpl }) {
       };
     }
     if (cached && Date.now() - cachedAt < CACHE_MS) return cached;
-    inflight ??= load().finally(() => {
-      inflight = null;
-    });
     try {
+      if (!inflight && Date.now() < retryAt)
+        throw new Error("backing off after a failure");
+      inflight ??= load().finally(() => {
+        inflight = null;
+      });
       cached = await inflight;
       cachedAt = Date.now();
+      failures = 0;
       return cached;
     } catch (err) {
+      if (Date.now() >= retryAt) {
+        failures += 1;
+        retryAt =
+          Date.now() +
+          Math.min(BACKOFF_BASE_MS * 2 ** (failures - 1), BACKOFF_MAX_MS);
+      }
       // Only a short reason is logged: errors can carry the URL.
       request.log.warn(
         { reason: String(err.message).slice(0, 40) },
