@@ -22,7 +22,11 @@ test("similar query filters to the window and excludes the talk itself", () => {
   const f = req.query.bool.filter;
   assert.deepEqual(f[0].bool.must_not[1], { ids: { values: ["42"] } });
   assert.deepEqual(f[1].range.starts_at, { gte: "2026-11-10T21:00:00.000Z", lte: "2026-11-10T23:00:00.000Z" });
-  assert.deepEqual(req.query.bool.must, [{ match: { semantic_content: "x" } }]);
+  assert.deepEqual(req.query.bool.should, [
+    { multi_match: { query: "x", fields: ["title^2", "abstract", "tags"] } },
+    { match: { semantic_content: "x" } },
+  ]);
+  assert.equal(req.query.bool.minimum_should_match, 1);
 });
 
 test("parsers", () => {
@@ -59,6 +63,51 @@ test("/api/similar searches once, then serves repeats from cache", async () => {
   assert.deepEqual((await app.inject({ url })).json(), { results: [{ id: "7" }] });
   await app.inject({ url });
   assert.equal(searches, 1);
+});
+
+test("/api/similar shares its request budget across a cold lookup and search", async () => {
+  let getTimeout;
+  let searchTimeout;
+  let getElapsed;
+  const app = appWith({
+    get: async (_request, options) => {
+      getTimeout = options.requestTimeout;
+      const started = Date.now();
+      await new Promise((resolve) => setTimeout(resolve, 30));
+      getElapsed = Date.now() - started;
+      return { _source: { title: "Mesh", abstract: "about meshes" } };
+    },
+    search: async (_request, options) => {
+      searchTimeout = options.requestTimeout;
+      return { hits: { hits: [] } };
+    },
+  });
+
+  const res = await app.inject({ url: "/api/similar?talk_id=1" });
+  assert.equal(res.statusCode, 200);
+  assert.equal(getTimeout, 800);
+  assert.ok(searchTimeout > 0);
+  assert.ok(searchTimeout <= getTimeout - getElapsed + 2);
+});
+
+test("/api/similar explains when no similar results are available", async () => {
+  const emptySeed = appWith({
+    get: async () => ({ _source: { title: "", abstract: "" } }),
+    search: async () => assert.fail("empty seed should skip search"),
+  });
+  assert.deepEqual((await emptySeed.inject({ url: "/api/similar?talk_id=1" })).json(), {
+    results: [],
+    message: "No similar talks found. Try widening the time window.",
+  });
+
+  const noMatches = appWith({
+    get: async () => ({ _source: { title: "Mesh" } }),
+    search: async () => ({ hits: { hits: [] } }),
+  });
+  assert.deepEqual((await noMatches.inject({ url: "/api/similar?talk_id=1" })).json(), {
+    results: [],
+    message: "No similar talks found. Try widening the time window.",
+  });
 });
 
 test("/api/similar: 404 for unknown talk, 400 for bad time, errors never leak", async () => {

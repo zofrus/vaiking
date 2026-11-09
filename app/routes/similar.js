@@ -2,7 +2,14 @@ const {
   parseWhen, parseLimit, seedText, buildSimilarRequest, createCache,
 } = require("../lib/search-similar");
 
-const OPTIONS = { requestTimeout: 800, maxRetries: 0 };
+const BUDGET_MS = 800;
+const OPTIONS = { maxRetries: 0 };
+
+function similarResponse(results) {
+  return results.length === 0
+    ? { results, message: "No similar talks found. Try widening the time window." }
+    : { results };
+}
 
 module.exports = async function similar(app, { elastic }) {
   const seeds = createCache(500, 10 * 60_000);
@@ -20,23 +27,29 @@ module.exports = async function similar(app, { elastic }) {
     const key = [talkId, after.value, before.value, limit].join("|");
     const cached = answers.get(key);
     if (cached) return cached;
+    const deadline = Date.now() + BUDGET_MS;
 
     try {
+      const requestOptions = () => {
+        const requestTimeout = deadline - Date.now();
+        if (requestTimeout <= 0) throw new Error("similar request deadline exceeded");
+        return { ...OPTIONS, requestTimeout };
+      };
       let text = seeds.get(talkId);
       if (text === undefined) {
         const talk = await elastic.client
-          .get({ index: "talks", id: talkId, _source_includes: ["title", "abstract"] }, OPTIONS)
+          .get({ index: "talks", id: talkId, _source_includes: ["title", "abstract"] }, requestOptions())
           .catch((err) => (err?.statusCode === 404 ? null : Promise.reject(err)));
         if (!talk) return reply.code(404).send({ error: "talk not found" });
         text = seedText(talk._source);
         seeds.set(talkId, text);
       }
-      if (!text) return { results: [] };
+      if (!text) return similarResponse([]);
       const res = await elastic.client.search(
         buildSimilarRequest({ talkId, text, after: after.value, before: before.value, limit }),
-        OPTIONS,
+        requestOptions(),
       );
-      const body = { results: (res.hits?.hits ?? []).map((h) => h._source) };
+      const body = similarResponse((res.hits?.hits ?? []).map((h) => h._source));
       answers.set(key, body);
       return body;
     } catch (err) {
