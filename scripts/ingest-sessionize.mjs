@@ -6,6 +6,16 @@
 import { createHash } from 'node:crypto';
 import { createRequire } from 'node:module';
 
+const require = createRequire(new URL('../app/package.json', import.meta.url));
+if (
+  process.env.OTEL_EXPORTER_OTLP_ENDPOINT &&
+  !process.env.NODE_OPTIONS?.includes('@opentelemetry/auto-instrumentations-node/register')
+) {
+  require('@opentelemetry/auto-instrumentations-node/register');
+}
+const { SpanStatusCode, trace } = require('@opentelemetry/api');
+const tracer = trace.getTracer('vaiking-ingest');
+
 const SOURCE_URL = 'https://sessionize.com/api/v2/svi82w6c/view/All';
 const SESSION_PAGE = 'https://events.linuxfoundation.org/kubecon-cloudnativecon-north-america/program/schedule/?id=';
 const INDEX = 'talks-v1';
@@ -102,10 +112,31 @@ export function normalize(feed) {
   return { fetched: feed.sessions.length, docs };
 }
 
+async function withSpan(name, attributes, operation) {
+  return tracer.startActiveSpan(name, async (span) => {
+    for (const [key, value] of Object.entries(attributes)) span.setAttribute(key, value);
+    try {
+      return await operation(span);
+    } catch (err) {
+      span.recordException({ name: err?.name ?? 'Error' });
+      span.setStatus({ code: SpanStatusCode.ERROR });
+      throw err;
+    } finally {
+      span.end();
+    }
+  });
+}
+
 async function fetchFeed() {
-  const res = await fetch(SOURCE_URL, { signal: AbortSignal.timeout(30_000) });
-  if (!res.ok) throw Object.assign(new Error('fetch failed'), { statusCode: res.status });
-  return res.json();
+  return withSpan(
+    'sessionize.fetch_feed',
+    { 'http.request.method': 'GET', 'server.address': 'sessionize.com' },
+    async () => {
+      const res = await fetch(SOURCE_URL, { signal: AbortSignal.timeout(30_000) });
+      if (!res.ok) throw Object.assign(new Error('fetch failed'), { statusCode: res.status });
+      return res.json();
+    },
+  );
 }
 
 function createClient() {
@@ -113,7 +144,6 @@ function createClient() {
   const apiKey = process.env.ELASTICSEARCH_API_KEY;
   if (!node || !apiKey) return null;
   // The dependency is installed in app/, next to the server that uses it.
-  const require = createRequire(new URL('../app/package.json', import.meta.url));
   const { Client } = require('@elastic/elasticsearch');
   return new Client({ node, auth: { apiKey }, serverMode: 'serverless', requestTimeout: 120_000 });
 }
@@ -139,18 +169,37 @@ async function findChanged(client, docs) {
 }
 
 async function ingest(client, docs) {
-  await ensureIndex(client);
-  const changed = await findChanged(client, docs);
-  if (changed.length === 0) return { changed: 0, written: 0, failed: 0 };
-  const stats = await client.helpers.bulk({
-    datasource: changed,
-    onDocument: (doc) => ({ index: { _index: INDEX, _id: doc.id } }),
-    flushBytes: 1_000_000,
-    concurrency: 2,
-    retries: 3,
-    onDrop: () => {},
-  });
-  return { changed: changed.length, written: stats.successful, failed: stats.failed };
+  return withSpan(
+    'elasticsearch.ingest',
+    { 'db.system.name': 'elasticsearch' },
+    async (span) => {
+      await ensureIndex(client);
+      const changed = await findChanged(client, docs);
+      let stats = { successful: 0, failed: 0 };
+      if (changed.length > 0) {
+        stats = await client.helpers.bulk({
+          datasource: changed,
+          onDocument: (doc) => ({ index: { _index: INDEX, _id: doc.id } }),
+          flushBytes: 1_000_000,
+          concurrency: 2,
+          retries: 3,
+          onDrop: () => {
+            console.error('Elasticsearch bulk dropped a document');
+            span.recordException({ name: 'ElasticsearchBulkDrop' });
+            span.setStatus({ code: SpanStatusCode.ERROR });
+          },
+        });
+      }
+      const current = docs.map((doc) => doc.id);
+      const { deleted } = await client.deleteByQuery({
+        index: INDEX,
+        query: { bool: { must_not: { ids: { values: current } } } },
+        refresh: true,
+      });
+      if (stats.failed > 0) span.setStatus({ code: SpanStatusCode.ERROR });
+      return { changed: changed.length, written: stats.successful, failed: stats.failed, deleted };
+    },
+  );
 }
 
 async function main() {
@@ -170,8 +219,8 @@ async function main() {
     return;
   }
 
-  const { changed, written, failed } = await ingest(client, docs);
-  console.log(`unchanged=${docs.length - changed} changed=${changed} written=${written} failed=${failed}`);
+  const { changed, written, failed, deleted } = await ingest(client, docs);
+  console.log(`unchanged=${docs.length - changed} changed=${changed} written=${written} failed=${failed} deleted=${deleted}`);
   await client.close();
   if (failed > 0) process.exitCode = 1;
 }

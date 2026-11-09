@@ -23,6 +23,7 @@ export async function initTelemetry(): Promise<void> {
       sessionTerminationTimeoutMillis: 4 * 60 * 60 * 1000,
     });
   } catch {
-    // No telemetry is better than a broken page.
+    // No telemetry is better than a broken page; don't log config or endpoint details.
+    console.warn("Browser telemetry initialization failed");
   }
 }

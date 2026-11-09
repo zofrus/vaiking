@@ -18,7 +18,8 @@ function createElastic(env = process.env) {
     });
     return { configured: true, client };
   } catch {
-    // A malformed URL must not stop the app. The error text can echo the URL.
+    // A malformed URL must not stop the app or expose the configured endpoint.
+    console.error("Elasticsearch client initialization failed");
     return NOT_CONFIGURED;
   }
 }
