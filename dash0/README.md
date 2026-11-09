@@ -1,13 +1,14 @@
 # Dash0 assets
 
-Status: the SLO and dashboard YAML are not exported yet. They must be built in the
-Dash0 UI and exported, because the asset schema has not been verified from here.
-This file records the exact queries so the UI build is copy and paste.
+Status: this folder holds no exported SLO or dashboard file. The repo has only the
+metric definitions (`app/lib/metrics.js`), the counting rule (`app/routes/plan-timing.js`)
+and the queries below, which are copy and paste into the Dash0 UI. Any SLO or dashboard
+built from them lives in Dash0, not in this repo.
 
 ## SLO: "plan requests answered within 1 second"
 
-Counts `GET /api/search`, `/api/changes` and `/api/talks`, the requests behind the plan screen.
-`/api/similar` is left out because it follows a break press.
+Counts `GET /api/search` and `GET /api/talks`, the requests behind the plan screen.
+`/api/changes` (the background poll) and `/api/similar` (it follows a break press) are left out.
 
 Dash0 SLO queries must be bare vector selectors, and good must be a strict subset of total.
 

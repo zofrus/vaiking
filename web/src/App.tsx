@@ -5,6 +5,7 @@ import { countPress } from "./lib/grace";
 import { PlanSection } from "./Plan";
 import { DayViewSection } from "./DayView";
 import { InstallPrompt } from "./InstallPrompt";
+import { OfflineChip } from "./OfflineChip";
 import { loadBreak, loadBuffer, loadPlan, saveBreak, saveBuffer, savePlan } from "./lib/plan";
 import { isPreview, now, samplePlan, useSample } from "./lib/clock";
 import { useAlternatives, useChanges, useSimilar } from "./lib/live";
@@ -331,6 +332,7 @@ export default function App() {
 
         <header className="mx-auto max-w-xl px-5 pt-6">
           <h1 className="text-lg font-semibold">Grace Period</h1>
+          <OfflineChip />{/* mount: OfflineChip */}
         </header>
 
         <main
