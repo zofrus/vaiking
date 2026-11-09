@@ -1,3 +1,4 @@
+import { QueryShape } from "./QueryShape";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { flushSync } from "react-dom";
 import { quietRoom, restrooms } from "./data/facilities";
@@ -5,14 +6,25 @@ import { countPress } from "./lib/grace";
 import { PlanSection } from "./Plan";
 import { DayViewSection } from "./DayView";
 import { InstallPrompt } from "./InstallPrompt";
-import { loadBuffer, loadPlan, saveBuffer, savePlan } from "./lib/plan";
+import { OfflineChip } from "./OfflineChip";
+import { loadBreak, loadBuffer, loadPlan, saveBreak, saveBuffer, savePlan } from "./lib/plan";
 import { isPreview, now, samplePlan, useSample } from "./lib/clock";
 import { useAlternatives, useChanges, useSimilar } from "./lib/live";
 import { formatTime, reconcile, type Notice, type PlanItem } from "./lib/reconcile";
 import { closestReachable } from "./lib/reach";
 import { placeLabel } from "./lib/place";
+import { Sticker } from "./Sticker";
+import { VenueHelp } from "./VenueHelp";
 
 type View = "home" | "calm" | "card";
+
+// The banner names the day being previewed, not always Tuesday.
+const previewDay = new Intl.DateTimeFormat("en-US", {
+  timeZone: "America/Denver",
+  weekday: "long",
+  month: "long",
+  day: "numeric",
+}).format(now());
 
 const viewFromHash = (): View =>
   location.hash === "#/calm" ? "calm" : location.hash === "#/card" ? "card" : "home";
@@ -86,8 +98,6 @@ function Calm({
         </p>
       </div>
 
-      {planResult}
-
       <div className="panel">
         <h3 className="text-2xl font-semibold">{quietRoom.name}</h3>
         <p className="mt-1 text-lg">
@@ -130,6 +140,11 @@ function Calm({
           Estimated. Confirm routes with event staff.
         </p>
       </div>
+
+      {/* mount: Sticker */}<Sticker />
+      {/* mount: VenueHelp */}<VenueHelp />
+
+      {planResult}
 
       <button type="button" onClick={onBack} className="quiet-button">
         Back to the start
@@ -203,7 +218,8 @@ export default function App() {
 
   const [plan, setPlanState] = useState<PlanItem[]>(() => (useSample ? [...samplePlan] : loadPlan()));
   const [buffer, setBufferState] = useState(loadBuffer);
-  const [grace, setGrace] = useState(false);
+  // A reload keeps a break only when the person pressed the button and it is still valid.
+  const [grace, setGrace] = useState(() => viewFromHash() !== "home" && loadBreak(now().getTime(), isPreview ? "preview" : "live"));
   const setPlan = (p: PlanItem[]) => {
     setPlanState(p);
     if (!isPreview) savePlan(p); // a preview never overwrites the real plan
@@ -218,7 +234,13 @@ export default function App() {
     r.clearUntil && Date.parse(r.clearUntil) > now().getTime()
       ? `You're clear until ${formatTime(r.clearUntil)} MST.`
       : "You're clear for the rest of your plan.";
-  const similar = useSimilar(grace ? result.dropped[0] : undefined);
+  // A similar talk is only worth naming if the person could go: it starts after
+  // their own buffer and clashes with nothing in their plan (same rule as notices).
+  const similarTalks = useSimilar(grace ? result.dropped[0] : undefined);
+  const similar =
+    grace && result.dropped[0]
+      ? closestReachable(similarTalks, [...result.kept, ...result.dropped], result.dropped[0].id, now(), buffer)
+      : null;
   const alternatives = useAlternatives(result.notices.filter((n) => !n.fits), buffer);
   // A notice that no longer fits names the first similar talk the person still
   // has time for, once /api/similar has answered. Until then it says only what changed.
@@ -234,7 +256,6 @@ export default function App() {
     };
   };
   const lines = result.notices.map((n) => ({ id: n.changeId, ...noticeLine(n) }));
-  const noticeText = lines.map((l) => l.text).join(" ");
   const notices = lines.length > 0 && (
     <>
       {lines.map((l) => (
@@ -245,12 +266,15 @@ export default function App() {
           Based on the {buffer} minutes you want between talks. Estimated. Confirm routes with event staff.
         </p>
       )}
+      {/* mount: QueryShape */}
+      {lines.some((l) => l.reach) && <QueryShape />}
     </>
   );
 
   const press = () => {
     setGrace(true);
-    countPress(isPreview ? "preview" : "live");
+    saveBreak(result.clearUntil ?? new Date(now().getTime() + 3 * 3_600_000).toISOString(), isPreview ? "preview" : "live");
+    countPress(isPreview ? "preview" : "live", plan, now());
     // Focus moving to the calm heading says where you are, so the live region
     // adds only the result. It is worked out here from the same plan, so
     // nothing waits on the network.
@@ -265,6 +289,7 @@ export default function App() {
   // The heading's words change, then focus moves to it so a screen reader
   // reads the new words. The button that was pressed is gone by then.
   const putBack = () => {
+    saveBreak(null, isPreview ? "preview" : "live");
     flushSync(() => {
       setGrace(false);
       setAnnounce("");
@@ -284,9 +309,12 @@ export default function App() {
       <p role="status" aria-live="polite" className="sr-only">
         {view === "home" ? "" : announce}
       </p>
-      <p aria-live="polite" className="sr-only">
-        {noticeText}
-      </p>
+      {/* One node per notice, so additions and text changes are announced independently. */}
+      <div role="status" aria-live="polite" aria-atomic="false" aria-relevant="additions text" className="sr-only">
+        {lines.map((l) => (
+          <p key={l.id}>{l.text}</p>
+        ))}
+      </div>
       {/* Everything but the live region goes quiet while the staff card is up,
           so Tab and the screen reader stay on the card. */}
       <div aria-hidden={showCard || undefined} inert={showCard || undefined}>
@@ -302,13 +330,14 @@ export default function App() {
         </a>
         {isPreview && (
           <p className="bg-black px-5 py-3 text-center font-semibold text-white">
-            Preview of Tuesday. Times are real, the moment is simulated.
+            Preview of {previewDay}. Times are real, the moment is simulated.
             {useSample && " The plan below is a sample."}
           </p>
         )}
 
         <header className="mx-auto max-w-xl px-5 pt-6">
           <h1 className="text-lg font-semibold">Grace Period</h1>
+          <OfflineChip />{/* mount: OfflineChip */}
         </header>
 
         <main
@@ -326,7 +355,7 @@ export default function App() {
               <p className="text-lg text-ink-soft">
                 Press the button whenever you need a pause. You get the quiet
                 room, a card to show staff, and a list of all-gender restrooms. It
-                works with no account and no signal.
+                needs no account, and works with no signal after your first visit.
               </p>
             </section>
             {result.notices.length > 0 && (
@@ -348,11 +377,15 @@ export default function App() {
                 plan.length > 0 && (
                   <div className="panel space-y-3" aria-labelledby="clear-h" role="group">
                     <h3 id="clear-h" tabIndex={-1} className="text-2xl font-semibold">
-                      {grace ? clearLine(result) : "Your talks are back in your plan."}
+                      {grace ? clearLine(result) : "All your talks are in your plan."}
                     </h3>
                     {grace && <p>Nothing is cancelled. Your plan is saved.</p>}
                     {notices}
-                    {similar && <p className="text-ink-soft">Similar talk later today: {similar}.</p>}
+                    {similar && (
+                      <p className="text-ink-soft">
+                        Similar talk later today: {similar.title}, {formatTime(similar.starts_at)} MST, {placeLabel(similar.room)}.
+                      </p>
+                    )}
                     {result.dropped.length > 0 && (
                       <>
                         <p id="aside-h" className="font-semibold">Set aside for now</p>
