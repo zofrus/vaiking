@@ -13,7 +13,7 @@
 - Open <https://grace.effulgentpoint.com> on your phone. There's no account and nothing to install. To use a QR code instead, scan the one at the top of <https://grace.effulgentpoint.com/demo>.
 - **Offline test:** open the app, close it, and open it a second time. The first visit caches it, and the chip then says "Ready offline". Turn on airplane mode and tap **I need a break**. The calm screen, the quiet room and the staff card still appear.
 
-<!-- TODO: when https://grace.effulgentpoint.com/qr-grace.svg is live (Builder A), add: ![QR code that opens https://grace.effulgentpoint.com](https://grace.effulgentpoint.com/qr-grace.svg) -->
+<img src="web/public/qr-grace.svg" width="160" alt="QR code that opens https://grace.effulgentpoint.com">
 
 ## The 60-second tour
 
