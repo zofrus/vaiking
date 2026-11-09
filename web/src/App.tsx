@@ -11,6 +11,7 @@ import { useAlternatives, useChanges, useSimilar } from "./lib/live";
 import { formatTime, reconcile, type Notice, type PlanItem } from "./lib/reconcile";
 import { closestReachable } from "./lib/reach";
 import { placeLabel } from "./lib/place";
+import { Sticker } from "./Sticker";
 
 type View = "home" | "calm" | "card";
 
@@ -136,6 +137,8 @@ function Calm({
           Estimated. Confirm routes with event staff.
         </p>
       </div>
+
+      {/* mount: Sticker */}<Sticker />
 
       {planResult}
 
