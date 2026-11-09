@@ -1,0 +1,6 @@
+/* Focus mode must not thin the Medical help card's borders. Focus mode sets 2px
+   on every button, so this is written to out-rank it. Scoped to this card, and
+   only to elements that already have a 4px border, so nothing else changes. */
+html[data-focus="on"] .emergency-dialog :is(button, a).border-4.border-4 {
+  border-width: 4px;
+}

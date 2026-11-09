@@ -26,6 +26,7 @@ import { VenueHelp } from "./VenueHelp";
 import { SoundPanel } from "./SoundPanel";
 import { Breathe } from "./Breathe";
 import { ReadAloud } from "./ReadAloud";
+import { EmergencyButton } from "./EmergencyCard";
 
 type View = "home" | "calm" | "card";
 
@@ -346,6 +347,7 @@ function StaffCard({ onClose, nextRoom }: { onClose: () => void; nextRoom: strin
         </div>
       </div>
       <div className="border-t-2 border-black px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+        {/* mount: EmergencyCard (staff card) */}<div className="mb-3"><EmergencyButton /></div>
         {/* mount: ReadAloud */}<div className="mb-3 text-black"><ReadAloud text={`Please point me to ${quietRoom.name}, Level ${quietRoom.level}. I may not be able to talk right now. ${quietRoom.venue}.${nextRoom ? ` Please point me to: ${nextRoom}.` : ""}`} /></div>
         <button type="button" onClick={onClose} className="close-button">
           Close card
@@ -510,6 +512,7 @@ export default function App() {
           className="mx-auto max-w-xl space-y-6 px-5 pb-6 pt-5"
         >
           <BreakButton onPress={press} />
+          {/* mount: EmergencyCard (home, and top of calm) */}<EmergencyButton />
           {view === "home" ? (
             <>
             <section aria-labelledby="home-h" className="space-y-3">
