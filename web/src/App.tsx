@@ -294,8 +294,8 @@ export default function App() {
       <p role="status" aria-live="polite" className="sr-only">
         {view === "home" ? "" : announce}
       </p>
-      {/* One node per notice, so only a new notice is read, not the whole list. */}
-      <div role="status" aria-live="polite" aria-relevant="additions text" className="sr-only">
+      {/* One node per notice, so additions and text changes are announced independently. */}
+      <div role="status" aria-live="polite" aria-atomic="false" aria-relevant="additions text" className="sr-only">
         {lines.map((l) => (
           <p key={l.id}>{l.text}</p>
         ))}
