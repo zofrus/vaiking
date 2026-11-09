@@ -4,6 +4,7 @@ import { flushSync } from "react-dom";
 import { quietRoom, restrooms } from "./data/facilities";
 import { countPress } from "./lib/grace";
 import { PlanSection } from "./Plan";
+import { AddToCalendar } from "./AddToCalendar";
 import { DayViewSection } from "./DayView";
 import { InstallPrompt } from "./InstallPrompt";
 import { OfflineChip } from "./OfflineChip";
@@ -374,6 +375,7 @@ export default function App() {
             <InstallPrompt />
             <PlanSection plan={plan} setPlan={setPlan} buffer={buffer} setBuffer={setBuffer} />
             <DayViewSection plan={plan} changes={changes} result={result} now={now()} bufferMinutes={buffer} />
+            <AddToCalendar talks={[...result.kept, ...result.dropped]} />{/* mount: AddToCalendar */}
             </>
           ) : (
             <Calm
