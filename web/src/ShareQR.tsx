@@ -1,10 +1,13 @@
 import { useRef } from "react";
+import { clickedOutside } from "./lib/dialogFit";
+import "./dialogfit.css";
 
 const URL_TEXT = "https://grace.effulgentpoint.com/";
 
 // A quiet "Share this app" button. The QR is a static file (public/qr-grace.svg,
 // generated once with error correction M), so no QR library ships. Native <dialog> with showModal(): inert background, Escape
-// closes, focus returns to the button.
+// or a tap outside closes, focus returns to the button. It fits a short (landscape)
+// phone: the body scrolls and Close stays pinned (see dialogfit.css).
 export function ShareQR() {
   const dialog = useRef<HTMLDialogElement>(null);
   return (
@@ -19,7 +22,12 @@ export function ShareQR() {
       <dialog
         ref={dialog}
         aria-labelledby="share-h"
-        className="m-auto w-[min(24rem,calc(100vw-1.5rem))] rounded-2xl bg-white p-5 text-[#18181b] backdrop:bg-black/70"
+        onClick={(e) => {
+          // A tap on the dimmed backdrop closes it: phones have no Escape key.
+          if (e.target === e.currentTarget && clickedOutside(e.currentTarget.getBoundingClientRect(), e.clientX, e.clientY))
+            e.currentTarget.close();
+        }}
+        className="fit-dialog m-auto w-[min(24rem,calc(100vw-1.5rem))] rounded-2xl bg-[var(--gp-surface)] p-5 text-[var(--gp-ink)] shadow-[0_0_0_1px_var(--gp-line)] backdrop:bg-[rgb(24_24_27/0.45)]"
       >
         <h2 id="share-h" className="text-xl font-semibold">
           Share this app
@@ -35,13 +43,12 @@ export function ShareQR() {
         <p className="mt-2">
           Scan to open Grace Period. Then use Add to Home Screen to install it.
         </p>
-        <form method="dialog" className="mt-4">
-          <button
-            type="submit"
-            className="inline-flex min-h-11 w-full items-center justify-center rounded-xl border-2 border-[#18181b] px-5 py-2 font-semibold"
-          >
-            Close
-          </button>
+        <form method="dialog">
+          <div className="dialog-actions">
+            <button type="submit" className="btn-p">
+              Close
+            </button>
+          </div>
         </form>
       </dialog>
     </>
