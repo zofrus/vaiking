@@ -1,31 +1,94 @@
 @import "tailwindcss";
 
-/* Calm, low-glare palette. Every pairing below is 4.5:1 or better. */
-@theme {
-  --color-ground: #e8eff0;
-  --color-panel: #ffffff;
-  --color-ink: #0f2328;
-  --color-ink-soft: #3b5057;
-  --color-line: #b9c9cc;
-  --color-deep: #0d4a52;
-  --color-deep-press: #093840;
-  --font-sans: ui-rounded, "Avenir Next", "Segoe UI", system-ui, sans-serif;
+/* Design tokens (Pro Product base, Quiet Room calm). Everyone else uses these
+   --gp-* names. Every text pair is 4.5:1 or better. */
+:root {
+  --gp-bg: #fafafa;
+  --gp-surface: #ffffff;
+  --gp-ink: #18181b;
+  --gp-muted: #52525b;
+  --gp-line: #e4e4e7;
+  --gp-hair: #f0f0f2; /* row dividers inside a card */
+  --gp-field-line: #858590; /* input borders: 3:1 against white */
+  --gp-accent: #4f3ff0; /* iris */
+  --gp-accent-ink: #ffffff;
+  --gp-accent-soft: #eef0ff;
+  --gp-accent-soft-ink: #3a2cc4;
+  --gp-notice: #9a4a00;
+  --gp-notice-bg: #fff7ed;
+  --gp-notice-line: #f5d9a8;
+  --gp-ok: #15803d;
+  --gp-ok-bg: #ecfdf3;
+  --gp-chip: #f4f4f5;
+  --gp-chip-ink: #3f3f46;
+  /* kubectl view only */
+  --gp-term-bg: #0d1117;
+  --gp-term-ink: #e6edf3;
+  --gp-term-green: #4ade9b;
+  --gp-term-amber: #f5c065;
+  --gp-term-blue: #7cc4ff;
+}
+
+/* Calm view: oat ground, sage action, clay notice. The staff card ignores this. */
+[data-view="calm"] {
+  --gp-bg: #f6f3ee;
+  --gp-ink: #2b2f2e;
+  --gp-muted: #5b625f;
+  --gp-line: #e6e1d8;
+  --gp-hair: #e6e1d8;
+  --gp-field-line: #8a867c;
+  --gp-accent: #3e6a5b; /* sage */
+  --gp-accent-soft: #e6ece8;
+  --gp-accent-soft-ink: #2c4d42;
+  --gp-notice: #7a4a1e; /* clay */
+  --gp-notice-bg: #f3e6d6;
+  --gp-notice-line: #e8d3ba;
+  --gp-chip: #e6ece8;
+  --gp-chip-ink: #2c4d42;
+}
+
+/* "inline" so a utility reads the variable where it is used, which lets the
+   calm view change the colours underneath. Old names stay as aliases. */
+@theme inline {
+  --color-ground: var(--gp-bg);
+  --color-panel: var(--gp-surface);
+  --color-ink: var(--gp-ink);
+  --color-ink-soft: var(--gp-muted);
+  --color-line: var(--gp-line);
+  --color-deep: var(--gp-ink);
+  --color-deep-press: var(--gp-ink);
+  --font-sans:
+    "Geist Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+    sans-serif;
+  --font-mono: "Geist Mono Variable", ui-monospace, Menlo, monospace;
 }
 
 html {
   font-family: var(--font-sans);
   -webkit-text-size-adjust: 100%;
+  /* Focused elements are never hidden under the sticky bar. */
+  scroll-padding-bottom: 6rem;
 }
 
-/* Large, unhurried reading text. Headings and buttons set their own sizes. */
 body {
+  font-size: 1rem;
+  line-height: 1.55;
+  background: var(--gp-bg);
+  -webkit-font-smoothing: antialiased;
+}
+[data-view="calm"] {
   font-size: 1.125rem;
-  line-height: 1.6;
+}
+
+h1,
+h2,
+h3 {
+  letter-spacing: -0.02em;
 }
 
 :focus-visible {
-  outline: 4px solid #1d4ed8;
-  outline-offset: 3px;
+  outline: 2px solid var(--gp-accent);
+  outline-offset: 2px;
 }
 /* Headings get focus from code so screen readers start there. They can't be
    tabbed to, so a ring around them is only noise, on the staff card most. */
@@ -33,59 +96,315 @@ body {
   outline: none;
 }
 
-.break-button {
-  display: block;
-  width: 100%;
-  min-height: 9rem;
-  border-radius: 2rem;
-  background: var(--color-deep);
-  color: #fff;
-  font-size: 2.25rem;
-  font-weight: 700;
+.mono {
+  font-family: var(--font-mono);
+}
+
+/* ---- Header ---- */
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-height: 2.75rem;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1rem;
+  font-weight: 600;
   letter-spacing: -0.01em;
+}
+.brand-mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.625rem;
+  height: 1.625rem;
+  border-radius: 0.5rem;
+  background: var(--gp-ink);
+  color: #fff;
+}
+/* The offline chip is a component of its own; this dresses its text. It stays
+   hidden while empty (that state carries sr-only). */
+.app-header p[aria-live]:not(.sr-only) {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin: 0;
+  height: 1.5rem;
+  padding: 0 0.5rem;
+  border-radius: 0.375rem;
+  background: var(--gp-ok-bg);
+  color: #166534;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1;
+}
+.app-header p[aria-live]:not(.sr-only)::before {
+  content: "";
+  width: 0.4375rem;
+  height: 0.4375rem;
+  border-radius: 50%;
+  background: var(--gp-ok);
+  animation: gp-pulse 2.4s ease-out infinite;
+}
+@keyframes gp-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgb(22 163 74 / 0.45);
+  }
+  100% {
+    box-shadow: 0 0 0 7px rgb(22 163 74 / 0);
+  }
+}
+
+/* ---- The break button ---- */
+.break-button {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 2.5rem;
+  width: 100%;
+  min-height: 15.5rem;
+  padding: 1.25rem;
+  border-radius: 1.25rem;
+  background: var(--gp-ink);
+  color: #fff;
+  text-align: left;
   box-shadow:
-    0 0 0 6px var(--color-ground),
-    0 0 0 8px var(--color-deep);
+    0 20px 40px -20px rgb(24 24 27 / 0.6),
+    inset 0 1px 0 rgb(255 255 255 / 0.1);
   transition:
     transform 120ms ease,
-    background-color 120ms ease;
+    box-shadow 120ms ease;
 }
 .break-button:active {
-  transform: scale(0.985);
-  background: var(--color-deep-press);
+  transform: scale(0.99);
 }
-
-.panel {
-  background: var(--color-panel);
-  border: 1px solid var(--color-line);
-  border-radius: 1.5rem;
-  padding: 1.5rem;
-}
-
-.staff-button {
-  display: block;
+.break-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   width: 100%;
-  min-height: 4rem;
-  border-radius: 1rem;
-  border: 3px solid var(--color-deep);
-  color: var(--color-deep);
-  font-size: 1.25rem;
-  font-weight: 700;
-  background: #fff;
 }
-
-/* For leaving a screen: clear, but quieter than the actions on it. */
-.quiet-button {
+.break-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 0.75rem;
+  background: var(--gp-accent);
+  color: var(--gp-accent-ink);
+}
+.break-meta {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: #d4d4d8;
+}
+.break-title {
   display: block;
-  width: 100%;
-  min-height: 3.5rem;
-  border-radius: 1rem;
-  border: 2px solid var(--color-ink-soft);
-  color: var(--color-ink);
+  font-size: 2.375rem;
   font-weight: 600;
-  background: transparent;
+  letter-spacing: -0.035em;
+  line-height: 1;
+}
+.break-sub {
+  display: block;
+  margin-top: 0.5rem;
+  font-size: 0.9375rem;
+  line-height: 1.4;
+  color: #d4d4d8;
+}
+/* On the calm screen the same button is a quiet repeat, not the headline. */
+[data-view="calm"] .break-button {
+  min-height: 3.25rem;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 0.625rem;
+  padding: 0 1.25rem;
+  border-radius: 1rem;
+  background: var(--gp-accent-soft);
+  color: var(--gp-accent-soft-ink);
+  box-shadow: none;
+}
+[data-view="calm"] .break-top,
+[data-view="calm"] .break-sub {
+  display: none;
+}
+[data-view="calm"] .break-title {
+  font-size: 1.0625rem;
+  letter-spacing: 0;
+  font-weight: 600;
 }
 
+/* ---- Surfaces ---- */
+.panel {
+  background: var(--gp-surface);
+  border-radius: 0.875rem;
+  padding: 1rem;
+  box-shadow:
+    0 0 0 1px var(--gp-line),
+    0 1px 2px rgb(9 9 11 / 0.05);
+}
+[data-view="calm"] .panel {
+  border-radius: 1.5rem;
+  padding: 1.25rem;
+  box-shadow: none;
+}
+
+.notice {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem 0.875rem;
+  border-radius: 0.75rem;
+  background: var(--gp-notice-bg);
+  color: var(--gp-notice);
+  box-shadow: 0 0 0 1px var(--gp-notice-line);
+}
+.notice h2 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+[data-view="calm"] .notice {
+  border-radius: 1.25rem;
+  padding: 1rem 1.125rem;
+  box-shadow: none;
+}
+
+/* Small label: rooms, levels, status. */
+.gp-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  height: 1.5rem;
+  padding: 0 0.5rem;
+  border-radius: 0.375rem;
+  background: var(--gp-chip);
+  color: var(--gp-chip-ink);
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+[data-view="calm"] .gp-tag {
+  height: 1.75rem;
+  padding: 0 0.75rem;
+  border-radius: 999px;
+  font-size: 0.8125rem;
+}
+/* Plain-text sponsor credit, only where the tool does the work. */
+.gp-credit {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3125rem;
+  min-height: 1.375rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: 0.375rem;
+  background: var(--gp-chip);
+  color: var(--gp-muted);
+  font-size: 0.71875rem;
+  font-weight: 500;
+}
+.gp-credit b {
+  color: var(--gp-ink);
+  font-weight: 600;
+}
+[data-view="calm"] .gp-credit {
+  border-radius: 999px;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.8125rem;
+}
+
+.gp-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 3.5rem;
+  padding: 0.5rem 0;
+}
+.gp-row + .gp-row {
+  border-top: 1px solid var(--gp-hair);
+}
+.gp-icon {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.5rem;
+  background: var(--gp-chip);
+  color: var(--gp-ink);
+}
+[data-view="calm"] .gp-icon {
+  background: transparent;
+  color: var(--gp-accent);
+  width: 1.5rem;
+}
+
+.eyebrow {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gp-muted);
+}
+
+/* ---- Buttons ---- */
+.staff-button,
+.quiet-button,
+.close-button,
+.install-button,
+.choice {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 2.875rem;
+  padding: 0 1rem;
+  border-radius: 0.625rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+/* Primary */
+.staff-button {
+  width: 100%;
+  background: var(--gp-ink);
+  color: #fff;
+  box-shadow:
+    0 1px 2px rgb(9 9 11 / 0.2),
+    inset 0 1px 0 rgb(255 255 255 / 0.12);
+}
+[data-view="calm"] .staff-button {
+  min-height: 3.25rem;
+  border-radius: 1rem;
+  background: var(--gp-accent);
+  font-size: 1.0625rem;
+  box-shadow: none;
+}
+/* Secondary, for leaving a screen */
+.quiet-button {
+  width: 100%;
+  background: var(--gp-surface);
+  color: var(--gp-ink);
+  box-shadow:
+    0 0 0 1px var(--gp-line),
+    0 1px 2px rgb(9 9 11 / 0.05);
+}
+[data-view="calm"] .quiet-button {
+  min-height: 3.25rem;
+  border-radius: 1rem;
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px #cfc9be;
+  font-size: 1.0625rem;
+}
 .close-button {
   width: 100%;
   min-height: 4rem;
@@ -100,7 +419,9 @@ body {
   position: absolute;
   left: -999px;
   background: #fff;
+  color: #000;
   padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
 }
 .skip-link:focus {
   left: 1rem;
@@ -108,66 +429,113 @@ body {
   z-index: 20;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  * {
-    transition: none !important;
-  }
-}
-
+/* ---- Form pieces used by the plan ---- */
 .field {
   display: block;
   width: 100%;
-  min-height: 3.5rem;
-  padding: 0 1rem;
-  border: 2px solid var(--color-deep);
-  border-radius: 1rem;
-  background: #fff;
-  color: var(--color-ink);
-  font-size: 1.125rem;
+  min-height: 2.875rem;
+  padding: 0 0.75rem;
+  border: 1px solid var(--gp-field-line);
+  border-radius: 0.625rem;
+  background: var(--gp-surface);
+  color: var(--gp-ink);
+  font-size: 1rem;
+}
+[data-view="calm"] .field {
+  min-height: 3rem;
+  border-radius: 0.875rem;
 }
 
 /* Search matches: a soft tint and bold, so the match never rests on colour alone. */
 mark {
-  background: #d3e9e6;
+  background: var(--gp-accent-soft);
   color: inherit;
   font-weight: 700;
   border-radius: 0.2em;
   padding: 0 0.1em;
 }
 
-.choice {
-  min-height: 3rem;
-  padding: 0 1.25rem;
-  border: 2px solid var(--color-deep);
-  border-radius: 1rem;
-  background: #fff;
-  color: var(--color-deep);
-  font-weight: 700;
-}
-.choice[aria-pressed="true"] {
-  background: var(--color-deep);
-  color: #fff;
-}
-
-/* Install suggestion: quiet, tap targets well above 24px. */
+.choice,
 .install-button {
-  min-height: 3rem;
-  min-width: 3rem;
-  padding: 0 1.25rem;
-  border: 2px solid var(--color-deep);
-  border-radius: 1rem;
-  background: #fff;
-  color: var(--color-deep);
-  font-weight: 700;
+  min-width: 2.75rem;
+  background: var(--gp-surface);
+  color: var(--gp-ink);
+  box-shadow:
+    inset 0 0 0 1px var(--gp-field-line),
+    0 1px 2px rgb(9 9 11 / 0.05);
 }
+.choice[aria-pressed="true"],
 .install-primary {
-  background: var(--color-deep);
+  background: var(--gp-ink);
   color: #fff;
+  box-shadow: none;
 }
 
-/* Footer links (the organizer board link was 20px tall): give them a real tap target. */
+/* Footer links need a real tap target. */
 footer a {
   display: inline-flex;
   align-items: center;
-  min-height: 3rem;
+  min-height: 2.75rem;
+  color: var(--gp-accent);
+  text-underline-offset: 3px;
+}
+
+/* ---- Calm: two soft rings that breathe over 8 seconds ---- */
+.calm-mark {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 7.5rem;
+  height: 7.5rem;
+}
+.calm-mark .ring {
+  position: absolute;
+  border-radius: 50%;
+  animation: gp-breathe 8s ease-in-out infinite;
+}
+.calm-mark .ring-1 {
+  inset: 0;
+  background: #e1e9e4;
+}
+.calm-mark .ring-2 {
+  inset: 0.875rem;
+  background: #cfddd5;
+  animation-delay: -4s;
+}
+.calm-mark .core {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 50%;
+  background: var(--gp-accent);
+  color: #fff;
+}
+@keyframes gp-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.55;
+  }
+  50% {
+    transform: scale(1.07);
+    opacity: 1;
+  }
+}
+
+/* ---- Staff card: black on white, maximum contrast, whatever the view ---- */
+.staff-card h2 {
+  letter-spacing: -0.035em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
 }
