@@ -175,3 +175,15 @@ describe("foldLine", () => {
   });
 });
 
+
+describe("UID", () => {
+  it("keeps only safe characters, so an id with CRLF cannot add a line", () => {
+    const item = {
+      id: "7\r\nATTENDEE:mailto:x@example.com", title: "T", room: "R",
+      starts_at: "2026-11-10T09:00:00-07:00", ends_at: "2026-11-10T09:30:00-07:00", priority: "nice" as const,
+    };
+    const out = buildIcs([item], STAMP);
+    expect(out).toContain("UID:grace-period-7ATTENDEEmailtoxexample.com@effulgentpoint.com\r\n");
+    expect(out).not.toMatch(/^ATTENDEE/m);
+  });
+});
