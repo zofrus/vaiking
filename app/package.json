@@ -1,0 +1,25 @@
+{
+  "name": "cnh-starter",
+  "version": "1.0.0",
+  "private": true,
+  "description": "vaiking app server",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test \"test/**/*.test.js\" \"../tests/**/*.test.js\"",
+    "lint": "cd .. && app/node_modules/.bin/eslint -c app/eslint.config.js app scripts/ingest-sessionize.mjs scripts/ingest-facilities.mjs"
+  },
+  "dependencies": {
+    "@elastic/elasticsearch": "^9.5.1",
+    "@fastify/static": "^10.1.10",
+    "@opentelemetry/api": "^1.10.0",
+    "@opentelemetry/auto-instrumentations-node": "^0.83.0",
+    "fastify": "^5.12.8",
+    "pino": "^10.4.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.5",
+    "eslint": "^9.39.5",
+    "globals": "^17.14.0"
+  }
+}

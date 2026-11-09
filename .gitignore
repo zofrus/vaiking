@@ -1,0 +1,30 @@
+# Never commit these: the repo is public.
+*kubeconfig*
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+node_modules/
+app/public/
+web/dist/
+npm-debug.log*
+.DS_Store
+
+# Agent runtime and local notes: never publish.
+.pipeline/
+.pipeline-*/
+.forge.config.json
+.forge.config.local.json
+SESSION_SUMMARY.md
+.claude/settings.local.json
+
+# Backups can hold old secrets.
+*.back
+*.back/
+*.back-*
+*.bak
+
+# Agent worktrees
+.claude/worktrees/
