@@ -19,7 +19,17 @@ const dayLabel = (iso: string) =>
 // Only the server's <mark> tags are kept; everything else is shown as text.
 function Highlight({ html }: { html: string }) {
   const parts = html.split(/(<mark>.*?<\/mark>)/g);
-  const decode = (t: string) => t.replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, "&");
+  // Elastic's html encoder also writes numeric codes such as &#x2F; for "/" and
+  // &#x27; for "'". The result is React text, never HTML, so decoding is safe.
+  const code = (whole: string, n: number) => (n > 0 && n <= 0x10ffff ? String.fromCodePoint(n) : whole);
+  const decode = (t: string) =>
+    t
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .replace(/&quot;/g, '"')
+      .replace(/&#x([0-9a-f]+);/gi, (whole, hex: string) => code(whole, parseInt(hex, 16)))
+      .replace(/&#(\d+);/g, (whole, dec: string) => code(whole, Number(dec)))
+      .replace(/&amp;/g, "&");
   return <>{parts.map((p, i) => (p.startsWith("<mark>") ? <mark key={i}>{decode(p.slice(6, -7))}</mark> : decode(p)))}</>;
 }
 
