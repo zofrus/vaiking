@@ -201,9 +201,11 @@ export default function App() {
 
   const [plan, setPlanState] = useState<PlanItem[]>(() => (useSample ? [...samplePlan] : loadPlan()));
   const [buffer, setBufferState] = useState(loadBuffer);
-  // A reload on the calm screen or the card keeps the break the person
-  // started, so "You're clear until ..." stays true with the talks still set aside.
-  const [grace, setGrace] = useState(() => viewFromHash() !== "home");
+  // A reload keeps a break only when the person pressed the button and it is still valid.
+  const [grace, setGrace] = useState(() => {
+    const until = sessionStorage.getItem("graceUntil");
+    return viewFromHash() !== "home" && until !== null && Date.parse(until) > now().getTime();
+  });
   const setPlan = (p: PlanItem[]) => {
     setPlanState(p);
     if (!isPreview) savePlan(p); // a preview never overwrites the real plan
@@ -247,6 +249,7 @@ export default function App() {
 
   const press = () => {
     setGrace(true);
+    sessionStorage.setItem("graceUntil", result.clearUntil ?? new Date(now().getTime() + 3 * 3600_000).toISOString());
     countPress(isPreview ? "preview" : "live");
     setAnnounce((current) =>
       current === "Quiet room details are on screen."
@@ -335,7 +338,14 @@ export default function App() {
                             <li key={d.id}>Set aside: {d.title}</li>
                           ))}
                         </ul>
-                        <button type="button" className="staff-button" onClick={() => setGrace(false)}>
+                        <button
+                          type="button"
+                          className="staff-button"
+                          onClick={() => {
+                            setGrace(false);
+                            sessionStorage.removeItem("graceUntil");
+                          }}
+                        >
                           Put them back
                         </button>
                       </>
