@@ -94,7 +94,7 @@ export function PlanSection({
             const value = e.target.value === "" ? 15 : Number(e.target.value);
             setBuffer(Number.isFinite(value) ? Math.min(120, Math.max(5, Math.round(value))) : 15);
           }} className="field" />
-          <p className="text-sm text-ink-soft">Your reasons stay on this phone. Only talk numbers are ever sent for search.</p>
+          <p className="text-sm text-ink-soft">Your reasons and your plan stay on this phone. The words you type in the search box are sent to search talks.</p>
         </div>
       )}
     </section>

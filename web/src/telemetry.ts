@@ -37,9 +37,10 @@ export async function initTelemetry(): Promise<void> {
         authToken: rum.token,
         ...(rum.dataset ? { dataset: rum.dataset } : {}),
       },
-      // The grace-count beacon never gets a span or trace header, so the
-      // button press stays out of browser telemetry.
-      ignoreUrls: [/\/api\/grace(?:[?#]|$)/],
+      // The grace-count beacon and search requests never get a span or trace
+      // header, so the button press and the words typed in search stay out of
+      // browser telemetry.
+      ignoreUrls: [/\/api\/grace(?:[?#]|$)/, /\/api\/search(?:[?#/]|$)/],
       sessionInactivityTimeoutMillis: 30 * 60 * 1000,
       sessionTerminationTimeoutMillis: 4 * 60 * 60 * 1000,
     });
