@@ -106,9 +106,9 @@ export default function BoardPage() {
             </p>
             <Table caption="Presses by floor, live" rows={load.board.live} />
             <p className="mt-3 text-sm text-slate-700">
-              Why it says “Floor not known”: for now the app sends no floor with
-              a press, so every press is counted that way. A floor shows here
-              once the app sends the floor of the person's last planned talk.
+              A floor shows when the person pressing has a talk in their plan:
+              the one on now, or else their next one today. “Floor not known”
+              means they had no such talk in their plan, or it was off-site.
             </p>
           </section>
           <section aria-labelledby="preview-h" className="mt-8">
