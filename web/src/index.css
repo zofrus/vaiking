@@ -126,6 +126,15 @@ body {
   font-size: 1.125rem;
 }
 
+/* Search matches: a soft tint and bold, so the match never rests on colour alone. */
+mark {
+  background: #d3e9e6;
+  color: inherit;
+  font-weight: 700;
+  border-radius: 0.2em;
+  padding: 0 0.1em;
+}
+
 .choice {
   min-height: 3rem;
   padding: 0 1.25rem;

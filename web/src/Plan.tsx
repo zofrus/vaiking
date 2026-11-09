@@ -51,7 +51,6 @@ export function PlanSection({
   const [q, setQ] = useState("");
   const [results, setResults] = useState<Talk[] | null>(null);
   const [status, setStatus] = useState("");
-  const [tookMs, setTookMs] = useState<number | null>(null);
   const [facets, setFacets] = useState<Facets | null>(null);
   const [track, setTrack] = useState("");
   const [day, setDay] = useState("");
@@ -85,7 +84,6 @@ export function PlanSection({
       if (!res.ok) throw new Error();
       const body = (await res.json()) as { results: Talk[]; took_ms?: number | null; facets?: Facets };
       setResults(body.results);
-      setTookMs(typeof body.took_ms === "number" ? body.took_ms : null);
       // Keep the unfiltered counts so the choices don't disappear once one is picked.
       if (body.facets && !nextTrack && !nextDay) setFacets(body.facets);
       setStatus(body.results.length === 0 ? "No talks found. Try a broader search." : `${body.results.length} talks found${typeof body.took_ms === "number" ? `. Found in ${body.took_ms} ms` : ""}.`);
@@ -148,13 +146,13 @@ export function PlanSection({
                 <h3 className="text-lg font-semibold">{t.title}</h3>
                 <p className="text-ink-soft">{when(t)}</p>
                 <p className="text-ink-soft">{placeLabel(t.room)}</p>
-                {t.highlight && <p className="text-sm"><Highlight html={t.highlight} /></p>}
+                {t.highlight && <p className="text-base"><Highlight html={t.highlight} /></p>}
                 {t.why && (t.why.keyword_rank || t.why.semantic_rank) && (
-                  <p className="text-sm text-ink-soft">
+                  <p className="text-base text-ink-soft">
                     {t.why.keyword_rank ? "Matched your words" : ""}
                     {t.why.keyword_rank && t.why.semantic_rank ? " and " : ""}
                     {t.why.semantic_rank ? (t.why.keyword_rank ? "your meaning" : "Matched your meaning") : ""}
-                    {tookMs !== null ? `. Found in ${tookMs} ms.` : "."}
+                    .
                   </p>
                 )}
                 <div className="flex flex-wrap gap-3">
