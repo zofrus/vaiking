@@ -84,7 +84,7 @@ export function reconcile(plan: PlanItem[], changes: Change[], opts: Options) {
   }
 
   // 3. The button. Set aside nice-to-haves from now up to the next must-see.
-  const upcoming = live.filter((i) => ms(i.ends_at) > now);
+  const upcoming = live.filter((i) => ms(i.starts_at) > now);
   const nextMust = upcoming.find((i) => i.priority === "must");
   const clearUntil = nextMust ? nextMust.starts_at : null;
   const setAside = (i: PlanItem) =>

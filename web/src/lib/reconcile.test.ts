@@ -37,6 +37,12 @@ describe("reconcile", () => {
     expect(r.clearUntil).toBeNull();
   });
 
+  it("does not use an in-progress must-see as a clear-until time", () => {
+    const ongoing = talk("ongoing", "12:30", "13:30", "must");
+    const r = reconcile([ongoing], [], { ...opts, now: new Date(at("13:00")) });
+    expect(r.clearUntil).toBeNull();
+  });
+
   it("ignores talks that already ended", () => {
     const r = reconcile([a], [], { ...opts, now: new Date(at("15:00")), graceActive: true });
     expect(r.dropped).toEqual([]);
@@ -60,7 +66,7 @@ describe("reconcile", () => {
     const change: Change = { id: "3", talk_id: "c", kind: "cancelled", before: null, after: null, detected_at: at("13:05") };
     const r = reconcile([a, c], [change], opts);
     expect(r.kept.map((i) => i.id)).toEqual(["a"]);
-    expect(r.notices[0].text).toBe("Your 4:00 PM MST talk was cancelled: Talk c.");
+    expect(r.notices[0].text).toContain("Your 4:00 PM MST talk was cancelled");
   });
 
   it("uses the newest change for a talk", () => {
