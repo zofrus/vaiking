@@ -1,4 +1,5 @@
-import { useSyncExternalStore } from "react";
+import { useEffect, useSyncExternalStore } from "react";
+import { reportInstallError, reportInstallEvent } from "./telemetry";
 
 // A small, optional suggestion to add the app to the home screen. It only ever
 // renders on the home screen (App decides where), never on the calm screen or
@@ -75,9 +76,13 @@ function snapshot(): Mode {
 
 export function InstallPrompt() {
   const mode = useSyncExternalStore(subscribe, snapshot, () => null);
+  useEffect(() => {
+    if (mode) reportInstallEvent("install_prompt_shown", { mode });
+  }, [mode]);
   if (!mode) return null;
 
   const dismiss = () => {
+    reportInstallEvent("install_prompt_dismissed", { mode });
     dismissed = true;
     try {
       localStorage.setItem(DISMISS_KEY, "1");
@@ -95,9 +100,16 @@ export function InstallPrompt() {
     if (!event) return;
     deferred = null; // the browser allows one prompt per event
     emit();
-    await event.prompt();
-    await event.userChoice.catch(() => undefined);
-    document.getElementById("main")?.focus();
+    reportInstallEvent("install_prompt_install", { mode: "install" });
+    try {
+      await event.prompt();
+      const choice = await event.userChoice;
+      reportInstallEvent("install_prompt_choice", { mode: "install", outcome: choice.outcome });
+    } catch (error) {
+      reportInstallError(error);
+    } finally {
+      document.getElementById("main")?.focus();
+    }
   };
 
   return (

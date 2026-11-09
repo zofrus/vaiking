@@ -22,6 +22,28 @@ export function reportRequestFailure(endpoint: string, error: unknown): void {
     });
 }
 
+export function reportInstallEvent(name: string, attributes: Record<string, string>): void {
+  void import("@dash0/sdk-web")
+    .then(({ sendEvent }) => {
+      sendEvent(name, { title: name, attributes });
+    })
+    .catch(() => {
+      // Telemetry must never break the page.
+    });
+}
+
+export function reportInstallError(error: unknown): void {
+  const reportedError = error instanceof Error ? error : new Error("Install prompt failed");
+  console.error("Install prompt failed", error);
+  void import("@dash0/sdk-web")
+    .then(({ reportError }) => {
+      reportError(reportedError, { attributes: { "app.feature": "install_prompt" } });
+    })
+    .catch(() => {
+      // Telemetry must never break the page.
+    });
+}
+
 export async function initTelemetry(): Promise<void> {
   try {
     const res = await fetch("/api/public-config");
