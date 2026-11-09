@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { formatTime, type PlanItem } from "./lib/reconcile";
+import { placeLabel } from "./lib/place";
 
 interface Talk {
   id: string;
@@ -27,7 +28,7 @@ const toItem = (t: Talk, priority: PlanItem["priority"]): PlanItem => ({
   id: t.id, title: t.title, room: t.room, starts_at: t.starts_at, ends_at: t.ends_at, priority,
 });
 
-const when = (t: Talk) => `${formatTime(t.starts_at)} to ${formatTime(t.ends_at)} MST, room ${t.room}`;
+const when = (t: Talk) => `${formatTime(t.starts_at)} to ${formatTime(t.ends_at)} MST`;
 
 export function PlanSection({
   plan, setPlan, buffer, setBuffer,
@@ -136,6 +137,7 @@ export function PlanSection({
               <li key={t.id} className="panel space-y-3">
                 <h3 className="text-lg font-semibold">{t.title}</h3>
                 <p className="text-ink-soft">{when(t)}</p>
+                <p className="text-ink-soft">{placeLabel(t.room)}</p>
                 {t.highlight && <p className="text-sm"><Highlight html={t.highlight} /></p>}
                 {t.why && (t.why.keyword_rank || t.why.semantic_rank) && (
                   <p className="text-sm text-ink-soft">
@@ -162,7 +164,8 @@ export function PlanSection({
             {[...plan].sort((a, b) => a.starts_at.localeCompare(b.starts_at)).map((p) => (
               <li key={p.id} className="panel">
                 <p className="font-semibold">{p.title}</p>
-                <p className="text-ink-soft">{p.priority === "must" ? "Must-see" : "Nice to have"}, {formatTime(p.starts_at)} MST, room {p.room}</p>
+                <p className="text-ink-soft">{p.priority === "must" ? "Must-see" : "Nice to have"}, {formatTime(p.starts_at)} MST</p>
+                <p className="text-ink-soft">{placeLabel(p.room)}</p>
               </li>
             ))}
           </ul>
