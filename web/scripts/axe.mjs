@@ -12,6 +12,7 @@ const pages = [
   { name: "staff card", url: "/#/card" },
   { name: "sample plan, after the button", url: sample, press: true },
   { name: "sample plan, home (calendar button)", url: sample },
+  { name: "staff card, with next talk line", url: sample + "#/card" },
   { name: "board", url: "/board" },
   { name: "first visit, invite shown", url: "/", firstVisit: true },
   { name: "tour open (after Take the tour)", url: "/", firstVisit: true, openTour: true },
