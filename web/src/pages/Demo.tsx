@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { reportRequestFailure } from "../telemetry";
 
 // Judge-facing projector page at /demo. Left half: the real app in preview mode
 // (Tuesday 3:25 PM Denver, sample plan). Right half: one column per tool, all
@@ -140,7 +141,8 @@ export default function Demo() {
           setData(body);
           setFailed(false);
         }
-      } catch {
+      } catch (error) {
+        reportRequestFailure("/api/demo", error);
         // A failed poll must never leave old numbers wearing a LIVE badge.
         if (!stop) {
           setData(null);
