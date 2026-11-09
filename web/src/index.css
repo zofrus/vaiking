@@ -121,3 +121,26 @@ html {
   background: var(--color-deep);
   color: #fff;
 }
+
+/* Install suggestion: quiet, tap targets well above 24px. */
+.install-button {
+  min-height: 3rem;
+  min-width: 3rem;
+  padding: 0 1.25rem;
+  border: 2px solid var(--color-deep);
+  border-radius: 1rem;
+  background: #fff;
+  color: var(--color-deep);
+  font-weight: 700;
+}
+.install-primary {
+  background: var(--color-deep);
+  color: #fff;
+}
+
+/* Footer links (the organizer board link was 20px tall): give them a real tap target. */
+footer a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 3rem;
+}
