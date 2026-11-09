@@ -13,6 +13,7 @@ import { formatTime, reconcile, type Notice, type PlanItem } from "./lib/reconci
 import { closestReachable } from "./lib/reach";
 import { placeLabel } from "./lib/place";
 import { Sticker } from "./Sticker";
+import { VenueHelp } from "./VenueHelp";
 
 type View = "home" | "calm" | "card";
 
@@ -140,6 +141,7 @@ function Calm({
       </div>
 
       {/* mount: Sticker */}<Sticker />
+      {/* mount: VenueHelp */}<VenueHelp />
 
       {planResult}
 
