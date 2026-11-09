@@ -175,6 +175,7 @@ export default function App() {
   useEffect(() => {
     if (prev.current === "card" && view === "calm") staffBtn.current?.focus();
     if (prev.current !== "home" && view === "home") document.getElementById("home-h")?.focus();
+    if (view === "home") setAnnounce("");
     prev.current = view;
   }, [view]);
 
@@ -228,7 +229,10 @@ export default function App() {
         Skip to main content
       </a>
       <p role="status" aria-live="polite" className="sr-only">
-        {announce} {noticeText}
+        {announce}
+      </p>
+      <p aria-live="polite" className="sr-only">
+        {noticeText}
       </p>
       {isPreview && (
         <p className="bg-black px-5 py-3 text-center font-semibold text-white">
