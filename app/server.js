@@ -10,9 +10,17 @@ const SESSIONIZE_URL = "https://sessionize.com/api/v2/svi82w6c/view/All";
 const DEEP_CACHE_MS = 30_000;
 const CHECK_TIMEOUT_MS = 3_000;
 
+// Log only method and path. Query strings carry search text, so they never reach logs.
+function serializeReq(req) {
+  const url = String(req.url || "");
+  const q = url.indexOf("?");
+  return { method: req.method, url: q === -1 ? url : url.slice(0, q) };
+}
+
 const LOGGER_OPTIONS = {
   level: process.env.LOG_LEVEL || "info",
   redact: ["req.headers.authorization", "req.headers.cookie"],
+  serializers: { req: serializeReq },
 };
 
 async function timed(check) {
@@ -182,4 +190,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { build };
+module.exports = { build, serializeReq, LOGGER_OPTIONS };

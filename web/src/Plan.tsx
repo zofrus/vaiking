@@ -91,7 +91,7 @@ export function PlanSection({
           </ul>
           <label htmlFor="buffer" className="block text-lg">Minutes you want between talks</label>
           <input id="buffer" type="number" min={5} max={120} value={buffer} onChange={(e) => setBuffer(Number(e.target.value) || 15)} className="field" />
-          <p className="text-sm text-ink-soft">Your reasons stay on this phone. Only talk numbers are ever sent for search.</p>
+          <p className="text-sm text-ink-soft">Your reasons and your plan stay on this phone. The words you type in the search box are sent to search talks.</p>
         </div>
       )}
     </section>
