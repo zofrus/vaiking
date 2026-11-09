@@ -40,6 +40,9 @@ const toItem = (t: Talk, priority: PlanItem["priority"]): PlanItem => ({
 
 const when = (t: Talk) => `${formatTime(t.starts_at)} to ${formatTime(t.ends_at)} MST`;
 
+// For first-time users who don't know what to type. Each has a good top match on the live search.
+export const SEARCH_EXAMPLES = ["kubernetes", "platform engineering", "ebpf", "security", "observability"];
+
 export function PlanSection({
   plan, setPlan, buffer, setBuffer,
 }: {
@@ -102,6 +105,13 @@ export function PlanSection({
     void run(text, "", "");
   };
 
+  const tryExample = (text: string) => {
+    setQ(text);
+    setTrack("");
+    setDay("");
+    void run(text, "", "");
+  };
+
   const pick = (nextTrack: string, nextDay: string) => {
     setTrack(nextTrack);
     setDay(nextDay);
@@ -113,7 +123,16 @@ export function PlanSection({
       <h2 id="plan-h" className="text-2xl font-semibold">Your day</h2>
       <form onSubmit={search} className="space-y-3">
         <label htmlFor="q" className="block text-lg font-semibold">What's the one thing you came for?</label>
-        <input id="q" type="search" value={q} onChange={(e) => setQ(e.target.value)} className="field" autoComplete="off" />
+        <p id="q-hint" className="text-ink-soft">Any topic, project or speaker works.</p>
+        <input id="q" type="search" value={q} onChange={(e) => setQ(e.target.value)} aria-describedby="q-hint" className="field" autoComplete="off" />
+        <div role="group" aria-labelledby="q-examples" className="flex flex-wrap items-center gap-3">
+          <span id="q-examples" className="text-ink-soft">Try one:</span>
+          {SEARCH_EXAMPLES.map((text) => (
+            <button key={text} type="button" aria-label={`Search for ${text}`} onClick={() => tryExample(text)} className="choice">
+              {text}
+            </button>
+          ))}
+        </div>
         <button type="submit" className="staff-button">Search talks</button>
       </form>
       <p role="status" aria-live="polite" className="text-ink-soft">{status}</p>

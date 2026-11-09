@@ -58,7 +58,8 @@ export default function BoardPage() {
     const run = async () => {
       try {
         const res = await fetch("/api/board");
-        if (!res.ok) throw new Error(`Board request failed with status ${res.status}`);
+        if (!res.ok)
+          throw new Error(`Board request failed with status ${res.status}`);
         const board = (await res.json()) as Board;
         if (current) setLoad({ state: "ready", board });
       } catch (error) {
@@ -82,6 +83,10 @@ export default function BoardPage() {
   return (
     <main id="main" tabIndex={-1} className="mx-auto max-w-2xl px-4 py-6">
       <h1 className="text-3xl font-bold">Organizer board</h1>
+      <p className="mt-2">
+        For event staff: how many people took a break in the last hour, by
+        floor. Counts only, nobody's identity.
+      </p>
       <p role="status" aria-live="polite" className="mt-4">
         {load.state === "loading" && "Loading counts."}
         {load.state === "error" && "Counts are unavailable right now."}
@@ -100,6 +105,11 @@ export default function BoardPage() {
               Last hour, from the venue. Counts only, no identities.
             </p>
             <Table caption="Presses by floor, live" rows={load.board.live} />
+            <p className="mt-3 text-sm text-slate-700">
+              Why it says “Floor not known”: for now the app sends no floor with
+              a press, so every press is counted that way. A floor shows here
+              once the app sends the floor of the person's last planned talk.
+            </p>
           </section>
           <section aria-labelledby="preview-h" className="mt-8">
             <h2 id="preview-h" className="text-xl font-semibold">
