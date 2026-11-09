@@ -259,7 +259,7 @@ export default function App() {
   const press = () => {
     setGrace(true);
     saveBreak(result.clearUntil ?? new Date(now().getTime() + 3 * 3_600_000).toISOString(), isPreview ? "preview" : "live");
-    countPress(isPreview ? "preview" : "live");
+    countPress(isPreview ? "preview" : "live", plan, now());
     // Focus moving to the calm heading says where you are, so the live region
     // adds only the result. It is worked out here from the same plan, so
     // nothing waits on the network.

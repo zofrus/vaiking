@@ -84,8 +84,8 @@ export default function BoardPage() {
     <main id="main" tabIndex={-1} className="mx-auto max-w-2xl px-4 py-6">
       <h1 className="text-3xl font-bold">Organizer board</h1>
       <p className="mt-2">
-        For event staff: how many people took a break in the last hour, by
-        floor. Counts only, nobody's identity.
+        For event staff: how many breaks were taken in the last hour, by floor.
+        Counts only, nobody's identity.
       </p>
       <p role="status" aria-live="polite" className="mt-4">
         {load.state === "loading" && "Loading counts."}
@@ -99,16 +99,16 @@ export default function BoardPage() {
         <>
           <section aria-labelledby="live-h" className="mt-6">
             <h2 id="live-h" className="text-xl font-semibold">
-              Floor of the last planned talk when people pressed the button
+              Floor of the talk on now or next when people pressed the button
             </h2>
             <p className="text-sm text-slate-700">
               Last hour, from the venue. Counts only, no identities.
             </p>
             <Table caption="Presses by floor, live" rows={load.board.live} />
             <p className="mt-3 text-sm text-slate-700">
-              Why it says “Floor not known”: for now the app sends no floor with
-              a press, so every press is counted that way. A floor shows here
-              once the app sends the floor of the person's last planned talk.
+              A floor shows when the person pressing has a talk in their plan:
+              the one on now, or else their next one today. “Floor not known”
+              means they had no such talk in their plan, or it was off-site.
             </p>
           </section>
           <section aria-labelledby="preview-h" className="mt-8">
