@@ -40,6 +40,9 @@ function Footer() {
         Schedule data: KubeCon + CloudNativeCon North America 2026, The Linux
         Foundation, CC BY 3.0.
       </p>
+      <a className="mt-2 inline-block underline" href="/board">
+        Organizer board
+      </a>
     </footer>
   );
 }

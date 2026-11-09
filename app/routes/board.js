@@ -11,7 +11,8 @@ const queryFor = (mode) =>
   `round(sum by (scheduled_floor) (increase(grace_requests_total{mode="${mode}"}[${WINDOW}])))`;
 
 // Standard Prometheus instant-query shape: data.result[{metric, value:[ts, "n"]}].
-// The exact Dash0 response has not been confirmed against a live token yet.
+// Confirmed against a live read token: GET {DASH0_API_URL}/api/prometheus/api/v1/query
+// returns {status, data:{resultType, result}}; bare /api/v1/query is a 404.
 function parseRows(body) {
   const result = body?.data?.result;
   if (!Array.isArray(result)) throw new Error("unexpected response shape");
@@ -27,7 +28,10 @@ function parseRows(body) {
 function sampleNote(configured, live, preview) {
   if (!configured) return "Live counts are not connected yet.";
   const n = live.reduce((s, r) => s + r.count, 0);
-  if (n === 0 && preview.length === 0) return "No presses in the last hour.";
+  if (n === 0)
+    return preview.length === 0
+      ? "No presses in the last hour."
+      : "No live presses in the last hour; only preview taps.";
   if (n < SMALL_SAMPLE)
     return `Small sample: ${n} press${n === 1 ? "" : "es"} in the last hour. Treat as a rough picture.`;
   return `${n} presses in the last hour.`;
@@ -42,7 +46,7 @@ module.exports = async function board(app, { env, fetch: fetchImpl }) {
   let inflight = null;
 
   async function query(mode) {
-    const url = `${base}/api/v1/query?${new URLSearchParams({ query: queryFor(mode) })}`;
+    const url = `${base}/api/prometheus/api/v1/query?${new URLSearchParams({ query: queryFor(mode) })}`;
     const res = await fetchImpl(url, {
       headers: { authorization: `Bearer ${token}` },
       signal: AbortSignal.timeout(TIMEOUT_MS),

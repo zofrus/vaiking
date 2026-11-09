@@ -62,9 +62,23 @@ test("reads live and preview, sorts, drops zeros, flags small samples, sends tok
   assert.equal(calls.length, 2);
   assert.ok(calls.every((c) => !c.url.includes("token")));
   assert.equal(calls[0].init.headers.authorization, "Bearer t");
+  assert.match(calls[0].url, /\/api\/prometheus\/api\/v1\/query\?/);
   assert.match(
     decodeURIComponent(calls[0].url).replace(/\+/g, " "),
     /round\(sum by \(scheduled_floor\)/,
+  );
+});
+
+test("reports preview taps separately when there are no live presses", async () => {
+  const app = await make(ENV, async (url) =>
+    url.includes("preview") ? prom([["3", 2]]) : prom([]),
+  );
+  const body = (await app.inject({ url: "/api/board" })).json();
+  assert.deepEqual(body.live, []);
+  assert.deepEqual(body.preview, [{ floor: "3", count: 2 }]);
+  assert.equal(
+    body.sample_note,
+    "No live presses in the last hour; only preview taps.",
   );
 });
 
