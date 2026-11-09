@@ -27,7 +27,7 @@ From the live app, Nov 9, 2026, 4:12 PM MST (build `c52585e`).
 
 - **Care in one tap.** For the attendee who is overwhelmed: one large "I need a break" button, no account, no plan and no reason asked. It shows the quiet room, the all-gender restrooms and a card to show staff.
 - **Works when the venue network doesn't.** After the first visit the button works offline, and the app installs on a phone.
-- **Your day, reconciled like a Kubernetes controller.** You declare what you came for. A reconciler compares the real schedule with it every 2 minutes, and the app tells you in one plain sentence what moved, what still fits, and, when a talk no longer fits, a similar talk you still have time for. No real schedule change has appeared in the feed yet today, so the moved-talk notice is shown in preview mode as a labelled DRILL.
+- **Your day, reconciled like a Kubernetes controller.** You declare what you came for. A reconciler compares the real schedule with it every 2 minutes, and the app tells you in one plain sentence what moved, what still fits, and, when a talk no longer fits, a similar talk you still have time for. During the hackathon the official schedule really changed, and Grace Period's reconciler detected it: at 4:36 PM a talk was added (Open Cluster Management (OCM): Live Demo Using k3d/KIND, Tue Nov 10 1:40 PM, Salt Palace Level 1 Project Pavilion) and at 4:41 PM a talk was removed from the official feed. The walkthrough still shows a moved talk in preview as a labelled DRILL.
 - **Four sponsor tools, live.** [/demo](https://grace.effulgentpoint.com/demo) shows the app next to live numbers from Elasticsearch, Dash0, Radar and Gitar.
 
 ## Try it
@@ -246,7 +246,7 @@ AI agents wrote most of the code in this repo. I directed the work, reviewed it,
 
 **How the AI was used.** Claude Code ran as a coordinator over parallel agent sessions on both Macs, sharing a work board, session logs and a watchdog. A merge loop merged only pull requests with green CI. Forge agents did intake, a devil's-advocate review, planning, building in separate clones, accessibility and code-review gates, and merge resolution. Research agents read the rules and sponsor docs. A design agent drew five directions. AI-assisted commits carry a `Co-Authored-By` line naming the model.
 
-Gitar reviewed 89 of our 92 merged pull requests (counted at 4:10 PM MST on Nov 9, 2026) against our rules and pushed fixes under its own name ([How Gitar was used](#how-gitar-was-used-to-build-this)). I read each fix before merging. One would have wiped the search index on an empty feed. Dash0's Agent0 found a false error report in our browser telemetry. Radar's AI investigation called a crash loop "transient". Radar's `diagnose` and the pod logs found the real cause ([STORY.md](STORY.md)).
+Gitar reviewed 108 of our 111 merged pull requests (as of 4:45 PM MST) against our rules and pushed fixes under its own name ([How Gitar was used](#how-gitar-was-used-to-build-this)). I read each fix before merging. One would have wiped the search index on an empty feed. Dash0's Agent0 found a false error report in our browser telemetry. Radar's AI investigation called a crash loop "transient". Radar's `diagnose` and the pod logs found the real cause ([STORY.md](STORY.md)).
 
 **In the product.** The only AI is semantic search: Elasticsearch embeds talk titles and abstracts. No language model is called, and nothing on the break-button path uses AI.
 
