@@ -211,7 +211,7 @@ export function PlanSection({
             onBlur={leaveBuffer}
             className="field"
           />
-          <p className="text-sm text-ink-soft">Your reasons and your plan stay on this phone. The words you type in the search box are sent to search talks.</p>
+          <p className="text-base text-ink-soft">Your reasons and your plan are saved only on this phone. To find talks, the app sends the words you type, and talk numbers when it looks for similar talks.</p>
         </div>
       )}
     </section>
