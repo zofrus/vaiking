@@ -1,25 +1,31 @@
 // POST /api/grace: counts one press of the break button. The body carries only
 // the floor of the last planned talk and live/preview. Nothing identifying is
-// read, stored or logged, and the request log line is silenced for this route.
+// read, stored or logged, and the request log line is hidden (warn level) for this route.
 const { SpanStatusCode, trace } = require("@opentelemetry/api");
 const { FLOORS, MODES, getMetrics, normalizeFloor } = require("../lib/metrics");
 
 const WINDOW_MS = 60_000;
 const MAX_PER_WINDOW = 30;
 const MAX_TRACKED = 5_000;
+// Backstop in case the per-IP key can be spoofed through forwarded headers.
+const MAX_TOTAL_PER_WINDOW = 1_200;
 
+// Fastify resolves request.ip using only the proxy hops trusted by TRUST_PROXY.
 module.exports = async function grace(app, opts) {
   const metrics = opts.metrics ?? getMetrics();
   // Per-IP counts live in memory only, are never logged, and are dropped each window.
   let hits = new Map();
+  let total = 0;
   let windowEnds = Date.now() + WINDOW_MS;
 
   function limited(ip) {
     const now = Date.now();
     if (now >= windowEnds) {
       hits = new Map();
+      total = 0;
       windowEnds = now + WINDOW_MS;
     }
+    if (++total > MAX_TOTAL_PER_WINDOW) return true;
     if (!hits.has(ip) && hits.size >= MAX_TRACKED) return true;
     const n = (hits.get(ip) ?? 0) + 1;
     hits.set(ip, n);
@@ -29,7 +35,7 @@ module.exports = async function grace(app, opts) {
   app.post(
     "/api/grace",
     {
-      logLevel: "silent",
+      logLevel: "warn",
       schema: {
         body: {
           type: "object",
@@ -58,6 +64,7 @@ module.exports = async function grace(app, opts) {
     const status =
       err.statusCode >= 400 && err.statusCode < 500 ? err.statusCode : 500;
     if (status >= 500) {
+      request.log.error({ err: err.code ?? err.name }, "grace failed");
       const span = trace.getActiveSpan();
       span?.recordException({ name: err.name, message: err.code ?? err.name });
       span?.setStatus({ code: SpanStatusCode.ERROR });

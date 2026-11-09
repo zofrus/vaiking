@@ -19,9 +19,9 @@ function appWith() {
 test("normalizeFloor maps to the allowlist or unknown", () => {
   assert.equal(normalizeFloor("Level 2"), "2");
   assert.equal(normalizeFloor("L3"), "3");
-  assert.equal(normalizeFloor("Ground"), "ground");
-  assert.equal(normalizeFloor("lobby"), "lobby");
   assert.equal(normalizeFloor("Lobby"), "lobby");
+  assert.equal(normalizeFloor("lobby"), "lobby");
+  assert.equal(normalizeFloor("Ground"), "ground");
   assert.equal(normalizeFloor("room 355F, jane@example.com"), "unknown");
   assert.equal(normalizeFloor(undefined), "unknown");
   assert.equal(normalizeFloor("unknown"), "unknown");
