@@ -1,10 +1,12 @@
 import { useId, useSyncExternalStore } from "react";
+import { isReadableFont, setReadableFont, subscribeReadableFont } from "./lib/readableFont";
 import { isFocusOn, setFocus, subscribeFocus } from "./lib/focusMode";
 
 // A native switch. The label and hint are the button's accessible name and
 // description, so a screen reader says what it does before it is pressed.
 export function FocusToggle() {
   const on = useSyncExternalStore(subscribeFocus, isFocusOn, () => false);
+  const readable = useSyncExternalStore(subscribeReadableFont, isReadableFont, () => false);
   const hintId = useId();
   return (
     <div className="focus-toggle">
@@ -23,6 +25,21 @@ export function FocusToggle() {
         <span className="focus-switch-state">{on ? "On" : "Off"}</span>
       </button>
       <p id={hintId} className="focus-hint">Fewer things on screen, no motion, larger text</p>
+      {on && (
+        <button
+          type="button"
+          role="switch"
+          aria-checked={readable}
+          onClick={() => setReadableFont(!readable)}
+          className="focus-switch"
+        >
+          <span className="focus-switch-label">Easier-to-read font</span>
+          <span aria-hidden="true" className="focus-switch-track">
+            <span className="focus-switch-thumb" />
+          </span>
+          <span className="focus-switch-state">{readable ? "On" : "Off"}</span>
+        </button>
+      )}
     </div>
   );
 }

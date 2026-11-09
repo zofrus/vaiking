@@ -16,6 +16,8 @@ const pages = [
   { name: "home, focus mode on", url: "/", focus: true },
   { name: "calm screen, focus mode on", url: "/", press: true, focus: true },
   { name: "staff card, focus mode on", url: "/#/card", focus: true },
+  { name: "home, focus mode and readable font on", url: "/", focus: true, font: true },
+  { name: "calm screen, focus mode and readable font on", url: "/", press: true, focus: true, font: true },
 ];
 
 const browser = await chromium.launch({ channel: process.env.AXE_CHANNEL || undefined });
@@ -23,6 +25,7 @@ let failed = 0;
 for (const p of pages) {
   const page = await (await browser.newContext()).newPage();
   if (p.focus) await page.addInitScript(() => localStorage.setItem("grace-focus-v1", "1"));
+  if (p.font) await page.addInitScript(() => localStorage.setItem("grace-font-v1", "1"));
   await page.goto(base + p.url);
   await page.waitForSelector("main");
   if (p.focus && (await page.locator("html").getAttribute("data-focus")) !== "on") {
