@@ -27,6 +27,10 @@ describe("EmergencyButton", () => {
     expect(h).not.toMatch(/<dialog[^>]*\sopen(=|>|\s)/);
   });
 
+  it("keeps the card out of analytics recordings with the dash0-block class", () => {
+    expect(html()).toMatch(/<dialog[^>]*class="[^"]*\bdash0-block\b/);
+  });
+
   it("is never marked secondary, so Focus mode cannot hide it", () => {
     expect(html()).not.toContain("gp-secondary");
   });

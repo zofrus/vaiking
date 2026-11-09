@@ -1,7 +1,7 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { venueFacts, VENUE_SOURCE_LINE } from "./data/facilities";
 import { SEIZURE_BLOCKS, SEIZURE_SOURCE_LINE } from "./data/seizureFirstAid";
-import { createAlarm } from "./lib/alarm";
+import { createAlarm, stopOnAway } from "./lib/alarm";
 import "./emergency.css";
 import {
   ABOUT_PRESETS,
@@ -67,8 +67,20 @@ export function EmergencyButton() {
   const [alarm] = useState(createAlarm);
   const [ringing, setRinging] = useState(false);
   const [alarmFailed, setAlarmFailed] = useState(false);
+  const starting = useRef(false);
 
-  useEffect(() => () => alarm.stop(), [alarm]);
+  // The alert never plays over a call or after leaving the page: stop it when the
+  // page is hidden or goes away, and when this card is torn down.
+  useEffect(() => {
+    const off = stopOnAway(document, window, () => {
+      alarm.stop();
+      setRinging(false);
+    });
+    return () => {
+      off();
+      alarm.stop();
+    };
+  }, [alarm]);
 
   const open = () => {
     setInfo(loadMedicalInfo());
@@ -105,14 +117,24 @@ export function EmergencyButton() {
     setDeleted(true);
   };
   const toggleAlarm = async () => {
+    if (starting.current) return;
     if (ringing) {
       alarm.stop();
       setRinging(false);
       return;
     }
-    const ok = await alarm.start();
-    setRinging(ok);
-    setAlarmFailed(!ok);
+    starting.current = true;
+    try {
+      const ok = await alarm.start();
+      // If the card was closed while the sound was starting, do not leave it on.
+      const stillOpen = dialog.current?.open === true;
+      const live = ok && stillOpen;
+      if (!live) alarm.stop();
+      setRinging(live);
+      setAlarmFailed(!ok && stillOpen);
+    } finally {
+      starting.current = false;
+    }
   };
 
   const sms = smsLink(info.contactPhone, info.callMe);
@@ -154,7 +176,7 @@ export function EmergencyButton() {
           // Escape closes only this card, not the staff card underneath it.
           if (e.key === "Escape") e.stopPropagation();
         }}
-        className="emergency-dialog m-0 h-[100dvh] max-h-none w-full max-w-none border-0 bg-white p-0 text-black backdrop:bg-black/80 open:flex open:flex-col"
+        className="emergency-dialog dash0-block m-0 h-[100dvh] max-h-none w-full max-w-none border-0 bg-white p-0 text-black backdrop:bg-black/80 open:flex open:flex-col"
       >
         <header
           className="shrink-0 px-5 py-5 text-white"
@@ -194,7 +216,7 @@ export function EmergencyButton() {
             </button>
             <p role="status" className="text-xl font-semibold">
               {ringing
-                ? "The sound alert is on."
+                ? "The sound alert is on (it may be silent if your phone is on mute)."
                 : alarmFailed
                   ? "Sound could not start on this phone."
                   : ""}
@@ -246,11 +268,12 @@ export function EmergencyButton() {
 
           <Section title="If someone is having a seizure">
             <p className="text-xl">
-              For the person helping. Quoted from the CDC page "First Aid for
-              Seizures".
+              For the person helping. Parts of the CDC page "First Aid for
+              Seizures", quoted word for word. It is not the whole page.
             </p>
             {SEIZURE_BLOCKS.map((b) => (
               <div key={b.heading}>
+                {b.intro && <p className="text-2xl">{b.intro}</p>}
                 <h4 className="text-2xl font-bold">{b.heading}</h4>
                 <ul className="mt-2 list-disc space-y-2 pl-7 text-2xl">
                   {b.items.map((i) => (
@@ -416,7 +439,7 @@ export function EmergencyButton() {
                   />
                   <p id={`${id}-cphone-hint`} className="mt-1 text-lg">
                     {info.contactPhone.trim() && !cleanPhone(info.contactPhone)
-                      ? "That does not look like a full phone number, so the call and text buttons are off."
+                      ? "Use digits only, with no letters or extension. Until then the call and text buttons are off."
                       : "Used for the Call and Text buttons. Include the area code."}
                   </p>
                 </div>

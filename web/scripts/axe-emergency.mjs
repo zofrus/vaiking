@@ -2,7 +2,7 @@
 // staff card. Also checks focus, Escape, that info stays on the phone, and that
 // nothing is sent. Usage: start `vite preview`, then
 // `node scripts/axe-emergency.mjs [baseUrl]`.
-/* global document, getComputedStyle, location */
+/* global document, getComputedStyle, location, window */
 // (Those run inside the browser, in page.evaluate callbacks.)
 import { chromium } from "playwright";
 import AxeBuilder from "@axe-core/playwright";
@@ -42,6 +42,18 @@ page.on(
   "console",
   (m) => m.type() === "error" && console.log("console.error:", m.text()),
 );
+
+await page.addInitScript(() => {
+  const Real = window.AudioContext;
+  window.__ctxs = [];
+  window.AudioContext = class extends Real {
+    constructor(...args) {
+      super(...args);
+      window.__ctxs.push(this);
+    }
+  };
+});
+const openContexts = () => page.evaluate(() => window.__ctxs.filter((c) => c.state !== "closed").length);
 
 const SECRET = [
   "Sam Rivera",
@@ -200,10 +212,10 @@ await axe("emergency dialog with about-me card");
 // Sound alert starts only on a tap and stops on Stop.
 check(
   "sound is off until tapped",
-  (await dlg.getByText("The sound alert is on.").count()) === 0,
+  (await dlg.getByText("The sound alert is on").count()) === 0,
 );
 await dlg.getByRole("button", { name: "Sound alert (loud)" }).click();
-await dlg.getByText("The sound alert is on.").waitFor();
+await dlg.getByText("The sound alert is on").waitFor();
 check(
   "two Stop buttons while ringing, one in the footer above Close",
   (await dlg.getByRole("button", { name: "Stop sound alert" }).count()) === 2 &&
@@ -214,19 +226,65 @@ const closeBox = await dlg.locator("footer").getByRole("button", { name: "Close"
 check("footer Stop is above Close and on screen", stopBox.y + stopBox.height <= closeBox.y && closeBox.y + closeBox.height <= 844);
 check("card is exactly the screen height", (await dlg.boundingBox()).height === 844);
 await dlg.locator("footer").getByRole("button", { name: "Stop sound alert" }).click();
-check("footer Stop turns the alert off and the footer button goes", (await dlg.getByText("The sound alert is on.").count()) === 0 && (await dlg.getByRole("button", { name: "Stop sound alert" }).count()) === 0);
+check("footer Stop turns the alert off and the footer button goes", (await dlg.getByText("The sound alert is on").count()) === 0 && (await dlg.getByRole("button", { name: "Stop sound alert" }).count()) === 0);
 check(
   "Stop turns the alert off",
-  (await dlg.getByText("The sound alert is on.").count()) === 0,
+  (await dlg.getByText("The sound alert is on").count()) === 0,
 );
 await dlg.getByRole("button", { name: "Sound alert (loud)" }).click();
-await dlg.getByText("The sound alert is on.").waitFor();
+await dlg.getByText("The sound alert is on").waitFor();
 await page.keyboard.press("Escape");
 await helpButton().click();
 check(
   "closing the card stops the alert",
-  (await dlg.getByText("The sound alert is on.").count()) === 0,
+  (await dlg.getByText("The sound alert is on").count()) === 0,
 );
+
+// Races: a double tap, closing while it starts, and the page going away.
+// Two taps in the same instant: the second must be ignored while it is starting.
+await page.evaluate(() => {
+  const b = [...document.querySelectorAll("dialog[open] button")].find((x) => /Sound alert \(loud\)/.test(x.textContent));
+  b.click();
+  b.click();
+});
+await dlg.getByText("The sound alert is on").waitFor();
+check("the ringing message mentions mute", (await dlg.getByText(/may be silent if your phone is on mute/).count()) === 1);
+check("a double tap leaves exactly one tone running", (await openContexts()) === 1);
+await dlg.locator("footer").getByRole("button", { name: "Stop sound alert" }).click();
+await page.waitForTimeout(500);
+check("Stop closes every audio context", (await openContexts()) === 0);
+
+await dlg.getByRole("button", { name: "Sound alert (loud)" }).click();
+await page.keyboard.press("Escape");
+await page.waitForTimeout(700);
+check("closing while it starts leaves nothing playing", (await openContexts()) === 0);
+await helpButton().click();
+check("and the card shows it as off", (await dlg.getByText("The sound alert is on").count()) === 0);
+
+await dlg.getByRole("button", { name: "Sound alert (loud)" }).click();
+await dlg.getByText("The sound alert is on").waitFor();
+await page.evaluate(() => {
+  Object.defineProperty(document, "visibilityState", { value: "hidden", configurable: true });
+  document.dispatchEvent(new Event("visibilitychange"));
+});
+await page.waitForTimeout(500);
+check("the alert stops when the page is hidden", (await openContexts()) === 0 && (await dlg.getByText("The sound alert is on").count()) === 0);
+await page.evaluate(() => {
+  Object.defineProperty(document, "visibilityState", { value: "visible", configurable: true });
+  document.dispatchEvent(new Event("visibilitychange"));
+});
+await dlg.getByRole("button", { name: "Sound alert (loud)" }).click();
+await dlg.getByText("The sound alert is on").waitFor();
+await page.evaluate(() => window.dispatchEvent(new Event("pagehide")));
+await page.waitForTimeout(500);
+check("the alert stops on pagehide", (await openContexts()) === 0 && (await dlg.getByText("The sound alert is on").count()) === 0);
+
+// A phone number with letters is rejected with a hint, and the links are off.
+await dlg.getByRole("button", { name: /Edit my info|Hide editing/ }).first().click().catch(() => {});
+await dlg.getByLabel("Emergency contact phone").fill("801 555 0134 ext 12");
+check("letters in the phone number show a hint", (await dlg.getByText(/Use digits only, with no letters or extension/).count()) === 1);
+check("and turn the contact links off", (await dlg.getByRole("link", { name: /^Text Alex Rivera/ }).count()) === 0);
+await dlg.getByLabel("Emergency contact phone").fill("(801) 555-0134");
 
 // Delete.
 await dlg.getByRole("button", { name: "Delete my info" }).click();

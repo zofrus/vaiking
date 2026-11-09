@@ -10,7 +10,9 @@ describe("seizure first aid", () => {
   it("quotes the CDC page word for word, with nothing added", () => {
     expect(SEIZURE_BLOCKS.length).toBeGreaterThan(0);
     for (const block of SEIZURE_BLOCKS) {
-      for (const line of [block.heading, ...block.items])
+      for (const line of [block.intro, block.heading, ...block.items].filter(
+        (l): l is string => Boolean(l),
+      ))
         expect(page, line).toContain(line);
       const at = block.items.map((i) => page.indexOf(i));
       expect([...at].sort((a, b) => a - b)).toEqual(at);
@@ -26,6 +28,13 @@ describe("seizure first aid", () => {
       "But you should call 911 if one or more of these things happen:",
     );
     expect(headings).toContain("Don't take these actions");
+  });
+
+  it("opens the call-911 list with the sentence the CDC puts before it", () => {
+    const block = SEIZURE_BLOCKS.find((b) => b.heading.startsWith("But you should call 911"))!;
+    expect(block.intro).toBe("Seizures don\u2019t usually require emergency medical attention.");
+    // It sits on the page directly before that heading.
+    expect(page.indexOf(block.intro!) + 1).toBe(page.indexOf(block.heading));
   });
 
   it("names the source, its address and the date it was checked", () => {

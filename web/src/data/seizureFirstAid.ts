@@ -4,6 +4,8 @@
 // If this ever cannot be checked against the source, remove it rather than edit it.
 
 export interface QuotedList {
+  // A sentence the CDC page puts right before the heading, so it reads in context.
+  intro?: string;
   heading: string;
   items: string[];
 }
@@ -24,6 +26,7 @@ export const SEIZURE_BLOCKS: QuotedList[] = [
     ],
   },
   {
+    intro: "Seizures don\u2019t usually require emergency medical attention.",
     heading: "But you should call 911 if one or more of these things happen:",
     items: [
       "The seizure lasts longer than 5 minutes.",

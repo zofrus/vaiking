@@ -68,10 +68,13 @@ export const hasAnyInfo = (i: MedicalInfo): boolean =>
 
 export const CALL_911 = "tel:911";
 
-// Digits, with one leading plus kept. Anything else is dropped, so a number can
-// never carry extra link syntax. Real numbers are 7 to 15 digits.
+// Digits, with one leading plus kept. Anything else makes it invalid, so a number
+// can never carry extra link syntax. Real numbers are 7 to 15 digits.
 export function cleanPhone(raw: string): string | null {
   const t = raw.trim();
+  // Only digits, spaces and ( ) . - are allowed, with one leading plus. Letters
+  // (such as "ext 12") are rejected rather than having their digits joined on.
+  if (!/^\+?[\d\s().-]*$/.test(t)) return null;
   const digits = t.replace(/\D/g, "");
   if (digits.length < 7 || digits.length > 15) return null;
   return (t.startsWith("+") ? "+" : "") + digits;

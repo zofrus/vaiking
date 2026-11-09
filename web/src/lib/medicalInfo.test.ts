@@ -103,7 +103,7 @@ describe("medical info storage", () => {
     ];
     for (const [f, src] of sources) {
       expect(src, f).not.toMatch(
-        /\bfetch\(|sendBeacon|XMLHttpRequest|WebSocket|telemetry|dash0|location\.|history\.|sessionStorage|document\.cookie/i,
+        /\bfetch\(|sendBeacon|XMLHttpRequest|WebSocket|telemetry|@dash0\/|location\.|history\.|sessionStorage|document\.cookie/i,
       );
     }
   });
@@ -120,7 +120,10 @@ describe("links", () => {
     expect(cleanPhone("  ")).toBeNull();
     expect(cleanPhone("12")).toBeNull();
     expect(cleanPhone("1234567890123456")).toBeNull();
-    expect(cleanPhone("8015550134;abc&x=1")).toBe("80155501341");
+    expect(cleanPhone("8015550134;abc&x=1")).toBeNull();
+    expect(cleanPhone("801 555 0134 ext 12")).toBeNull();
+    expect(cleanPhone("801-555-0134 x12")).toBeNull();
+    expect(cleanPhone("+1 (801) 555.0134")).toBe("+18015550134");
   });
 
   it("builds tel and sms links from the person's own contact number only", () => {
