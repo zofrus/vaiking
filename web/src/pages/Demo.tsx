@@ -14,7 +14,9 @@ const APP_SRC = "/?preview=2026-11-10T15%3A25%3A00-07%3A00&sample=1&drill=1";
 
 interface Stat {
   value: number | null;
-  status: "live" | "unavailable";
+  // stale: the last good value, kept when the source answered with nothing.
+  status: "live" | "stale" | "unavailable";
+  as_of?: string;
   window?: string;
 }
 interface Source {
@@ -151,7 +153,17 @@ function StatBlock({
   stat?: Stat;
   loading: boolean;
 }) {
-  const live = stat?.status === "live" && stat.value !== null;
+  const live =
+    (stat?.status === "live" || stat?.status === "stale") &&
+    stat.value !== null;
+  const asOf =
+    stat?.status === "stale" && stat.as_of
+      ? new Date(stat.as_of).toLocaleTimeString("en-US", {
+          hour: "numeric",
+          minute: "2-digit",
+          timeZone: "America/Denver",
+        })
+      : null;
   const text = live
     ? stat.value!.toLocaleString(
         "en-US",
@@ -183,6 +195,7 @@ function StatBlock({
       {unit && (live || loading) && (
         <p className="gp-unit gp-digits gp-muted">{unit}</p>
       )}
+      {asOf && <p className="gp-unit gp-muted">as of {asOf}</p>}
       {live && stat?.window && (
         <p className="gp-unit gp-muted">{stat.window}</p>
       )}
