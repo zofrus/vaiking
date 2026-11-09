@@ -26,6 +26,19 @@ export function PlanSection({
   const [q, setQ] = useState("");
   const [results, setResults] = useState<Talk[] | null>(null);
   const [status, setStatus] = useState("");
+  // What is in the minutes box while someone types. Clamping on every key
+  // turned "3" into 5 before the "0" of 30 arrived, so clamp only on leaving.
+  const [draft, setDraft] = useState<string | null>(null);
+  const typeBuffer = (text: string) => {
+    setDraft(text);
+    const n = Number(text);
+    if (text !== "" && Number.isInteger(n) && n >= 5 && n <= 120) setBuffer(n);
+  };
+  const leaveBuffer = () => {
+    const n = Number(draft);
+    if (draft !== null && draft.trim() !== "" && Number.isFinite(n)) setBuffer(Math.min(120, Math.max(5, Math.round(n))));
+    setDraft(null);
+  };
 
   const mark = (t: Talk, priority: PlanItem["priority"]) => {
     const current = plan.find((p) => p.id === t.id);
@@ -69,8 +82,8 @@ export function PlanSection({
                 <h3 className="text-lg font-semibold">{t.title}</h3>
                 <p className="text-ink-soft">{when(t)}</p>
                 <div className="flex flex-wrap gap-3">
-                  <button type="button" aria-pressed={mine === "must"} onClick={() => mark(t, "must")} className="choice">Must-see</button>
-                  <button type="button" aria-pressed={mine === "nice"} onClick={() => mark(t, "nice")} className="choice">Nice to have</button>
+                  <button type="button" aria-label={`Must-see: ${t.title}`} aria-pressed={mine === "must"} onClick={() => mark(t, "must")} className="choice">Must-see</button>
+                  <button type="button" aria-label={`Nice to have: ${t.title}`} aria-pressed={mine === "nice"} onClick={() => mark(t, "nice")} className="choice">Nice to have</button>
                 </div>
               </li>
             );
@@ -90,10 +103,20 @@ export function PlanSection({
             ))}
           </ul>
           <label htmlFor="buffer" className="block text-lg">Minutes you want between talks</label>
-          <input id="buffer" type="number" min={5} max={120} step={1} value={buffer} onChange={(e) => {
-            const value = e.target.value === "" ? 15 : Number(e.target.value);
-            setBuffer(Number.isFinite(value) ? Math.min(120, Math.max(5, Math.round(value))) : 15);
-          }} className="field" />
+          <p id="buffer-hint" className="text-ink-soft">Any number from 5 to 120.</p>
+          <input
+            id="buffer"
+            type="number"
+            inputMode="numeric"
+            min={5}
+            max={120}
+            step={1}
+            value={draft ?? String(buffer)}
+            aria-describedby="buffer-hint"
+            onChange={(e) => typeBuffer(e.target.value)}
+            onBlur={leaveBuffer}
+            className="field"
+          />
           <p className="text-sm text-ink-soft">Your reasons and your plan stay on this phone. The words you type in the search box are sent to search talks.</p>
         </div>
       )}
