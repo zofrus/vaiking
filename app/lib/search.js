@@ -27,7 +27,7 @@ function isDay(value) {
 }
 
 // Applied to both legs of the fusion, so each leg ranks the same candidate set.
-function buildFilters({ day } = {}) {
+function buildFilters({ day, track } = {}) {
   const filters = [
     { bool: { must_not: [{ terms: { track: EXCLUDED_TRACKS } }] } },
   ];
@@ -38,6 +38,8 @@ function buildFilters({ day } = {}) {
       },
     });
   }
+  // Exact match on the keyword field, so "Security" never matches "Security + X".
+  if (track) filters.push({ term: { track } });
   return filters;
 }
 
@@ -60,19 +62,33 @@ function semanticLeg(q) {
   return { standard: { query: { match: { semantic_content: q } } } };
 }
 
-function buildSearchRequest({ q, day, limit }) {
+const FACET_AGGS = {
+  tracks: { terms: { field: "track", size: 30 } },
+  days: {
+    date_histogram: {
+      field: "starts_at",
+      calendar_interval: "day",
+      time_zone: TIME_ZONE,
+      format: "yyyy-MM-dd",
+      min_doc_count: 1,
+    },
+  },
+};
+
+function buildSearchRequest({ q, day, track, limit }) {
   return {
     index: "talks",
     size: limit,
     timeout: SEARCH_TIMEOUT,
     _source: { excludes: HIDDEN_FIELDS },
     explain: true,
+    aggs: FACET_AGGS,
     retriever: {
       rrf: {
         retrievers: [keywordLeg(q), semanticLeg(q)],
         rank_window_size: RANK_WINDOW,
         rank_constant: 60,
-        filter: buildFilters({ day }),
+        filter: buildFilters({ day, track }),
       },
     },
     highlight: {
@@ -116,9 +132,17 @@ function shapeHit(hit) {
   };
 }
 
+function shapeFacets(aggs) {
+  const bucket = (b) => ({ value: b.key_as_string ?? String(b.key), count: b.doc_count });
+  return {
+    tracks: (aggs?.tracks?.buckets ?? []).filter((b) => !EXCLUDED_TRACKS.includes(b.key)).map(bucket),
+    days: (aggs?.days?.buckets ?? []).map(bucket),
+  };
+}
+
 function shapeResponse(res) {
   const hits = res.hits?.hits ?? [];
-  const body = { took_ms: res.took ?? null, results: hits.map(shapeHit) };
+  const body = { took_ms: res.took ?? null, results: hits.map(shapeHit), facets: shapeFacets(res.aggregations) };
   if (hits.length === 0) {
     body.message =
       "No talks matched. Try fewer or simpler words, or describe what you want to learn.";
@@ -137,5 +161,6 @@ module.exports = {
   buildSearchRequest,
   escapeHtml,
   legRanks,
+  shapeFacets,
   shapeResponse,
 };
