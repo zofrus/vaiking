@@ -3,6 +3,12 @@ const {
   getNodeAutoInstrumentations,
 } = require("@opentelemetry/auto-instrumentations-node");
 
+const { withServiceVersion } = require("./lib/otel-resource");
+
+// Must run before the SDK reads the environment to build its resource.
+const attributes = withServiceVersion();
+if (attributes) process.env.OTEL_RESOURCE_ATTRIBUTES = attributes;
+
 const sdk = new NodeSDK({
   instrumentations: getNodeAutoInstrumentations({
     "@opentelemetry/instrumentation-http": {

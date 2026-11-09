@@ -48,7 +48,7 @@ spec:
             - name: OTEL_METRICS_EXPORTER
               value: "otlp"
             - name: NODE_OPTIONS
-              value: "--require @opentelemetry/auto-instrumentations-node/register"
+              value: "--require ./otel.js"
             - name: POD_NAME
               valueFrom:
                 fieldRef:
