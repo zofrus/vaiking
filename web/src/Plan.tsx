@@ -120,7 +120,7 @@ export function PlanSection({
   };
 
   return (
-    <section aria-labelledby="plan-h" className="gp-find space-y-4">
+    <section aria-labelledby="plan-h" className="gp-find">
       <h2 id="plan-h" className="gp-h">Find your talks</h2>
       <form onSubmit={search} className="space-y-3">
         <label htmlFor="q" className="gp-label">What's the one thing you came for?</label>
