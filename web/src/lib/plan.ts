@@ -24,7 +24,7 @@ export function savePlan(plan: PlanItem[]): void {
 export function loadBuffer(): number {
   try {
     const n = Number(localStorage.getItem(BUFFER_KEY));
-    return Number.isFinite(n) && n > 0 && n <= 120 ? n : 15;
+    return Number.isInteger(n) && n >= 5 && n <= 120 ? n : 15;
   } catch {
     return 15;
   }

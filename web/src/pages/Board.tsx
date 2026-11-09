@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { reportRequestFailure } from "../telemetry";
 
 interface Row {
   floor: string;
@@ -54,10 +55,11 @@ export default function BoardPage() {
     const run = async () => {
       try {
         const res = await fetch("/api/board");
-        if (!res.ok) throw new Error();
+        if (!res.ok) throw new Error(`Board request failed with status ${res.status}`);
         const board = (await res.json()) as Board;
         if (current) setLoad({ state: "ready", board });
-      } catch {
+      } catch (error) {
+        reportRequestFailure("/api/board", error);
         if (current)
           setLoad((prev) =>
             prev.state === "ready" ? prev : { state: "error" },

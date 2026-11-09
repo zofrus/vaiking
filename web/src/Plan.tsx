@@ -43,7 +43,7 @@ export function PlanSection({
       if (!res.ok) throw new Error();
       const body = (await res.json()) as { results: Talk[] };
       setResults(body.results);
-      setStatus(`${body.results.length} talks found.`);
+      setStatus(body.results.length === 0 ? "No talks found. Try a broader search." : `${body.results.length} talks found.`);
     } catch {
       setResults(null);
       setStatus("Search is not available right now. The break button still works.");
@@ -90,7 +90,10 @@ export function PlanSection({
             ))}
           </ul>
           <label htmlFor="buffer" className="block text-lg">Minutes you want between talks</label>
-          <input id="buffer" type="number" min={5} max={120} value={buffer} onChange={(e) => setBuffer(Number(e.target.value) || 15)} className="field" />
+          <input id="buffer" type="number" min={5} max={120} step={1} value={buffer} onChange={(e) => {
+            const value = e.target.value === "" ? 15 : Number(e.target.value);
+            setBuffer(Number.isFinite(value) ? Math.min(120, Math.max(5, Math.round(value))) : 15);
+          }} className="field" />
           <p className="text-sm text-ink-soft">Your reasons stay on this phone. Only talk numbers are ever sent for search.</p>
         </div>
       )}

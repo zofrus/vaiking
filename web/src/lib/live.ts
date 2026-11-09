@@ -1,25 +1,28 @@
 import { useEffect, useState } from "react";
 import type { Change, PlanItem } from "./reconcile";
+import { reportRequestFailure } from "../telemetry";
 
 // Ask the server what changed, once a minute while online. Never blocks the UI.
 export function useChanges(): Change[] {
   const [changes, setChanges] = useState<Change[]>([]);
   useEffect(() => {
-    let since = new Date().toISOString();
+    let since = new Date(0).toISOString();
     const poll = async () => {
       if (!navigator.onLine) return;
       try {
         const res = await fetch(`/api/changes?since=${encodeURIComponent(since)}`, { signal: AbortSignal.timeout(5000) });
-        if (!res.ok) return;
+        if (!res.ok) throw new Error(`Changes request failed with status ${res.status}`);
         const body = (await res.json()) as { now: string; changes: Change[] };
         since = body.now;
         if (body.changes.length) {
           setChanges((old) => [...old, ...body.changes.filter((c) => !old.some((o) => o.id === c.id))]);
         }
-      } catch {
+      } catch (error) {
+        reportRequestFailure("/api/changes", error);
         // Offline or slow: try again next minute.
       }
     };
+    void poll();
     const id = setInterval(() => void poll(), 60_000);
     return () => clearInterval(id);
   }, []);
@@ -44,7 +47,7 @@ export function useSimilar(talk: PlanItem | undefined): string | null {
         const first = b?.results?.[0];
         setLine(first ? { id, title: first.title } : null);
       })
-      .catch(() => {});
+      .catch((error: unknown) => reportRequestFailure("/api/similar", error));
   }, [id, after]);
   return line && line.id === id ? line.title : null;
 }
