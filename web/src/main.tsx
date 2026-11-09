@@ -4,6 +4,10 @@ import App from "./App";
 import { reloadOnceForNewBuild } from "./lib/staleBuild";
 import { initTelemetry } from "./telemetry";
 import "./index.css";
+import "./focus.css";
+import { initFocus } from "./lib/focusMode";
+
+initFocus(); // sets data-focus before the first render, so nothing flashes
 
 void initTelemetry();
 
