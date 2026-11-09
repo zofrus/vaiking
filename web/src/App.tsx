@@ -220,20 +220,22 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-ground text-ink">
-      <a
-        href="#main"
-        className="skip-link"
-        onClick={(e) => {
-          e.preventDefault();
-          document.getElementById("main")?.focus();
-        }}
-      >
-        Skip to main content
-      </a>
       <p role="status" aria-live="polite" className="sr-only">
         {announce} {noticeText}
       </p>
+      {/* Everything but the live region goes quiet while the staff card is up,
+          so Tab and the screen reader stay on the card. */}
       <div aria-hidden={showCard || undefined} inert={showCard || undefined}>
+        <a
+          href="#main"
+          className="skip-link"
+          onClick={(e) => {
+            e.preventDefault();
+            document.getElementById("main")?.focus();
+          }}
+        >
+          Skip to main content
+        </a>
         {isPreview && (
           <p className="bg-black px-5 py-3 text-center font-semibold text-white">
             Preview of Tuesday. Times are real, the moment is simulated.
