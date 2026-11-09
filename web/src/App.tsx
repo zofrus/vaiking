@@ -229,8 +229,8 @@ export default function App() {
   return (
     <div className="min-h-screen bg-ground text-ink">
       <p role="status" aria-live="polite" className="sr-only">{announce}</p>
-      {/* One node per notice, so only a new notice is read, not the whole list. */}
-      <div role="status" aria-live="polite" aria-relevant="additions" className="sr-only">
+      {/* One node per notice, so additions and text changes are announced independently. */}
+      <div role="status" aria-live="polite" aria-atomic="false" aria-relevant="additions text" className="sr-only">
         {result.notices.map((n) => (
           <p key={n.changeId}>{n.text}</p>
         ))}
