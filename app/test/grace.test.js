@@ -16,6 +16,8 @@ function appWith() {
 test("normalizeFloor maps to the allowlist or unknown", () => {
   assert.equal(normalizeFloor("Level 2"), "2");
   assert.equal(normalizeFloor("L3"), "3");
+  assert.equal(normalizeFloor("Lobby"), "lobby");
+  assert.equal(normalizeFloor("lobby"), "lobby");
   assert.equal(normalizeFloor("Ground"), "ground");
   assert.equal(normalizeFloor("room 355F, jane@example.com"), "unknown");
   assert.equal(normalizeFloor(undefined), "unknown");
@@ -98,7 +100,7 @@ test("POST /api/grace rate limits per IP", async () => {
     last = await app.inject({
       method: "POST",
       url: "/api/grace",
-      remoteAddress: "10.9.9.9",
+      headers: { "x-forwarded-for": "10.9.9.9, 10.0.0.1" },
       payload: { mode: "live" },
     });
   }
@@ -106,7 +108,7 @@ test("POST /api/grace rate limits per IP", async () => {
   const other = await app.inject({
     method: "POST",
     url: "/api/grace",
-    remoteAddress: "10.9.9.8",
+    headers: { "x-forwarded-for": "10.9.9.8" },
     payload: { mode: "live" },
   });
   assert.equal(other.statusCode, 204);

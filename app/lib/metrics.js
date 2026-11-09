@@ -12,7 +12,7 @@ function normalizeFloor(value) {
   const v = value
     .trim()
     .toLowerCase()
-    .replace(/^(level|floor|l)\s*/, "")
+    .replace(/^(level|floor|l(?=\s*\d))\s*/, "")
     .replace(/(st|nd|rd|th)?\s*floor$/, "");
   return FLOORS.includes(v) ? v : "unknown";
 }
