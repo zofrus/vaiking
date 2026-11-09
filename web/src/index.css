@@ -187,7 +187,10 @@ h3 {
 }
 /* Headings get focus from code so screen readers start there. They can't be
    tabbed to, so a ring around them is only noise, on the staff card most. */
-[tabindex="-1"]:focus {
+main[tabindex="-1"]:focus,
+h1[tabindex="-1"]:focus,
+h2[tabindex="-1"]:focus,
+h3[tabindex="-1"]:focus {
   outline: none;
 }
 
