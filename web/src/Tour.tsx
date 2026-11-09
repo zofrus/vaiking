@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import "./tour.css";
 import { TOUR_OPEN_EVENT, TOUR_STEPS, hasSeenTour, markTourSeen, shouldShowInvite } from "./lib/tour";
 
 const btn =
@@ -46,29 +47,34 @@ export function Tour() {
       ref={dialog}
       aria-labelledby="tour-h"
       onClose={() => markTourSeen()}
-      className="m-auto w-[min(32rem,calc(100vw-1.5rem))] rounded-2xl bg-white p-5 text-ink backdrop:bg-black/70"
+      className="tour-dialog m-auto max-h-[calc(100dvh-2rem)] w-[min(32rem,calc(100vw-1.5rem))] overflow-y-auto rounded-2xl bg-[var(--gp-surface)] p-5 text-[var(--gp-ink)] shadow-[0_0_0_1px_var(--gp-line)] backdrop:bg-[rgb(24_24_27/0.45)]"
     >
       <p className="text-sm font-semibold">
         Step {step + 1} of {TOUR_STEPS.length}
       </p>
+      <ol className="tour-dots" aria-hidden="true">
+        {TOUR_STEPS.map((_, i) => (
+          <li key={i} data-current={i === step ? "true" : undefined} />
+        ))}
+      </ol>
       <h2 id="tour-h" ref={heading} tabIndex={-1} className="mt-1 text-2xl font-semibold">
         {s.title}
       </h2>
       <p className="mt-2 text-lg">{s.text}</p>
-      <div className="mt-5 flex flex-wrap gap-3">
+      <div className="dialog-actions">
         <button type="button" className={btn} disabled={step === 0} onClick={() => setStep(step - 1)}>
           Back
         </button>
         {last ? (
-          <button type="button" className={btn} onClick={() => dialog.current?.close()}>
+          <button type="button" className="btn-p" onClick={() => dialog.current?.close()}>
             Done
           </button>
         ) : (
-          <button type="button" className={btn} onClick={() => setStep(step + 1)}>
+          <button type="button" className="btn-p" onClick={() => setStep(step + 1)}>
             Next
           </button>
         )}
-        <button type="button" className={btn} onClick={() => dialog.current?.close()}>
+        <button type="button" className="btn-q" onClick={() => dialog.current?.close()}>
           Skip tour
         </button>
       </div>
