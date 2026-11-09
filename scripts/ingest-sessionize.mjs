@@ -168,6 +168,8 @@ async function findChanged(client, docs) {
   return docs.filter((d) => existing.get(d.id) !== d.content_hash);
 }
 
+const MIN_DOCS_TO_PRUNE = 400;
+
 async function ingest(client, docs) {
   return withSpan(
     'elasticsearch.ingest',
@@ -190,12 +192,20 @@ async function ingest(client, docs) {
           },
         });
       }
-      const current = docs.map((doc) => doc.id);
-      const { deleted } = await client.deleteByQuery({
-        index: INDEX,
-        query: { bool: { must_not: { ids: { values: current } } } },
-        refresh: true,
-      });
+      // A short or failed feed must never wipe the index, so prune only after a
+      // clean write of a feed that looks complete (about 580 sessions in full).
+      let deleted = 0;
+      if (docs.length >= MIN_DOCS_TO_PRUNE && stats.failed === 0) {
+        const current = docs.map((doc) => doc.id);
+        ({ deleted } = await client.deleteByQuery({
+          index: INDEX,
+          query: { bool: { must_not: { ids: { values: current } } } },
+          refresh: true,
+        }));
+      } else {
+        span.setAttribute('ingest.prune_skipped', true);
+        console.warn(`prune skipped: docs=${docs.length} failed=${stats.failed}`);
+      }
       if (stats.failed > 0) span.setStatus({ code: SpanStatusCode.ERROR });
       return { changed: changed.length, written: stats.successful, failed: stats.failed, deleted };
     },
