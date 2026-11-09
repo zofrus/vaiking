@@ -168,7 +168,8 @@
   font-size: 0.8125rem;
   font-weight: 500;
   cursor: pointer;
-  white-space: nowrap;
+  flex-wrap: wrap;
+  max-width: 100%;
 }
 .gp-sw {
   appearance: none;
