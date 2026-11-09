@@ -9,6 +9,7 @@ interface Board {
   live: Row[];
   preview: Row[];
   sample_note: string;
+  stale?: boolean;
 }
 type Load =
   | { state: "loading" }
@@ -87,7 +88,7 @@ export default function BoardPage() {
         {load.state === "loading" && "Loading counts."}
         {load.state === "error" && "Counts are unavailable right now."}
         {load.state === "ready" &&
-          load.stale &&
+          (load.stale || load.board.stale) &&
           "Couldn't refresh; these counts may be out of date. "}
         {load.state === "ready" && load.board.sample_note}
       </p>
