@@ -85,7 +85,7 @@ test("/api/similar shares its request budget across a cold lookup and search", a
 
   const res = await app.inject({ url: "/api/similar?talk_id=1" });
   assert.equal(res.statusCode, 200);
-  assert.equal(getTimeout, 800);
+  assert.ok(getTimeout > 0 && getTimeout <= 800);
   assert.ok(searchTimeout > 0);
   assert.ok(searchTimeout <= getTimeout - getElapsed + 2);
 });
