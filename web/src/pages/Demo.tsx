@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import DemoQr from "./DemoQr";
 import { reportRequestFailure } from "../telemetry";
 import "./pages.css";
@@ -30,7 +30,8 @@ interface Column {
   key: keyof Demo;
   name: string;
   role: string;
-  stats: { key: string; label: string; unit?: string }[];
+  // decimals: fixed fraction digits, so a rate keeps one width between polls.
+  stats: { key: string; label: string; unit?: string; decimals?: number }[];
 }
 
 const COLUMNS: Column[] = [
@@ -50,7 +51,12 @@ const COLUMNS: Column[] = [
     stats: [
       { key: "button_presses", label: "real button presses, 1h" },
       { key: "plan_requests", label: "plan requests, 1h" },
-      { key: "http_rate", label: "HTTP requests", unit: "per second" },
+      {
+        key: "http_rate",
+        label: "HTTP requests",
+        unit: "per second",
+        decimals: 2,
+      },
     ],
   },
   {
@@ -89,15 +95,15 @@ function Chip({ state }: { state: ChipState }) {
   return (
     <span
       className={
-        "gp-chip" +
+        "gp-pill" +
         (state === "live"
-          ? " gp-chip-live"
+          ? " gp-pill-live"
           : state === "partial"
-            ? " gp-chip-partial"
+            ? " gp-pill-partial"
             : "")
       }
     >
-      {state === "live" && <span aria-hidden="true" className="gp-chip-dot" />}
+      {state === "live" && <span aria-hidden="true" className="gp-pill-dot" />}
       {CHIP_TEXT[state]}
     </span>
   );
@@ -131,33 +137,47 @@ function ago(iso: string | null, nowMs: number): string {
 function StatBlock({
   label,
   unit,
+  decimals,
   stat,
   loading,
 }: {
   label: string;
   unit?: string;
+  decimals?: number;
   stat?: Stat;
   loading: boolean;
 }) {
   const live = stat?.status === "live" && stat.value !== null;
+  const text = live
+    ? stat.value!.toLocaleString(
+        "en-US",
+        decimals === undefined
+          ? undefined
+          : {
+              minimumFractionDigits: decimals,
+              maximumFractionDigits: decimals,
+            },
+      )
+    : "";
+  // The number's size follows its length, so a long count shrinks to fit its
+  // tile instead of wrapping or running past it (see .gp-value).
+  const fit = { "--gp-len": Math.max(3, text.length) } as CSSProperties;
   return (
     <div className="gp-tile">
       <p className="gp-tile-label gp-muted">{label}</p>
-      {/* The dash holds the number's height while loading, so nothing jumps. */}
-      <p className="gp-value gp-mono">
+      {/* The dash holds the number's height while loading, so nothing jumps.
+          The column's chip and the page's status line already say Loading. */}
+      <p className="gp-value gp-digits" style={fit}>
         {live ? (
-          stat.value!.toLocaleString("en-US")
+          text
         ) : loading ? (
-          <>
-            <span aria-hidden="true">—</span>
-            <span className="sr-only">Loading</span>
-          </>
+          <span aria-hidden="true">—</span>
         ) : (
           <span className="gp-value-word">Unavailable</span>
         )}
       </p>
       {unit && (live || loading) && (
-        <p className="gp-unit gp-mono gp-muted">{unit}</p>
+        <p className="gp-unit gp-digits gp-muted">{unit}</p>
       )}
       {live && stat?.window && (
         <p className="gp-unit gp-muted">{stat.window}</p>
@@ -204,7 +224,11 @@ export default function Demo() {
   const loading = data === null && !failed;
 
   return (
-    <div className="gp-page gp-demo">
+    <main id="main" className="gp-page gp-demo">
+      {/* The title comes first, so a screen reader meets it before the app. */}
+      <h1 className="sr-only">
+        Grace Period live demo: the app and the four tools behind it
+      </h1>
       {/* Only a change of overall state is announced, never every poll. */}
       <p className="sr-only" role="status">
         {failed
@@ -214,18 +238,25 @@ export default function Demo() {
             : ""}
       </p>
       <section aria-label="The app" className="gp-demo-app">
-        <iframe
-          title="Grace Period app in preview mode, Tuesday 3:25 PM Mountain, with a sample plan"
-          src={APP_SRC}
-        />
+        <div className="gp-phone">
+          <iframe
+            title="Grace Period app in preview mode, Tuesday 3:25 PM Mountain, with a sample plan"
+            src={APP_SRC}
+          />
+        </div>
       </section>
       <div className="gp-demo-tools">
+        {/* The QR sits in the header so the four columns fit a 1280x800
+            projector without scrolling. The brand text repeats the h1, so
+            screen readers skip it. */}
         <header className="gp-header">
-          <div className="gp-brand">
+          <p className="gp-brand" aria-hidden="true">
             <Mark />
-            <h1>
-              Grace Period live demo: the app and the four tools behind it
-            </h1>
+            Grace Period
+            <span className="gp-muted">Live demo</span>
+          </p>
+          <div className="gp-qr">
+            <DemoQr />
           </div>
         </header>
         <div className="gp-demo-grid">
@@ -238,7 +269,7 @@ export default function Demo() {
               <section
                 key={col.key}
                 aria-labelledby={`h-${col.key}`}
-                className="gp-card gp-col"
+                className="gp-box gp-col"
               >
                 <div className="gp-col-head">
                   <div>
@@ -247,22 +278,25 @@ export default function Demo() {
                   </div>
                   <Chip state={state} />
                 </div>
-                {col.key === "gitar" && (
-                  <div className="gp-qr">
-                    <DemoQr />
+                {/* A tool with no live stat at all gets one line, not a wall
+                    of "Unavailable" tiles. Partly live keeps its tiles, so
+                    each missing stat is still named. */}
+                {state === "unavailable" ? (
+                  <p className="gp-unavail gp-muted">Live data unavailable</p>
+                ) : (
+                  <div className="gp-tiles">
+                    {col.stats.map((s) => (
+                      <StatBlock
+                        key={s.key}
+                        label={s.label}
+                        unit={s.unit}
+                        decimals={s.decimals}
+                        stat={src?.stats?.[s.key]}
+                        loading={loading}
+                      />
+                    ))}
                   </div>
                 )}
-                <div className="gp-tiles">
-                  {col.stats.map((s) => (
-                    <StatBlock
-                      key={s.key}
-                      label={s.label}
-                      unit={s.unit}
-                      stat={src?.stats?.[s.key]}
-                      loading={loading}
-                    />
-                  ))}
-                </div>
                 {col.key === "gitar" && src?.latest_reviewed_pr && (
                   <div className="gp-block">
                     <p className="gp-tile-label gp-muted">
@@ -293,6 +327,6 @@ export default function Demo() {
           })}
         </div>
       </div>
-    </div>
+    </main>
   );
 }
