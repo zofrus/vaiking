@@ -17,6 +17,12 @@ html {
   -webkit-text-size-adjust: 100%;
 }
 
+/* Large, unhurried reading text. Headings and buttons set their own sizes. */
+body {
+  font-size: 1.125rem;
+  line-height: 1.6;
+}
+
 :focus-visible {
   outline: 4px solid #1d4ed8;
   outline-offset: 3px;
@@ -57,6 +63,18 @@ html {
   font-size: 1.25rem;
   font-weight: 700;
   background: #fff;
+}
+
+/* For leaving a screen: clear, but quieter than the actions on it. */
+.quiet-button {
+  display: block;
+  width: 100%;
+  min-height: 3.5rem;
+  border-radius: 1rem;
+  border: 2px solid var(--color-ink-soft);
+  color: var(--color-ink);
+  font-weight: 600;
+  background: transparent;
 }
 
 .close-button {

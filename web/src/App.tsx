@@ -49,11 +49,13 @@ function Footer() {
 
 function Calm({
   onCard,
+  onBack,
   staffBtn,
   planResult,
 }: {
   planResult: ReactNode;
   onCard: () => void;
+  onBack: () => void;
   staffBtn: { current: HTMLButtonElement | null };
 }) {
   const heading = useRef<HTMLHeadingElement>(null);
@@ -123,6 +125,10 @@ function Calm({
           Estimated. Confirm routes with event staff.
         </p>
       </div>
+
+      <button type="button" onClick={onBack} className="quiet-button">
+        Back to the start
+      </button>
     </section>
   );
 }
@@ -168,6 +174,7 @@ export default function App() {
 
   useEffect(() => {
     if (prev.current === "card" && view === "calm") staffBtn.current?.focus();
+    if (prev.current !== "home" && view === "home") document.getElementById("home-h")?.focus();
     prev.current = view;
   }, [view]);
 
@@ -184,17 +191,24 @@ export default function App() {
   };
   const changes = useChanges();
   const result = reconcile(plan, changes, { now: now(), bufferMinutes: buffer, graceActive: grace });
-  const clearUntil = result.clearUntil && Date.parse(result.clearUntil) > now().getTime() ? result.clearUntil : null;
+  const clearLine = (r: ReturnType<typeof reconcile>) =>
+    r.clearUntil && Date.parse(r.clearUntil) > now().getTime()
+      ? `You're clear until ${formatTime(r.clearUntil)} MST.`
+      : "You're clear for the rest of your plan.";
   const similar = useSimilar(grace ? result.dropped[0] : undefined);
   const noticeText = result.notices.map((n) => n.text).join(" ");
 
   const press = () => {
     setGrace(true);
     countPress(isPreview ? "preview" : "live");
+    // Say the result too, not only where it is. Worked out here from the same
+    // plan, so nothing waits on the network.
+    const pressed = reconcile(plan, changes, { now: now(), bufferMinutes: buffer, graceActive: true });
+    const planLine = plan.length > 0 ? ` ${clearLine(pressed)} Nothing is cancelled. Your plan is saved.` : "";
     setAnnounce((current) =>
-      current === "Quiet room details are on screen."
+      (current.startsWith("Quiet room details are on screen.")
         ? "Quiet room details are still on screen."
-        : "Quiet room details are on screen.",
+        : "Quiet room details are on screen.") + planLine,
     );
     go("calm");
   };
@@ -225,7 +239,7 @@ export default function App() {
 
       <div aria-hidden={showCard || undefined} inert={showCard || undefined}>
         <header className="mx-auto max-w-xl px-5 pt-6">
-          <p className="text-lg font-semibold">Grace Period</p>
+          <h1 className="text-lg font-semibold">Grace Period</h1>
         </header>
 
         <main
@@ -233,12 +247,11 @@ export default function App() {
           tabIndex={-1}
           className="mx-auto max-w-xl space-y-8 px-5 pb-6 pt-5"
         >
-          <h1 className="sr-only">Grace Period</h1>
           <BreakButton onPress={press} />
           {view === "home" ? (
             <>
             <section aria-labelledby="home-h" className="space-y-3">
-              <h2 id="home-h" className="text-2xl font-semibold">
+              <h2 id="home-h" tabIndex={-1} className="text-2xl font-semibold">
                 One tap, no setup.
               </h2>
               <p className="text-lg text-ink-soft">
@@ -260,12 +273,16 @@ export default function App() {
           ) : (
             <Calm
               onCard={() => go("card")}
+              onBack={() => {
+                setAnnounce("");
+                go("home");
+              }}
               staffBtn={staffBtn}
               planResult={
                 plan.length > 0 && (
                   <div className="panel space-y-3" aria-labelledby="clear-h" role="group">
                     <h3 id="clear-h" className="text-2xl font-semibold">
-                      {clearUntil ? `You're clear until ${formatTime(clearUntil)} MST.` : "You're clear for the rest of your plan."}
+                      {clearLine(result)}
                     </h3>
                     <p>Nothing is cancelled. Your plan is saved.</p>
                     {result.notices.map((n) => (
@@ -274,9 +291,10 @@ export default function App() {
                     {similar && <p className="text-ink-soft">Similar talk later today: {similar}.</p>}
                     {result.dropped.length > 0 && (
                       <>
-                        <ul className="list-disc pl-6 text-ink-soft">
+                        <p id="aside-h" className="font-semibold">Set aside for now</p>
+                        <ul aria-labelledby="aside-h" className="list-disc space-y-1 pl-6 text-ink-soft">
                           {result.dropped.map((d) => (
-                            <li key={d.id}>Set aside: {d.title}</li>
+                            <li key={d.id}>{d.title}</li>
                           ))}
                         </ul>
                         <button type="button" className="staff-button" onClick={() => setGrace(false)}>
