@@ -43,8 +43,9 @@ export function PlanSection({
       if (!res.ok) throw new Error();
       const body = (await res.json()) as { results: Talk[] };
       setResults(body.results);
-      setStatus(`${body.results.length} talks found.`);
-    } catch {
+      setStatus(body.results.length === 0 ? "No talks found. Try a different search." : `${body.results.length} talks found.`);
+    } catch (error) {
+      console.warn("Talk search failed:", error instanceof Error ? error.name : "unknown");
       setResults(null);
       setStatus("Search is not available right now. The break button still works.");
     }
@@ -90,8 +91,8 @@ export function PlanSection({
             ))}
           </ul>
           <label htmlFor="buffer" className="block text-lg">Minutes you want between talks</label>
-          <input id="buffer" type="number" min={5} max={120} value={buffer} onChange={(e) => setBuffer(Number(e.target.value) || 15)} className="field" />
-          <p className="text-sm text-ink-soft">Your reasons stay on this phone. Only talk numbers are ever sent for search.</p>
+          <input id="buffer" type="number" min={5} max={120} value={buffer} onChange={(e) => { const n = Number(e.target.value); if (e.target.value !== "" && Number.isFinite(n)) setBuffer(Math.min(120, Math.max(5, Math.round(n)))); }} className="field" />
+          <p className="text-sm text-ink-soft">Your plan and your reasons stay on this phone. Only the words you search for, and talk numbers, are sent to find talks.</p>
         </div>
       )}
     </section>

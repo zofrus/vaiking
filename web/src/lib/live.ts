@@ -10,13 +10,17 @@ export function useChanges(): Change[] {
       if (!navigator.onLine) return;
       try {
         const res = await fetch(`/api/changes?since=${encodeURIComponent(since)}`, { signal: AbortSignal.timeout(5000) });
-        if (!res.ok) return;
+        if (!res.ok) {
+          console.warn("Change poll failed:", res.status);
+          return;
+        }
         const body = (await res.json()) as { now: string; changes: Change[] };
         since = body.now;
         if (body.changes.length) {
           setChanges((old) => [...old, ...body.changes.filter((c) => !old.some((o) => o.id === c.id))]);
         }
-      } catch {
+      } catch (error) {
+        console.warn("Change poll failed:", error instanceof Error ? error.name : "unknown");
         // Offline or slow: try again next minute.
       }
     };
@@ -44,7 +48,9 @@ export function useSimilar(talk: PlanItem | undefined): string | null {
         const first = b?.results?.[0];
         setLine(first ? { id, title: first.title } : null);
       })
-      .catch(() => {});
+      .catch((error: unknown) => {
+        console.warn("Similar talk lookup failed:", error instanceof Error ? error.name : "unknown");
+      });
   }, [id, after]);
   return line && line.id === id ? line.title : null;
 }

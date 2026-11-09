@@ -72,14 +72,14 @@ export function reconcile(plan: PlanItem[], changes: Change[], opts: Options) {
   // 2. Say what changed, in one plain sentence each.
   const notices: Notice[] = cancelled.map((c) => {
     const item = plan.find((p) => p.id === c.talk_id)!;
-    return { changeId: c.id, talkId: item.id, fits: false, text: `Your ${formatTime(item.starts_at)} talk was cancelled: ${item.title}.` };
+    return { changeId: c.id, talkId: item.id, fits: false, text: `Your ${formatTime(item.starts_at)} MST talk was cancelled: ${item.title}.` };
   });
   for (const item of live) {
     const change = byTalk.get(item.id);
     if (change?.kind !== "moved" && change?.kind !== "rescheduled") continue;
     const fits = !live.some((other) => other.id !== item.id && clash(item, other, buffer));
     const where = change.after?.room ? ` to ${change.after.room}` : "";
-    const text = `Your ${formatTime(item.starts_at)} talk moved${where}. ` + (fits ? "It still fits." : "It no longer fits.");
+    const text = `Your ${formatTime(item.starts_at)} MST talk moved${where}. ` + (fits ? "It still fits." : "It no longer fits.");
     notices.push({ changeId: change.id, talkId: item.id, fits, text });
   }
 
