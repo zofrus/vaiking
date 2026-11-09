@@ -34,6 +34,8 @@ From the live app, Nov 9, 2026, 4:12 PM MST (build `c52585e`).
 
 Open <https://grace.effulgentpoint.com> on your phone. No account, no install needed.
 
+To see the day being reconciled, open the [sample day with a labelled drill](https://grace.effulgentpoint.com/?preview=2026-11-10T15%3A25%3A00-07%3A00&sample=1&drill=1): a talk moves, and the app says whether your plan still fits.
+
 <img src="web/public/qr-grace.svg" width="160" alt="QR code that opens https://grace.effulgentpoint.com">
 
 The same code is served by the app at <https://grace.effulgentpoint.com/qr-grace.svg>.
@@ -145,7 +147,7 @@ Semantic search through Elasticsearch's embeddings is the only AI in the product
 
 Dash0 is where the organizer signal comes from, not only where we look at our own servers.
 
-- **The break press becomes the organizer board.** Pressing the button sends one beacon (`POST /api/grace`) with a floor and `live` or `preview`. The server adds 1 to the OpenTelemetry counter `grace_requests_total{scheduled_floor, mode}` ([`app/lib/metrics.js`](app/lib/metrics.js)). `GET /api/board` reads it back from Dash0's Prometheus API with a read-only token that stays on the server: `round(sum by (scheduled_floor) (increase(grace_requests_total{mode="live"}[1h])))`, cached for 30 seconds ([`app/routes/board.js`](app/routes/board.js)). The [`/board`](https://grace.effulgentpoint.com/board) page shows the counts by floor, labels a small sample as small, and marks old counts as stale. The floor comes from a fixed list, so no other value can be stored.
+- **The break press becomes the organizer board.** Pressing the button sends one beacon (`POST /api/grace`) with a floor and `live` or `preview`. The server adds 1 to the OpenTelemetry counter `grace_requests_total{scheduled_floor, mode}` ([`app/lib/metrics.js`](app/lib/metrics.js)). `GET /api/board` reads it back from Dash0's Prometheus API with a read-only token that stays on the server: `round(sum by (scheduled_floor) (increase(grace_requests_total{mode="live"}[1h])))`, cached for 30 seconds ([`app/routes/board.js`](app/routes/board.js)). The [`/board`](https://grace.effulgentpoint.com/board) page shows the counts by floor, labels a small sample as small, and marks old counts as stale. The floor comes from a fixed list, so no other value can be stored. The floor is the level of the talk you are in or your next one, so a press with no saved plan counts as "Floor not known": most live presses on the board today are that, because most testers had no plan.
 - **Plan-screen SLO.** `plan_requests_total{within_1s}` counts `GET /api/search` and `GET /api/talks`, with a 5xx counted as slow ([`app/routes/plan-timing.js`](app/routes/plan-timing.js)). The query for an SLO "plan requests answered within 1 second" is in [`dash0/README.md`](dash0/README.md). No SLO or dashboard export is committed to this repo.
 - **Schedule changes.** The reconciler adds to `schedule_changes_total{kind}` for `moved`, `rescheduled`, `cancelled` and `added`, and wraps each 2-minute cycle in a `reconciler.cycle` span with `reconciler.outcome`, `reconciler.reason` and `reconciler.changes` ([`app/reconciler.js`](app/reconciler.js)). It has recorded 0 changes so far, because the real schedule has not moved.
 - **Traces, logs and RUM.** The API (`vaiking-app`) and the reconciler (`vaiking-reconciler`) send traces, logs and metrics. The browser (`vaiking-web`) sends RUM, with its token handed out at runtime by `/api/public-config` ([`web/src/telemetry.ts`](web/src/telemetry.ts)).

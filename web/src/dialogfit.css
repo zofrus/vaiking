@@ -40,3 +40,26 @@
     0 1px 2px rgb(9 9 11 / 0.2),
     inset 0 1px 0 rgb(255 255 255 / 0.12);
 }
+
+/* The form has no box of its own, so the sticky action bar is held inside the
+   dialog itself. Inside the form it could only move within the form, which at
+   large text starts below the fold and left Close off the screen. */
+.fit-dialog form {
+  display: contents;
+}
+
+/* Option cards wrap their words and shrink with the dialog, never past its edge. */
+.fit-dialog label {
+  min-width: 0;
+  max-width: 100%;
+  padding: 0.75rem;
+}
+.fit-dialog label > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* A focused option scrolls clear of the pinned bar instead of sitting under it. */
+.fit-dialog {
+  scroll-padding-bottom: 6rem;
+}
