@@ -1,6 +1,6 @@
 const { withSpan } = require("../lib/search-trace");
 const {
-  parseWhen, parseLimit, seedText, buildSimilarRequest, createCache,
+  parseWhen, parseLimit, seedText, buildSimilarRequest, describeQuery, createCache,
 } = require("../lib/search-similar");
 
 const { clientKey, createLimiter } = require("../lib/guard");
@@ -42,7 +42,8 @@ module.exports = async function similar(app, { elastic, env = process.env }) {
 
     const afterMin = floorToMinute(after.value);
     const beforeMin = floorToMinute(before.value);
-    const key = [talkId, afterMin, beforeMin, limit].join("|");
+    const withShape = request.query.shape === "1";
+    const key = [talkId, afterMin, beforeMin, limit, withShape ? "shape" : ""].join("|");
     const cached = answers.get(key);
     if (cached) return cached;
     // Only requests that would reach Elasticsearch are counted.
@@ -81,6 +82,7 @@ module.exports = async function similar(app, { elastic, env = process.env }) {
         { traced: false },
       );
       const body = similarResponse((res.hits?.hits ?? []).map((h) => h._source));
+      if (withShape) body.query_shape = describeQuery({ after: afterMin, before: beforeMin, limit });
       answers.set(key, body);
       return body;
     } catch (err) {

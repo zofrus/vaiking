@@ -1,3 +1,4 @@
+import { QueryShape } from "./QueryShape";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { flushSync } from "react-dom";
 import { quietRoom, restrooms } from "./data/facilities";
@@ -259,6 +260,8 @@ export default function App() {
           Based on the {buffer} minutes you want between talks. Estimated. Confirm routes with event staff.
         </p>
       )}
+      {/* mount: QueryShape */}
+      {lines.some((l) => l.reach) && <QueryShape />}
     </>
   );
 
