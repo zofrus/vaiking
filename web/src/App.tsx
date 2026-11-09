@@ -119,12 +119,21 @@ function Footer({ showReplay }: { showReplay: boolean }) {
       <span className="gp-credit gp-secondary self-start">
         This release reviewed by <b>Gitar</b>
       </span>
-      <p>
-        <span className="font-semibold text-ink">Grace Period</span> by{" "}
-        <span className="text-[0.6875rem] font-bold uppercase tracking-[0.08em] text-ink">
-          Effulgent Point
-        </span>{" "}
-        · open source, offered to the CNCF events team
+      <p className="text-xs">
+        Made with{" "}
+        <svg
+          className="inline-block align-[-0.125em]"
+          width="12"
+          height="12"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          aria-hidden="true"
+        >
+          <path d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 2.6 5 6 5c2.1 0 3.6 1.2 4.5 2.6h3C14.4 6.2 15.9 5 18 5c3.4 0 5.1 3.4 3.6 6.8C19.5 16.4 12 21 12 21z" />
+        </svg>
+        <span className="sr-only">love</span> by{" "}
+        <span className="font-semibold text-ink">Effulgent Point</span>
+        <span className="block sm:inline"> · open source, offered to the CNCF events team</span>
       </p>
       <p>
         Schedule data: KubeCon + CloudNativeCon North America 2026, The Linux
@@ -138,6 +147,7 @@ function Footer({ showReplay }: { showReplay: boolean }) {
       <a className="self-start font-medium underline" href="/board">
         Organizer board
       </a>
+      {/* mount: ShareQR */}
     </footer>
   );
 }
