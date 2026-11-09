@@ -1,0 +1,51 @@
+name: ci
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            app/package-lock.json
+            web/package-lock.json
+      - name: Install app
+        run: npm ci --no-audit --no-fund
+        working-directory: app
+      - name: Install web
+        run: npm ci --no-audit --no-fund
+        working-directory: web
+      - name: Lint app
+        run: npm run lint
+        working-directory: app
+      - name: Lint web
+        run: npm run lint
+        working-directory: web
+      - name: Test app
+        run: npm test
+        working-directory: app
+      - name: Test web
+        run: npm test
+        working-directory: web
+      - name: Build web
+        run: npm run build
+        working-directory: web
+      - name: Install browser for accessibility check
+        run: npx playwright install --with-deps chromium
+        working-directory: web
+      - name: Accessibility check (axe) on the built app
+        run: |
+          npx vite preview --port 4173 &
+          curl --retry 15 --retry-connrefused --retry-delay 1 -sf http://localhost:4173/ > /dev/null
+          npm run axe
+        working-directory: web
