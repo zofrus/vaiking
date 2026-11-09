@@ -104,6 +104,27 @@ test("changes: cached for the same since, limited per client", async () => {
   assert.equal((await app.inject("/api/changes?since=2026-11-10T21:00:00Z")).statusCode, 429);
 });
 
+test("search, changes and similar share the total rate-limit backstop", async () => {
+  let searchCalls = 0;
+  let talkLookups = 0;
+  const client = {
+    search: async () => (searchCalls++, HITS),
+    get: async () => (talkLookups++, { _source: { title: "T" } }),
+  };
+  const app = appWith(client, {
+    RATE_LIMIT_PER_MIN: "10",
+    RATE_LIMIT_TOTAL_PER_MIN: "2",
+  });
+
+  assert.equal((await app.inject("/api/search?q=mesh")).statusCode, 200);
+  assert.equal((await app.inject("/api/changes")).statusCode, 200);
+  const similar = await app.inject(
+    "/api/similar?talk_id=1&after=2026-11-10T21:00:00Z",
+  );
+  assert.equal(similar.statusCode, 429);
+  assert.equal(searchCalls, 2);
+  assert.equal(talkLookups, 0);
+});
 test("similar: after and before are cut to the minute for the cache key and the query", async () => {
   let searches = 0;
   let seen;

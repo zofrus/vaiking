@@ -20,8 +20,8 @@ function buildChangesRequest(sinceMs) {
   };
 }
 
-module.exports = async function changes(app, { elastic, env }) {
-  const guarded = createGuard({ env, ttlMs: CACHE_MS });
+module.exports = async function changes(app, { elastic, env, totalLimiter }) {
+  const guarded = createGuard({ env, ttlMs: CACHE_MS, totalLimiter });
   app.get("/api/changes", async (request, reply) => {
     const { since } = request.query;
     const sinceMs = since === undefined ? null : Date.parse(since);
