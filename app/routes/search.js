@@ -12,6 +12,7 @@ module.exports = async function search(app, { elastic }) {
     if (day !== undefined && !isDay(day)) {
       return reply.code(400).send({ error: "day must look like 2026-11-10" });
     }
+    const track = typeof request.query.track === "string" ? request.query.track.trim().slice(0, 80) : "";
     if (!elastic.configured) {
       return reply.code(503).send({ error: "search is not available right now" });
     }
@@ -22,7 +23,7 @@ module.exports = async function search(app, { elastic }) {
         span.setAttribute("db.operation.name", "search");
         try {
           const res = await elastic.client.search(
-            buildSearchRequest({ q, day, limit: parseLimit(request.query.limit) }),
+            buildSearchRequest({ q, day, track: track || undefined, limit: parseLimit(request.query.limit) }),
             REQUEST_OPTIONS,
           );
           const shaped = shapeResponse(res);

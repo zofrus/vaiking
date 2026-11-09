@@ -130,3 +130,15 @@ test("route: returns shaped results", async () => {
   assert.equal(res.statusCode, 200);
   assert.equal(res.json().results[0].highlight, "<mark>Mesh</mark>");
 });
+
+test("facets: track filter is an exact term and aggregations are shaped", () => {
+  const search = require("../../app/lib/search");
+  const req = search.buildSearchRequest({ q: "x", track: "Security", limit: 3 });
+  assert.deepEqual(req.retriever.rrf.filter.at(-1), { term: { track: "Security" } });
+  assert.ok(req.aggs.tracks && req.aggs.days);
+  const f = search.shapeFacets({
+    tracks: { buckets: [{ key: "Security", doc_count: 4 }, { key: "Breaks", doc_count: 9 }] },
+    days: { buckets: [{ key_as_string: "2026-11-10", key: 1, doc_count: 5 }] },
+  });
+  assert.deepEqual(f, { tracks: [{ value: "Security", count: 4 }], days: [{ value: "2026-11-10", count: 5 }] });
+});
