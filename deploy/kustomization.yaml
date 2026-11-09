@@ -12,4 +12,4 @@ resources:
 images:
   - name: app
     newName: ghcr.io/zofrus/vaiking
-    newTag: "c1b528e"
+    newTag: "f725f0c"
