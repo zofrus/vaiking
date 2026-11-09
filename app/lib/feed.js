@@ -28,6 +28,19 @@ function plainText(value) {
     .trim();
 }
 
+// Links in the feed are typed by speakers. Only http and https are kept, so a
+// javascript: or data: value can never reach an href. Anything else becomes null.
+function safeHttpUrl(value) {
+  if (typeof value !== "string") return null;
+  const text = value.trim();
+  try {
+    const { protocol } = new URL(text);
+    return protocol === "http:" || protocol === "https:" ? text : null;
+  } catch {
+    return null;
+  }
+}
+
 function withOffset(time) {
   if (!time) return null;
   return /(Z|[+-]\d\d:\d\d)$/.test(time) ? time : time + CONFERENCE_OFFSET;
@@ -84,12 +97,12 @@ function normalize(feed) {
       floor: floor ? Number(floor[1]) : null,
       starts_at: withOffset(session.startsAt),
       ends_at: withOffset(session.endsAt),
-      url: SESSION_PAGE + session.id,
-      slides_url: slides?.answerValue ?? null,
+      url: safeHttpUrl(SESSION_PAGE + session.id),
+      slides_url: safeHttpUrl(slides?.answerValue),
     };
     docs.push({ ...doc, content_hash: hashOf(doc) });
   }
   return { fetched: feed.sessions.length, docs };
 }
 
-module.exports = { SOURCE_URL, normalize };
+module.exports = { SOURCE_URL, normalize, safeHttpUrl, plainText };
