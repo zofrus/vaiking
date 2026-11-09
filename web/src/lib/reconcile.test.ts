@@ -1,4 +1,10 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
+vi.hoisted(() => {
+  // clock.ts reads location at import time; node has none.
+  (globalThis as { location?: unknown }).location = { search: "" };
+});
+import { samplePlan } from "./clock";
 import { reconcile, type Change, type PlanItem } from "./reconcile";
 
 const at = (hm: string) => `2026-11-10T${hm}:00-07:00`;
@@ -93,5 +99,38 @@ describe("reconcile", () => {
     const early: Change = { id: "4", talk_id: "c", kind: "moved", before: null, after: { room: "1" }, detected_at: at("13:01") };
     const late: Change = { id: "5", talk_id: "c", kind: "moved", before: null, after: { room: "2" }, detected_at: at("13:09") };
     expect(reconcile([c], [late, early], opts).notices[0].text).toContain("to 2.");
+  });
+});
+
+describe("drill", () => {
+  const kserve = samplePlan[2];
+  const drillChange: Change = {
+    id: "drill-1", talk_id: kserve.id, kind: "rescheduled", drill: true, before: null,
+    after: { starts_at: "2026-11-10T17:15:00-07:00", ends_at: "2026-11-10T17:45:00-07:00" },
+    detected_at: "2026-11-10T15:25:00-07:00",
+  };
+
+  it("a drill reschedule of KServe no longer fits and says Drill first", () => {
+    const r = reconcile([...samplePlan], [drillChange], { now: new Date("2026-11-10T15:25:00-07:00"), bufferMinutes: 15, graceActive: false });
+    const n = r.notices.find((x) => x.talkId === kserve.id)!;
+    expect(n.fits).toBe(false);
+    expect(n.text.startsWith("Drill: simulated change, not from the official schedule.")).toBe(true);
+    expect(n.text).toContain("It no longer fits.");
+  });
+
+  it("a real change has no Drill prefix", () => {
+    const real = { ...drillChange, drill: undefined };
+    const r = reconcile([...samplePlan], [real], { now: new Date("2026-11-10T15:25:00-07:00"), bufferMinutes: 15, graceActive: false });
+    expect(r.notices[0].text.startsWith("Drill")).toBe(false);
+  });
+
+  it("isDrill needs preview", async () => {
+    for (const [search, want] of [["?drill=1", false], ["?preview=2026-11-10T15%3A25%3A00-07%3A00&drill=1", true], ["?preview=2026-11-10T15%3A25%3A00-07%3A00", false]] as const) {
+      vi.resetModules();
+      vi.stubGlobal("location", { search });
+      const m = await import("./clock");
+      expect(m.isDrill).toBe(want);
+    }
+    vi.stubGlobal("location", { search: "" });
   });
 });
