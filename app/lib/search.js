@@ -44,6 +44,9 @@ function buildFilters({ day, track } = {}) {
 }
 
 // Typos are handled here: fuzziness is ignored on semantic_text fields.
+// Longer queries must match most of their words (minimum_should_match) and
+// fuzzy matches must share the first two letters, so one loosely matching word
+// in an abstract cannot outrank the talks the query is really about.
 function keywordLeg(q) {
   return {
     standard: {
@@ -52,6 +55,8 @@ function keywordLeg(q) {
           query: q,
           fields: ["title^3", "speakers^2", "tags^2", "abstract"],
           fuzziness: "AUTO",
+          prefix_length: 2,
+          minimum_should_match: "2<-25%",
         },
       },
     },
