@@ -489,16 +489,16 @@ footer a {
   width: 7.5rem;
   height: 7.5rem;
 }
-.calm-mark .ring {
+.calm-mark .c-ring {
   position: absolute;
   border-radius: 50%;
   animation: gp-breathe 8s ease-in-out infinite;
 }
-.calm-mark .ring-1 {
+.calm-mark .c-ring.c-ring-1 {
   inset: 0;
   background: #e1e9e4;
 }
-.calm-mark .ring-2 {
+.calm-mark .c-ring-2 {
   inset: 0.875rem;
   background: #cfddd5;
   animation-delay: -4s;

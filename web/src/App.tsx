@@ -149,8 +149,8 @@ function Calm({
     <section aria-labelledby="calm-h" className="space-y-6">
       <div className="flex flex-col items-start gap-5">
         <div className="calm-mark" aria-hidden="true">
-          <span className="ring ring-1" />
-          <span className="ring ring-2" />
+          <span className="c-ring c-ring-1" />
+          <span className="c-ring c-ring-2" />
           <span className="core">
             <CheckIcon />
           </span>
