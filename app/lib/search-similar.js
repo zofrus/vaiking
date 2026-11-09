@@ -44,7 +44,16 @@ function buildSimilarRequest({ talkId, text, after, before, limit }) {
     size: limit,
     timeout: SIMILAR_TIMEOUT,
     _source: { excludes: HIDDEN_FIELDS },
-    query: { bool: { must: [{ match: { semantic_content: text } }], filter } },
+    query: {
+      bool: {
+        should: [
+          { multi_match: { query: text, fields: ["title^2", "abstract", "tags"] } },
+          { match: { semantic_content: text } },
+        ],
+        minimum_should_match: 1,
+        filter,
+      },
+    },
   };
 }
 
