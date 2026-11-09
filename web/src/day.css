@@ -18,8 +18,31 @@
   --_notice-line: var(--gp-notice-line, #f5d9a8);
   --_accent-soft: var(--gp-accent-soft, color-mix(in srgb, var(--_accent) 14%, white));
   --_hair: var(--gp-hair, #e4e4e7);
+  --_chip: var(--gp-chip, #f4f4f5);
+  --_chip-ink: var(--gp-chip-ink, #3f3f46);
+  --_ok-ink: var(--gp-ok-ink, #166534);
+  --_btn: var(--gp-btn, #18181b);
+  --_btn-ink: var(--gp-btn-ink, #ffffff);
+  --_accent-ink: var(--gp-accent-ink, #ffffff);
+  --_bad: #b42318;
+  --_bad-bg: #fef2f2;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  /* Home sections are cards (Pro Product). */
+  background: var(--_surface);
+  border-radius: 14px;
+  box-shadow: 0 0 0 1px var(--_line), 0 1px 2px rgba(9, 9, 11, 0.05);
+  padding: 1rem;
   font-family: var(--font-sans, "Geist Variable", system-ui, sans-serif);
   color: var(--_ink);
+}
+@media (prefers-color-scheme: dark) {
+  .gp-day,
+  .gp-find {
+    --_bad: #ff9c8a;
+    --_bad-bg: #3a1414;
+  }
 }
 .gp-mono {
   font-family: var(--font-mono, "Geist Mono Variable", ui-monospace, Menlo, monospace);
@@ -27,12 +50,7 @@
 
 /* Cards and rows */
 .gp-card {
-  background: var(--_surface);
-  border-radius: 14px;
-  box-shadow:
-    0 0 0 1px var(--_line),
-    0 1px 2px rgba(9, 9, 11, 0.05);
-  padding: 0.25rem 0.875rem;
+  padding: 0;
   list-style: none;
 }
 :is(.gp-day, .gp-find) .gp-row {
@@ -40,16 +58,16 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 0.75rem;
-  min-height: 3.5rem;
+  min-height: 3.25rem;
   padding: 0.5rem 0;
 }
 .gp-card > li + li {
   border-top: 1px solid var(--_hair);
 }
 .gp-time {
-  width: 4.25rem;
+  width: 3.5rem;
   flex: none;
-  font-size: 0.8125rem;
+  font-size: 0.75rem;
   color: var(--_muted);
 }
 .gp-title {
@@ -74,23 +92,24 @@
   min-height: 1.5rem;
   padding: 0 0.5rem;
   border-radius: 6px;
-  background: var(--gp-chip, #f4f4f5);
-  color: var(--gp-chip-ink, #3f3f46);
+  background: var(--_chip);
+  color: var(--_chip-ink);
   font-size: 0.75rem;
   font-weight: 600;
   white-space: nowrap;
 }
 :is(.gp-day, .gp-find) .gp-tag-moved {
-  background: var(--gp-notice-bg, #fff4e5);
+  background: var(--_notice-bg);
   color: var(--_notice);
+  box-shadow: inset 0 0 0 1px var(--_notice-line);
 }
 :is(.gp-day, .gp-find) .gp-tag-bad {
-  background: var(--gp-bad-bg, #fef2f2);
-  color: var(--gp-bad-ink, #b42318);
+  background: var(--_bad-bg);
+  color: var(--_bad);
 }
 :is(.gp-day, .gp-find) .gp-tag-ok {
   background: var(--_ok-bg);
-  color: var(--gp-ok-ink, #166534);
+  color: var(--_ok-ink);
 }
 
 /* Sponsor credit chip: plain text, no logo */
@@ -102,7 +121,7 @@
   min-height: 1.5rem;
   padding: 0 0.5rem;
   border-radius: 6px;
-  background: var(--gp-chip, #f4f4f5);
+  background: var(--_chip);
   color: var(--_muted);
   font-size: 0.75rem;
   font-weight: 500;
@@ -122,10 +141,10 @@
   gap: 0.75rem;
 }
 .gp-h {
-  font-size: 1.625rem;
+  font-size: 0.875rem;
   font-weight: 600;
-  letter-spacing: -0.03em;
-  line-height: 1.15;
+  letter-spacing: -0.005em;
+  line-height: 1.3;
 }
 .gp-meta {
   margin-top: 0.25rem;
@@ -134,8 +153,9 @@
   line-height: 1.4;
 }
 .gp-summary {
-  font-size: 1rem;
-  font-weight: 600;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--_muted);
   line-height: 1.45;
 }
 
@@ -222,10 +242,11 @@
   margin: 0;
   font-size: 0.84375rem;
   line-height: 1.45;
-  color: var(--_notice);
+  color: var(--_ink);
 }
 :is(.gp-day, .gp-find) .gp-notice .gp-credit {
-  background: var(--gp-surface, #fff);
+  background: var(--_surface);
+  color: var(--_muted);
 }
 .gp-stack {
   display: flex;
@@ -297,6 +318,11 @@
   font-weight: 600;
   letter-spacing: -0.01em;
 }
+.gp-find h3.gp-label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--_muted);
+}
 .gp-hint {
   margin-top: 0.125rem;
   font-size: 0.8125rem;
@@ -355,7 +381,7 @@
   min-height: 2.75rem;
   padding: 0 0.875rem;
   border: 0;
-  border-radius: 999px;
+  border-radius: 10px;
   background: var(--_surface);
   box-shadow: 0 0 0 1px var(--_line);
   color: var(--_ink);
@@ -375,7 +401,7 @@
 }
 .gp-chip[aria-pressed="true"] {
   background: var(--_accent);
-  color: var(--gp-accent-ink, #fff);
+  color: var(--_accent-ink);
   box-shadow: none;
 }
 .gp-btn {
@@ -392,14 +418,14 @@
   font-size: 0.9375rem;
   font-weight: 600;
   cursor: pointer;
-  background: var(--_ink);
-  color: var(--_surface);
+  background: var(--_btn);
+  color: var(--_btn-ink);
   box-shadow:
     0 1px 2px rgba(9, 9, 11, 0.2),
     inset 0 1px 0 rgba(255, 255, 255, 0.12);
 }
 .gp-result {
-  background: var(--_surface);
+  background: var(--_bg);
   border-radius: 14px;
   box-shadow:
     0 0 0 1px var(--_line),
