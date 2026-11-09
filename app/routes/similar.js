@@ -1,3 +1,4 @@
+const { withSpan } = require("../lib/search-trace");
 const {
   parseWhen, parseLimit, seedText, buildSimilarRequest, createCache,
 } = require("../lib/search-similar");
@@ -24,17 +25,19 @@ module.exports = async function similar(app, { elastic }) {
     try {
       let text = seeds.get(talkId);
       if (text === undefined) {
-        const talk = await elastic.client
-          .get({ index: "talks", id: talkId, _source_includes: ["title", "abstract"] }, OPTIONS)
-          .catch((err) => (err?.statusCode === 404 ? null : Promise.reject(err)));
+        const talk = await withSpan("elasticsearch.get", "get", () =>
+          elastic.client.get({ index: "talks", id: talkId, _source_includes: ["title", "abstract"] }, OPTIONS),
+        ).catch((err) => (err?.statusCode === 404 ? null : Promise.reject(err)));
         if (!talk) return reply.code(404).send({ error: "talk not found" });
         text = seedText(talk._source);
         seeds.set(talkId, text);
       }
       if (!text) return { results: [] };
-      const res = await elastic.client.search(
-        buildSimilarRequest({ talkId, text, after: after.value, before: before.value, limit }),
-        OPTIONS,
+      const res = await withSpan("elasticsearch.similar", "search", () =>
+        elastic.client.search(
+          buildSimilarRequest({ talkId, text, after: after.value, before: before.value, limit }),
+          OPTIONS,
+        ),
       );
       const body = { results: (res.hits?.hits ?? []).map((h) => h._source) };
       answers.set(key, body);
