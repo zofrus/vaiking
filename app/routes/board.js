@@ -27,7 +27,10 @@ function parseRows(body) {
 function sampleNote(configured, live, preview) {
   if (!configured) return "Live counts are not connected yet.";
   const n = live.reduce((s, r) => s + r.count, 0);
-  if (n === 0 && preview.length === 0) return "No presses in the last hour.";
+  if (n === 0)
+    return preview.length === 0
+      ? "No presses in the last hour."
+      : "No live presses in the last hour; only preview taps.";
   if (n < SMALL_SAMPLE)
     return `Small sample: ${n} press${n === 1 ? "" : "es"} in the last hour. Treat as a rough picture.`;
   return `${n} presses in the last hour.`;

@@ -98,10 +98,15 @@ export default function App() {
       </main>
 
       <footer className="border-t border-slate-300 px-4 py-6 text-sm text-slate-700">
-        <p className="mx-auto max-w-2xl">
-          Session data: KubeCon + CloudNativeCon North America 2026, The Linux
-          Foundation, CC BY 3.0.
-        </p>
+        <div className="mx-auto max-w-2xl">
+          <p>
+            Session data: KubeCon + CloudNativeCon North America 2026, The Linux
+            Foundation, CC BY 3.0.
+          </p>
+          <a className="mt-2 inline-block underline" href="/board">
+            Organizer board
+          </a>
+        </div>
       </footer>
     </div>
   );

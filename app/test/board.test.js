@@ -69,6 +69,19 @@ test("reads live and preview, sorts, drops zeros, flags small samples, sends tok
   );
 });
 
+test("reports preview taps separately when there are no live presses", async () => {
+  const app = await make(ENV, async (url) =>
+    url.includes("preview") ? prom([["3", 2]]) : prom([]),
+  );
+  const body = (await app.inject({ url: "/api/board" })).json();
+  assert.deepEqual(body.live, []);
+  assert.deepEqual(body.preview, [{ floor: "3", count: 2 }]);
+  assert.equal(
+    body.sample_note,
+    "No live presses in the last hour; only preview taps.",
+  );
+});
+
 test("caches for 30 seconds", async () => {
   let n = 0;
   const app = await make(ENV, async () => (n++, prom([])));
