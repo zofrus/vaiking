@@ -129,6 +129,21 @@ function build(opts = {}) {
     };
   });
 
+  // Each file in routes/ is a Fastify plugin, so features added in parallel
+  // never need to edit this file.
+  const routesDir = path.join(__dirname, "routes");
+  if (fs.existsSync(routesDir)) {
+    for (const file of fs.readdirSync(routesDir).sort()) {
+      if (file.endsWith(".js")) {
+        app.register(require(path.join(routesDir, file)), {
+          elastic,
+          env,
+          fetch: fetchImpl,
+        });
+      }
+    }
+  }
+
   const hasPublicDir = fs.existsSync(path.join(publicDir, "index.html"));
   if (hasPublicDir) app.register(fastifyStatic, { root: publicDir });
 
