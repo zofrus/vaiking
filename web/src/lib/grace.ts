@@ -5,8 +5,8 @@ export function countPress(mode: "live" | "preview"): void {
     const body = new Blob([JSON.stringify({ scheduled_floor: "unknown", mode })], {
       type: "application/json",
     });
-    navigator.sendBeacon("/api/grace", body);
+    if (!navigator.sendBeacon("/api/grace", body)) console.warn("Grace count not queued");
   } catch {
-    // Counting is optional. The calm screen never depends on it.
+    console.warn("Grace count failed");
   }
 }
