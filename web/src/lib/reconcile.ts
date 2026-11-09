@@ -78,8 +78,16 @@ export function reconcile(plan: PlanItem[], changes: Change[], opts: Options) {
     const change = byTalk.get(item.id);
     if (change?.kind !== "moved" && change?.kind !== "rescheduled") continue;
     const fits = !live.some((other) => other.id !== item.id && clash(item, other, buffer));
-    const where = change.after?.room ? ` to ${change.after.room}` : "";
-    const text = `Your ${formatTime(item.starts_at)} MST talk moved${where}. ` + (fits ? "It still fits." : "It no longer fits.");
+    // Name the talk by the time the person planned for, then say what is new.
+    const planned = plan.find((p) => p.id === item.id)!;
+    const time = ms(item.starts_at) !== ms(planned.starts_at) ? `${formatTime(item.starts_at)} MST` : "";
+    const room = change.after?.room && change.after.room !== planned.room ? change.after.room : "";
+    const what =
+      time && room ? `moved to ${time} in ${room}`
+      : time ? `moved to ${time}`
+      : room ? `moved to ${room}`
+      : `now ends at ${formatTime(item.ends_at)} MST`;
+    const text = `Your ${formatTime(planned.starts_at)} MST talk ${what}. ` + (fits ? "It still fits." : "It no longer fits.");
     notices.push({ changeId: change.id, talkId: item.id, fits, text });
   }
 

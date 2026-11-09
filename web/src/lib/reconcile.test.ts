@@ -62,6 +62,21 @@ describe("reconcile", () => {
     expect(r.notices[0].text).toContain("It no longer fits.");
   });
 
+  it("names a rescheduled talk by its planned time, then gives the new time", () => {
+    const change: Change = { id: "6", talk_id: "c", kind: "rescheduled", before: { starts_at: c.starts_at }, after: { starts_at: at("16:30"), ends_at: at("17:00"), room: c.room }, detected_at: at("13:05") };
+    expect(reconcile([c], [change], opts).notices[0].text).toBe("Your 4:00 PM MST talk moved to 4:30 PM MST. It still fits.");
+  });
+
+  it("gives both the new time and the new room when both change", () => {
+    const change: Change = { id: "7", talk_id: "c", kind: "moved", before: null, after: { starts_at: at("16:30"), ends_at: at("17:00"), room: "355F" }, detected_at: at("13:05") };
+    expect(reconcile([c], [change], opts).notices[0].text).toBe("Your 4:00 PM MST talk moved to 4:30 PM MST in 355F. It still fits.");
+  });
+
+  it("says when only the end time changed", () => {
+    const change: Change = { id: "8", talk_id: "b", kind: "rescheduled", before: null, after: { ends_at: at("15:50") }, detected_at: at("13:05") };
+    expect(reconcile([b, c], [change], opts).notices[0].text).toBe("Your 2:30 PM MST talk now ends at 3:50 PM MST. It no longer fits.");
+  });
+
   it("removes a cancelled talk and says so", () => {
     const change: Change = { id: "3", talk_id: "c", kind: "cancelled", before: null, after: null, detected_at: at("13:05") };
     const r = reconcile([a, c], [change], opts);
