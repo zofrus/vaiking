@@ -31,7 +31,7 @@ A real failure, not staged. All times are 2026-11-09 MST.
 
 ## After
 
-Recorded 2026-11-09 14:16 MST on image `48dc5c7`, in the same [Radar Checks view](https://app.radarhq.io/checks?scope=5JYX5CP_IYU&namespace=team-vaiking).
+As of 4:45 PM MST, 2026-11-09, on the final deploy before the freeze: image `dc65ed4`. Argo CD Application `app` is Synced and Healthy at revision `88b50ab` ("deploy: dc65ed4"), sync history entry 61. `app` is 2/2 Ready and `reconciler` 1/1, and `/api/status` reports `dc65ed4`. First recorded at 14:16 on image `48dc5c7`, and unchanged since, in the same [Radar Checks view](https://app.radarhq.io/checks?scope=5JYX5CP_IYU&namespace=team-vaiking).
 
 Findings by severity: 0 critical, 0 high, 1 medium, 0 low, down from 4 medium.
 
@@ -43,6 +43,32 @@ Findings by severity: 0 critical, 0 high, 1 medium, 0 low, down from 4 medium.
 | `missingTopologySpread` | Replicas spread across nodes when the cluster can (PR #19) |
 
 The one open finding is new: `singleReplica` on `Deployment/team-vaiking/reconciler`. We are leaving it. The reconciler is a single control loop that serves no traffic, so a second replica would add duplicate work, not availability.
+
+**The loop, running live.** The reconciler logs one line per 2-minute cycle, which Radar shows in the workload's logs. A routine cycle, at 15:43:22:
+
+```
+{"msg":"reconcile cycle","outcome":"reconciled","talks":582,"changes":0,"updated":0,"failed":0}
+```
+
+At 16:36:04 it detected a real change in the official schedule: talk 1372568, "Open Cluster Management (OCM): Live Demo Using k3d/KIND", was added for Tuesday 13:40 to 14:05 in the Project Pavilion. At 16:41:19 it detected that talk 1370500, "CNCF Project Demos", had been removed from the same slot. The organizers had swapped the session. Both are in `/api/changes`. Radar still had the log line for the second cycle:
+
+```
+2026-11-09T23:41:19.743811876Z {"msg":"reconcile cycle","outcome":"reconciled","talks":582,"changes":1,"updated":0,"failed":0}
+```
+
+We don't have the line for 16:36. The reconciler pod that wrote it was replaced by a later deploy, and its logs went with it.
+
+## A platform node drain, seen in Radar
+
+A real event, not staged. All times are 2026-11-09 MST.
+
+**What happened.** At 16:29, Argo CD synced `c48e246`, and a new app pod was scheduled on node `i-05908fcb46c4b7713`. At 16:29:38, 27 seconds later, the host's autoscaler cordoned that node to drain it. The pod waited about 3.5 minutes for its container to start, then got no CPU to speak of: no log lines, 4.6 MB of memory, and probes answering "connection refused". Our deploy watch flagged it as a stalled rollout at about 16:34.
+
+**What Radar showed.** `diagnose` on the pod gave the timeline and the probe failures, and `get_resource` on the node showed it `Cordoned` with the `unschedulable` taint added at 23:29:38 UTC. It was the platform, not our code. Users saw nothing: the two old pods stayed Ready on `58bb75a`, and the PodDisruptionBudget from PR #19 kept at least one up throughout.
+
+**What it also took out.** The pre-installed `kube-state-metrics` pod was on the same node. It crash-looped (6 restarts, last exit `Error`): its logs show a start too slow to finish before the liveness probe killed it. So from about 16:29 every `kube_*` series in Prometheus went blank, and with it the cluster tiles on our `/demo` page.
+
+**What we did.** The app needed nothing: the next deploy, `ea25d3b` at about 16:33, scheduled new pods on healthy nodes and replaced the stuck one. For metrics, we did one rolling restart of `monitoring/prometheus-kube-state-metrics` through Radar's `manage_workload` at 16:41, with no configuration change. Its new pod was Ready in 6 seconds on a healthy node, and `query_prometheus` for `kube_pod_status_ready{namespace="team-vaiking"}` returned our three pods, all ready.
 
 ## Practising what the product preaches
 
