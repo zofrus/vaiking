@@ -235,7 +235,7 @@ AI agents wrote most of the code in this repo. I directed the work, reviewed it,
 
 **How the AI was used.** Claude Code ran as a coordinator over parallel agent sessions on both Macs, sharing a work board, session logs and a watchdog. A merge loop merged only pull requests with green CI. Forge agents did intake, a devil's-advocate review, planning, building in separate clones, accessibility and code-review gates, and merge resolution. Research agents read the rules and sponsor docs. A design agent drew five directions. AI-assisted commits carry a `Co-Authored-By` line naming the model.
 
-Gitar reviewed 89 of our 92 merged pull requests (counted at 4:10 PM on Nov 9) against our rules and pushed fixes under its own name ([How Gitar was used](#how-gitar-was-used-to-build-this)). I read each fix before merging. One would have wiped the search index on an empty feed. Dash0's Agent0 found a false error report in our browser telemetry. Radar's AI investigation called a crash loop "transient". Radar's `diagnose` and the pod logs found the real cause ([STORY.md](STORY.md)).
+Gitar reviewed 89 of our 92 merged pull requests (counted at 4:10 PM MST on Nov 9, 2026) against our rules and pushed fixes under its own name ([How Gitar was used](#how-gitar-was-used-to-build-this)). I read each fix before merging. One would have wiped the search index on an empty feed. Dash0's Agent0 found a false error report in our browser telemetry. Radar's AI investigation called a crash loop "transient". Radar's `diagnose` and the pod logs found the real cause ([STORY.md](STORY.md)).
 
 **In the product.** The only AI is semantic search: Elasticsearch embeds talk titles and abstracts. No language model is called, and nothing on the break-button path uses AI.
 
