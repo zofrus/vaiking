@@ -162,7 +162,7 @@ export function PlanSection({
       )}
 
       {results && (
-        <ul className="space-y-3 p-0">
+        <ul role="list" className="space-y-3 p-0">
           {results.map((t) => {
             const mine = plan.find((p) => p.id === t.id)?.priority;
             return (

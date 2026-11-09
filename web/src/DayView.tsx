@@ -87,7 +87,7 @@ export function DayViewSection({
             · times in MST
           </p>
         </div>
-        <label htmlFor="kubectl" className="gp-switch gp-secondary">
+        <label htmlFor="kubectl" className="gp-switch">
           Show as kubectl
           <input
             id="kubectl"
