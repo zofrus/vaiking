@@ -8,6 +8,21 @@
 - Judge view, the app beside four live tool columns: <https://grace.effulgentpoint.com/demo>
 - Organizer board, counts only: <https://grace.effulgentpoint.com/board>
 
+## Screenshots
+
+From the live app, Nov 9, 2026, 4:12 PM MST (build `c52585e`).
+
+<img src="docs/screenshots/hero.png" width="800" alt="Three phone screens: the home screen with the large &quot;I need a break&quot; button, the calm screen with Quiet Room 260A, and Your day with a notice labelled Drill">
+
+<p>
+  <img src="docs/screenshots/home.png" width="200" alt="Home screen with the large &quot;I need a break&quot; button, a Focus switch and a Ready offline chip">
+  <img src="docs/screenshots/calm.png" width="200" alt="Calm screen: Take your time, Quiet Room 260A on Salt Palace Level 2, hours not listed, Read this aloud and Show this to staff">
+  <img src="docs/screenshots/staff-card.png" width="200" alt="Staff card in large black text: Please point me to Quiet Room 260A, Level 2. I may not be able to talk right now.">
+  <img src="docs/screenshots/your-day-drill.png" width="200" alt="Preview of Tuesday with a sample plan: a notice reading Drill: simulated change, not from the official schedule. Your 5:30 PM MST talk moved to 5:15 PM MST. It no longer fits.">
+</p>
+
+<img src="docs/screenshots/demo.png" width="800" alt="/demo at 1280 by 800: the app in a phone frame beside live Elasticsearch, Dash0, Radar and Gitar columns">
+
 ## Why it's different
 
 - **Care in one tap.** For the attendee who is overwhelmed: one large "I need a break" button, no account, no plan and no reason asked. It shows the quiet room, the all-gender restrooms and a card to show staff.
@@ -30,16 +45,6 @@ Open <https://grace.effulgentpoint.com> on your phone. No account, no install ne
 3. Under **Find your talks**, search for what you came for (try "kubernetes"). Each result says whether it matched your words or your meaning. Mark one **Must-see**.
 4. Read **Your day**, and turn on **Show as kubectl** to see the same facts as `kubectl get` and `describe` output.
 5. Open the [preview of Tuesday](https://grace.effulgentpoint.com/?preview=2026-11-10T15:25:00-07:00&sample=1) for a sample saved plan, labelled as simulated, and press the button there. Then open [/demo](https://grace.effulgentpoint.com/demo).
-
-Screenshots from the live app, Nov 9, 2026, 3:52 PM MST:
-
-<p>
-  <img src="docs/screenshots/home.png" width="220" alt="Home screen with the large &quot;I need a break&quot; button">
-  <img src="docs/screenshots/calm.png" width="220" alt="Calm screen with Quiet Room 260A, hours not listed, and the staff card button">
-  <img src="docs/screenshots/staff-card.png" width="220" alt="Staff card asking staff to point the person to Quiet Room 260A">
-</p>
-
-<img src="docs/screenshots/demo.png" width="720" alt="/demo with the app beside live Elasticsearch, Dash0, Radar and Gitar columns">
 
 ## Features
 
