@@ -152,7 +152,7 @@ export function PlanSection({
         href="/?preview=2026-11-10T15%3A25%3A00-07%3A00&sample=1&drill=1"
         className="inline-flex min-h-11 items-center text-sm font-medium text-[color:var(--gp-accent)] underline underline-offset-4"
       >
-        See a sample day with a room change
+        See a sample day with a schedule change
       </a>
       <form onSubmit={search} className="space-y-3">
         <label htmlFor="q" className="gp-label">What did you come for?</label>
