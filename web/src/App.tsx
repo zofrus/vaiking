@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { quietRoom, restrooms } from "./data/facilities";
 import { countPress } from "./lib/grace";
 import { PlanSection } from "./Plan";
+import { DayViewSection } from "./DayView";
 import { loadBuffer, loadPlan, saveBuffer, savePlan } from "./lib/plan";
 import { isPreview, now, samplePlan, useSample } from "./lib/clock";
 import { useChanges, useSimilar } from "./lib/live";
@@ -127,31 +128,48 @@ function Calm({
   );
 }
 
+// Held up to someone else, so it is sized for arm's length: vmin keeps the
+// words large in portrait and still on screen when the phone is turned.
 function StaffCard({ onClose }: { onClose: () => void }) {
   const heading = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
     heading.current?.focus();
   }, []);
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    addEventListener("keydown", onKey);
+    return () => removeEventListener("keydown", onKey);
+  }, [onClose]);
   return (
     <section
+      role="dialog"
+      aria-modal="true"
       aria-labelledby="card-h"
       className="fixed inset-0 z-10 flex flex-col bg-white text-black"
     >
-      <div className="flex flex-1 flex-col justify-center px-6">
-        <h2
-          id="card-h"
-          ref={heading}
-          tabIndex={-1}
-          className="text-[clamp(2.25rem,10vw,4.5rem)] font-bold leading-[1.1] outline-none"
-        >
-          Please point me to {quietRoom.name}, Level {quietRoom.level}.
-        </h2>
-        <p className="mt-8 text-[clamp(1.75rem,7vw,3rem)] font-semibold leading-tight">
-          I may not be able to talk right now.
-        </p>
-        <p className="mt-8 text-xl">{quietRoom.venue}</p>
+      {/* Auto margins centre the words but drop to 0 if they overflow, so the
+          first line can always be scrolled back into view. */}
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-6 py-8">
+        <div className="my-auto">
+          <h2
+            id="card-h"
+            ref={heading}
+            tabIndex={-1}
+            className="text-[clamp(2.5rem,13vmin,5.5rem)] font-bold leading-[1.08] tracking-tight outline-none"
+          >
+            Please point me to {quietRoom.name}, Level {quietRoom.level}.
+          </h2>
+          <p className="mt-[6vmin] text-[clamp(1.75rem,9vmin,3.5rem)] font-semibold leading-tight">
+            I may not be able to talk right now.
+          </p>
+          <p className="mt-[6vmin] text-[clamp(1.5rem,7.5vmin,2.75rem)] font-semibold leading-tight">
+            {quietRoom.venue}
+          </p>
+        </div>
       </div>
-      <div className="border-t-2 border-black p-4">
+      <div className="border-t-2 border-black px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
         <button type="button" onClick={onClose} className="close-button">
           Close card
         </button>
@@ -203,27 +221,29 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-ground text-ink">
-      <a
-        href="#main"
-        className="skip-link"
-        onClick={(e) => {
-          e.preventDefault();
-          document.getElementById("main")?.focus();
-        }}
-      >
-        Skip to main content
-      </a>
       <p role="status" aria-live="polite" className="sr-only">
         {announce} {noticeText}
       </p>
-      {isPreview && (
-        <p className="bg-black px-5 py-3 text-center font-semibold text-white">
-          Preview of Tuesday. Times are real, the moment is simulated.
-          {useSample && " The plan below is a sample."}
-        </p>
-      )}
-
+      {/* Everything but the live region goes quiet while the staff card is up,
+          so Tab and the screen reader stay on the card. */}
       <div aria-hidden={showCard || undefined} inert={showCard || undefined}>
+        <a
+          href="#main"
+          className="skip-link"
+          onClick={(e) => {
+            e.preventDefault();
+            document.getElementById("main")?.focus();
+          }}
+        >
+          Skip to main content
+        </a>
+        {isPreview && (
+          <p className="bg-black px-5 py-3 text-center font-semibold text-white">
+            Preview of Tuesday. Times are real, the moment is simulated.
+            {useSample && " The plan below is a sample."}
+          </p>
+        )}
+
         <header className="mx-auto max-w-xl px-5 pt-6">
           <p className="text-lg font-semibold">Grace Period</p>
         </header>
@@ -256,6 +276,7 @@ export default function App() {
               </section>
             )}
             <PlanSection plan={plan} setPlan={setPlan} buffer={buffer} setBuffer={setBuffer} />
+            <DayViewSection plan={plan} changes={changes} result={result} now={now()} bufferMinutes={buffer} />
             </>
           ) : (
             <Calm

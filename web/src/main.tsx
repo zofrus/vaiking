@@ -10,9 +10,18 @@ void initTelemetry();
 const Board = lazy(() => import("./pages/Board"));
 const onBoard = location.pathname.replace(/\/+$/, "") === "/board";
 
+// /demo is the judge-facing projector page. Inside its iframe the app loads at /,
+// so this path check never recurses.
+const Demo = lazy(() => import("./pages/Demo"));
+const onDemo = location.pathname.replace(/\/+$/, "") === "/demo";
+
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    {onBoard ? (
+    {onDemo ? (
+      <Suspense fallback={<p className="p-4">Loading.</p>}>
+        <Demo />
+      </Suspense>
+    ) : onBoard ? (
       <Suspense fallback={<p className="p-4">Loading.</p>}>
         <Board />
       </Suspense>
