@@ -1,3 +1,6 @@
+@import "@fontsource/atkinson-hyperlegible/latin-400.css";
+@import "@fontsource/atkinson-hyperlegible/latin-700.css";
+
 /* Focus mode: the toggle's own look, then the [data-focus="on"] overrides. */
 
 .focus-switch {
@@ -92,4 +95,10 @@ html[data-focus="on"]:has([aria-modal="true"]) {
 [data-focus="on"] [aria-modal="true"] {
   line-height: 1.1;
   letter-spacing: normal;
+}
+
+/* Easier-to-read font, inside Focus mode only. Atkinson Hyperlegible is bundled. */
+[data-focus="on"][data-font="readable"],
+[data-focus="on"][data-font="readable"] body {
+  font-family: "Atkinson Hyperlegible", system-ui, sans-serif;
 }
