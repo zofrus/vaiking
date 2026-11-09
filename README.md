@@ -34,6 +34,8 @@ From the live app, Nov 9, 2026, 4:12 PM MST (build `c52585e`).
 
 Open <https://grace.effulgentpoint.com> on your phone. No account, no install needed.
 
+To see the day being reconciled, open the [sample day with a labelled drill](https://grace.effulgentpoint.com/?preview=2026-11-10T15%3A25%3A00-07%3A00&sample=1&drill=1): a talk moves, and the app says whether your plan still fits.
+
 <img src="web/public/qr-grace.svg" width="160" alt="QR code that opens https://grace.effulgentpoint.com">
 
 The same code is served by the app at <https://grace.effulgentpoint.com/qr-grace.svg>.
