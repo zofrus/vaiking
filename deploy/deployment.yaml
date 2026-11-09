@@ -18,6 +18,8 @@ spec:
     spec:
       # The app never talks to the Kubernetes API.
       automountServiceAccountToken: false
+      # Above the 5s preStop drain plus the app's 30s limit to finish and flush.
+      terminationGracePeriodSeconds: 45
       # Keep the two replicas on different nodes when the cluster can.
       topologySpreadConstraints:
         - maxSkew: 1
@@ -104,6 +106,11 @@ spec:
             limits:
               cpu: 500m
               memory: 512Mi
+          lifecycle:
+            preStop:
+              # Keep serving while the Service stops routing to this pod.
+              exec:
+                command: ["sleep", "5"]
           readinessProbe:
             httpGet:
               path: /readyz
