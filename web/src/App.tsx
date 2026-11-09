@@ -84,6 +84,7 @@ function BreakButton({ onPress }: { onPress: () => void }) {
       type="button"
       onClick={onPress}
       className="break-button"
+      id="break-main"
       aria-labelledby="break-label"
       aria-describedby="break-desc"
     >
@@ -105,10 +106,31 @@ function BreakButton({ onPress }: { onPress: () => void }) {
   );
 }
 
+// Shown only once the big button has scrolled out of view, so the page never
+// has two of the same button on screen. Hidden means out of the tab order too.
+function BreakBar({ onPress }: { onPress: () => void }) {
+  const [show, setShow] = useState(false);
+  useEffect(() => {
+    const target = document.getElementById("break-main");
+    if (!target || !("IntersectionObserver" in window)) return;
+    const io = new IntersectionObserver(([entry]) => setShow(!entry.isIntersecting));
+    io.observe(target);
+    return () => io.disconnect();
+  }, []);
+  return (
+    <div className="break-bar" hidden={!show}>
+      <button type="button" onClick={onPress} className="break-bar-button">
+        <MoonIcon size={20} />
+        I need a break
+      </button>
+    </div>
+  );
+}
+
 function Footer() {
   return (
-    <footer className="mx-auto flex max-w-xl flex-col gap-1.5 px-5 pb-10 pt-6 text-xs leading-relaxed text-ink-soft">
-      <span className="gp-credit self-start">
+    <footer className="mx-auto flex max-w-xl flex-col gap-1.5 px-5 pb-28 pt-6 text-xs leading-relaxed text-ink-soft">
+      <span className="gp-credit gp-secondary self-start">
         This release reviewed by <b>Gitar</b>
       </span>
       <p>
@@ -125,6 +147,7 @@ function Footer() {
       <a className="self-start font-medium underline" href="/board">
         Organizer board
       </a>
+      {/* mount: Tour (Replay tour) */}
     </footer>
   );
 }
@@ -150,7 +173,7 @@ function Calm({
   return (
     <section aria-labelledby="calm-h" className="space-y-6">
       <div className="flex flex-col items-start gap-5">
-        <div className="calm-mark" aria-hidden="true">
+        <div className="calm-mark gp-secondary" aria-hidden="true">
           <span className="c-ring c-ring-1" />
           <span className="c-ring c-ring-2" />
           <span className="core">
@@ -227,11 +250,15 @@ function Calm({
       </div>
 
       <div className="flex flex-wrap gap-2">
-        <span className="gp-credit">
+        <span className="gp-credit gp-secondary">
           Counted anonymously, by floor · <b>Dash0</b>
         </span>
       </div>
 
+      {/* mount: Breathe */}
+      {/* mount: SoundPanel */}
+      {/* mount: FocusToggle (calm) */}
+      {/* mount: Tour (Replay tour, calm) */}
       {/* mount: Sticker */}<Sticker />
       {/* mount: VenueHelp */}<VenueHelp />
 
@@ -269,6 +296,7 @@ function StaffCard({ onClose }: { onClose: () => void }) {
           first line can always be scrolled back into view. */}
       <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-6 py-8">
         <div className="my-auto">
+          {/* mount: ReadAloud */}
           <h2
             id="card-h"
             ref={heading}
@@ -420,7 +448,7 @@ export default function App() {
           Skip to main content
         </a>
         {isPreview && (
-          <p className="bg-ink px-5 py-3 text-center text-sm font-semibold text-white">
+          <p className="preview-banner px-5 py-3 text-center text-sm font-semibold">
             {isDrill && <strong className="mono mr-2 uppercase tracking-wider">Drill</strong>}
             Preview of {previewDay}. Times are real, the moment is simulated.
             {useSample && " The plan below is a sample."}
@@ -437,7 +465,10 @@ export default function App() {
             </span>
             Grace Period
           </h1>
-          <OfflineChip />{/* mount: OfflineChip */}
+          <span className="flex items-center gap-2">
+            {/* mount: FocusToggle (header) */}
+            <OfflineChip />{/* mount: OfflineChip */}
+          </span>
         </header>
 
         <main
@@ -457,7 +488,7 @@ export default function App() {
                 room, a card to show staff, and a list of all-gender restrooms. It
                 needs no account, and works with no signal after your first visit.
               </p>
-              <p className="text-xs text-ink-soft">
+              <p className="gp-secondary text-xs text-ink-soft">
                 Unofficial attendee companion for KubeCon + CloudNativeCon North
                 America 2026 · built at the Cloud Native Hackathon
               </p>
@@ -468,7 +499,9 @@ export default function App() {
                 {notices}
               </section>
             )}
-            <InstallPrompt />
+            <div className="gp-secondary">
+              <InstallPrompt />
+            </div>
             <PlanSection plan={plan} setPlan={setPlan} buffer={buffer} setBuffer={setBuffer} />
             <DayViewSection plan={plan} changes={changes} result={result} now={now()} bufferMinutes={buffer} />
             </>
@@ -498,7 +531,7 @@ export default function App() {
                             <li key={d.id}>{d.title}</li>
                           ))}
                         </ul>
-                        <button type="button" className="staff-button" onClick={putBack}>
+                        <button type="button" className="quiet-button" onClick={putBack}>
                           Put them back
                         </button>
                       </>
@@ -509,6 +542,7 @@ export default function App() {
             />
           )}
         </main>
+        {view === "home" && <BreakBar onPress={press} />}
         <Footer />
       </div>
 
