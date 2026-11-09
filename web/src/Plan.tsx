@@ -107,11 +107,11 @@ export function PlanSection({
       setResults(body.results);
       // Keep the unfiltered counts so the choices don't disappear once one is picked.
       if (body.facets && !nextTrack && !nextDay) setFacets(body.facets);
-      setStatus(body.results.length === 0 ? "No talks found. Try a broader search." : `${body.results.length} talks found${typeof body.took_ms === "number" ? `. Found in ${body.took_ms} ms` : ""}.`);
+      setStatus(body.results.length === 0 ? "No talks found. Try fewer words." : `${body.results.length} talks found${typeof body.took_ms === "number" ? `. Found in ${body.took_ms} ms` : ""}.`);
     } catch {
       if (!current()) return;
       setResults(null);
-      setStatus("Search is not available right now. The break button still works.");
+      setStatus("Search is down. The break button still works.");
     }
   };
 
@@ -250,7 +250,7 @@ export function PlanSection({
             onBlur={leaveBuffer}
             className="gp-field"
           />
-          <p className="gp-hint">Your plan stays on this phone. We send only your search words and talk numbers, and on a break press, a floor number and whether this is a preview.</p>
+          <p className="gp-hint">Your plan stays on this phone. Search sends your words and talk numbers; the break button sends your floor.</p>
         </div>
       )}
     </section>

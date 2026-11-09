@@ -74,7 +74,7 @@ export function buildDayView(
     if (change?.kind === "cancelled") {
       entries.push({
         id: item.id, title: item.title, status: "no-longer-fits", moved: false, ageMs: age(item.id),
-        reason: "It was cancelled in the real schedule.",
+        reason: "Cancelled in the real schedule.",
         event: { type: "Warning", reason: "FailedScheduling", message: "0/1 slots fit: the talk was cancelled in the real schedule" },
       });
       continue;
@@ -84,12 +84,14 @@ export function buildDayView(
     const moved = noticeFor.has(item.id);
     const place = `${now.room ? ` in ${placeLabel(now.room)}` : ""}`;
     const movedTo = `Moved to ${now.room ? `${placeLabel(now.room)} at ` : ""}${at(now.starts_at)}`;
+    // Reasons lead with the change: what moved, to when and where, then the verdict.
+    const movedShort = `Moved to ${formatTime(now.starts_at)}${now.room ? ` · ${placeLabel(now.room)}` : ""}`;
 
     if (setAsideIds.has(item.id)) {
       const until = result.clearUntil ? `until your must-see at ${at(result.clearUntil)}` : "for the rest of your plan";
       entries.push({
         id: item.id, title: item.title, status: "set-aside", moved, ageMs: age(item.id),
-        reason: `You pressed the break button. This nice-to-have is set aside ${until}. To bring it back, press "I need a break" and choose "Put them back".`,
+        reason: `Set aside ${until}. To bring it back: "I need a break", then "Put them back".`,
         event: { type: "Normal", reason: "Preempted", message: `Set aside by you ${until}` },
       });
     } else if (moved && !noticeFor.get(item.id)!.fits) {
@@ -97,24 +99,24 @@ export function buildDayView(
       const gap = c ? (c.gapMin < 0 ? `overlaps ${c.other.title} by ${Math.abs(c.gapMin)}m` : c.before ? `starts ${c.gapMin}m after the previous talk` : `ends ${c.gapMin}m before the next talk`) : "does not leave your buffer";
       const gapPlain = c
         ? c.gapMin < 0
-          ? `It overlaps ${c.other.title} by ${mins(Math.abs(c.gapMin))}`
-          : `It ${c.before ? "starts" : "ends"} ${mins(c.gapMin)} ${c.before ? "after" : "before"} ${c.other.title}${c.before ? " ends" : " starts"}`
-        : "It does not leave your buffer";
+          ? `Overlaps ${c.other.title} by ${mins(Math.abs(c.gapMin))}`
+          : `${c.before ? "Starts" : "Ends"} ${mins(c.gapMin)} ${c.before ? "after" : "before"} ${c.other.title}${c.before ? " ends" : " starts"}`
+        : "Leaves no buffer";
       entries.push({
         id: item.id, title: item.title, status: "no-longer-fits", moved, ageMs: age(item.id),
-        reason: `${movedTo}. ${gapPlain}, and you asked for ${buffer}.`,
+        reason: `${movedShort} · no longer fits. ${gapPlain}. You set ${buffer}.`,
         event: { type: "Warning", reason: "FailedScheduling", message: `0/1 slots fit: ${gap}, you asked for ${opts.bufferMinutes}m` },
       });
     } else if (moved) {
       entries.push({
         id: item.id, title: item.title, status: "moved-fits", moved, ageMs: age(item.id),
-        reason: `${movedTo}. It still fits your ${buffer} buffer.`,
+        reason: `${movedShort} · still fits.`,
         event: { type: "Normal", reason: "Rescheduled", message: `${movedTo}; fits your ${opts.bufferMinutes}m buffer` },
       });
     } else {
       entries.push({
         id: item.id, title: item.title, status: "kept", moved, ageMs: age(item.id),
-        reason: `Still at ${at(now.starts_at)}${place}. The schedule has not changed it.`,
+        reason: `${at(now.starts_at)}${now.room ? ` · ${placeLabel(now.room)}` : ""}. Unchanged.`,
         event: { type: "Normal", reason: "Scheduled", message: `Kept at ${at(now.starts_at)}${place}` },
       });
     }
@@ -125,7 +127,7 @@ export function buildDayView(
   const movedN = count((e) => e.moved);
   const lost = count((e) => e.status === "no-longer-fits");
   const aside = count((e) => e.status === "set-aside");
-  const parts = [`You wanted ${talks(entries.length)}.`, `${fit} still ${fit === 1 ? "fits" : "fit"}.`];
+  const parts = [`${fit} of ${talks(entries.length)} still ${fit === 1 ? "fits" : "fit"}.`];
   if (movedN) parts.push(`${movedN} moved.`);
   if (lost) parts.push(`${lost} no longer ${lost === 1 ? "fits" : "fit"}.`);
   if (aside) parts.push(`${aside} set aside by you.`);
