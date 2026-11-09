@@ -84,8 +84,8 @@ export default function BoardPage() {
     <main id="main" tabIndex={-1} className="mx-auto max-w-2xl px-4 py-6">
       <h1 className="text-3xl font-bold">Organizer board</h1>
       <p className="mt-2">
-        For event staff: how many people took a break in the last hour, by
-        floor. Counts only, nobody's identity.
+        For event staff: how many breaks were taken in the last hour, by floor.
+        Counts only, nobody's identity.
       </p>
       <p role="status" aria-live="polite" className="mt-4">
         {load.state === "loading" && "Loading counts."}
