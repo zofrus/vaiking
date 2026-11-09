@@ -254,7 +254,15 @@ export default function App() {
     // adds only the result. It is worked out here from the same plan, so
     // nothing waits on the network.
     const pressed = reconcile(plan, changes, { now: now(), bufferMinutes: buffer, graceActive: true });
-    setAnnounce(plan.length > 0 ? `${clearLine(pressed)} Nothing is cancelled. Your plan is saved.` : "");
+    const message = plan.length > 0 ? `${clearLine(pressed)} Nothing is cancelled. Your plan is saved.` : "";
+    if (view === "calm" && message) {
+      // A live region does not announce unchanged text; clear it before restoring
+      // the result so a second press is announced too.
+      flushSync(() => setAnnounce(""));
+      requestAnimationFrame(() => setAnnounce(message));
+    } else {
+      setAnnounce(message);
+    }
     // Pressed again on the calm screen: nothing remounts, so move focus back
     // to the heading to say it again.
     if (view === "calm") document.getElementById("calm-h")?.focus();
