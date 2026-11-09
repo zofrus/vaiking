@@ -22,7 +22,7 @@
   height: 1.5rem;
   border-radius: 999px;
   border: 2px solid var(--color-deep);
-  background: #fff;
+  background: var(--gp-surface, #fff);
   transition: background-color 120ms ease;
 }
 .focus-switch-thumb {
@@ -36,7 +36,7 @@
   transition: transform 120ms ease;
 }
 .focus-switch[aria-checked="true"] .focus-switch-track { background: var(--color-deep); }
-.focus-switch[aria-checked="true"] .focus-switch-thumb { background: #fff; transform: translateX(1.25rem); }
+.focus-switch[aria-checked="true"] .focus-switch-thumb { background: var(--gp-btn-ink, #fff); transform: translateX(1.25rem); }
 .focus-switch-state { min-width: 2rem; color: var(--color-ink-soft); }
 .focus-hint { margin: 0; font-size: 0.875rem; color: var(--color-ink-soft); }
 

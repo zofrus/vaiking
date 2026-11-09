@@ -25,7 +25,8 @@ async function open(reducedMotion) {
   };
   await page.goto(base + "/");
   await page.waitForSelector("main");
-  await page.getByRole("button", { name: "I need a break" }).click();
+  await page.locator("#break-main").click();
+  await page.locator(".more-support > summary").click(); // the extras sit behind one disclosure
   await page.getByRole("heading", { name: "Background sound" }).waitFor();
   return { page, axe };
 }
@@ -35,7 +36,7 @@ async function open(reducedMotion) {
   await axe("calm with sound and breathe panels");
   check("nothing plays or runs before a tap", (await page.getByText("Playing").count()) === 0 && (await page.getByRole("button", { name: "Start breathing guide" }).isVisible()));
   check("volume starts low", Number(await page.getByRole("slider", { name: "Volume" }).inputValue()) <= 0.3);
-  await page.getByRole("button", { name: "Play" }).click();
+  await page.getByRole("button", { name: "Play", exact: true }).click();
   await page.getByText("Playing: Focus.").waitFor();
   check("Play shows a Stop button", await page.getByRole("button", { name: "Stop", exact: true }).first().isVisible());
   await axe("sound playing");

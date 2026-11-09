@@ -1,91 +1,593 @@
 @import "tailwindcss";
 
-/* Calm, low-glare palette. Every pairing below is 4.5:1 or better. */
+/* Design tokens (Pro Product base, Quiet Room calm). Everyone else uses these
+   --gp-* names. Every text pair is 4.5:1 or better. */
+:root {
+  --gp-bg: #fafafa;
+  --gp-surface: #ffffff;
+  --gp-ink: #18181b;
+  --gp-muted: #52525b;
+  --gp-line: #e4e4e7;
+  --gp-hair: #f0f0f2; /* row dividers inside a card */
+  --gp-field-line: #858590; /* input borders: 3:1 against white */
+  --gp-accent: #4f3ff0; /* iris */
+  --gp-accent-ink: #ffffff;
+  --gp-accent-soft: #eef0ff;
+  --gp-accent-soft-ink: #3a2cc4;
+  --gp-notice: #9a4a00;
+  --gp-notice-bg: #fff7ed;
+  --gp-notice-line: #f5d9a8;
+  --gp-ok: #15803d;
+  --gp-ok-bg: #ecfdf3;
+  --gp-ok-ink: #166534;
+  --gp-bad-bg: #fef2f2;
+  --gp-bad-ink: #b42318;
+  --gp-chip: #f4f4f5;
+  --gp-chip-ink: #3f3f46;
+  --gp-btn: #18181b; /* primary button ground and its text */
+  --gp-btn-ink: #ffffff;
+  --gp-ring-1: #e1e9e4;
+  --gp-ring-2: #cfddd5;
+  /* kubectl view only */
+  --gp-term-bg: #0d1117;
+  --gp-term-ink: #e6edf3;
+  --gp-term-green: #4ade9b;
+  --gp-term-amber: #f5c065;
+  --gp-term-blue: #7cc4ff;
+}
+
+/* Calm view: oat ground, sage action, clay notice. The staff card ignores this. */
+[data-view="calm"] {
+  --gp-bg: #f6f3ee;
+  --gp-ink: #2b2f2e;
+  --gp-muted: #5b625f;
+  --gp-line: #e6e1d8;
+  --gp-hair: #e6e1d8;
+  --gp-field-line: #8a867c;
+  --gp-accent: #3e6a5b; /* sage */
+  --gp-accent-soft: #e6ece8;
+  --gp-accent-soft-ink: #2c4d42;
+  --gp-notice: #7a4a1e; /* clay */
+  --gp-notice-bg: #f3e6d6;
+  --gp-notice-line: #e8d3ba;
+  --gp-chip: #e6ece8;
+  --gp-chip-ink: #2c4d42;
+  --gp-accent-ink: #ffffff;
+}
+
+/* Dark: follows the phone's setting. */
+@media (prefers-color-scheme: dark) {
+  /* Only where the app itself is on the page (it sets data-view), so the
+     organizer board and other pages stay as they were. */
+  :root:has([data-view]) {
+    color-scheme: dark;
+    --gp-bg: #111113;
+    --gp-surface: #1b1b1f;
+    --gp-ink: #f4f4f5;
+    --gp-muted: #a1a1aa;
+    --gp-line: #2e2e33;
+    --gp-hair: #26262b;
+    --gp-field-line: #8a8a94;
+    --gp-accent: #8b80ff;
+    --gp-accent-ink: #0f0f12;
+    --gp-accent-soft: #25234a;
+    --gp-accent-soft-ink: #c7c2ff;
+    --gp-notice: #f5c065;
+    --gp-notice-bg: #2a1f10;
+    --gp-notice-line: #5a4219;
+    --gp-ok: #4ade9b;
+    --gp-ok-bg: #0f2a1c;
+    --gp-ok-ink: #4ade9b;
+    --gp-bad-bg: #2d1414;
+    --gp-bad-ink: #ff9c8a;
+    --gp-chip: #26262b;
+    --gp-chip-ink: #d4d4d8;
+    --gp-btn: #f4f4f5;
+    --gp-btn-ink: #18181b;
+  }
+  [data-view="calm"] {
+    --gp-bg: #161a19;
+    --gp-surface: #1f2523;
+    --gp-ink: #e8ecea;
+    --gp-muted: #a3ada8;
+    --gp-line: #2d3532;
+    --gp-hair: #2d3532;
+    --gp-field-line: #7f8a85;
+    --gp-accent: #7fb8a3;
+    --gp-accent-ink: #0f1a16;
+    --gp-accent-soft: #223029;
+    --gp-accent-soft-ink: #bfe3d2;
+    --gp-notice: #e8c79b;
+    --gp-notice-bg: #2b2115;
+    --gp-notice-line: #5a4426;
+    --gp-chip: #223029;
+    --gp-chip-ink: #bfe3d2;
+    --gp-ring-1: #1f2d28;
+    --gp-ring-2: #2a3f37;
+  }
+}
+
+/* Dialogs (sticker, tour) paint their own light surface, so they keep the light
+   tokens in dark mode and stay readable. */
+@media (prefers-color-scheme: dark) {
+  dialog {
+    color-scheme: light;
+    --gp-bg: #fafafa;
+    --gp-surface: #ffffff;
+    --gp-ink: #18181b;
+    --gp-muted: #52525b;
+    --gp-line: #e4e4e7;
+    --gp-hair: #f0f0f2;
+    --gp-field-line: #858590;
+    --gp-accent: #4f3ff0;
+    --gp-accent-ink: #ffffff;
+    --gp-accent-soft: #eef0ff;
+    --gp-accent-soft-ink: #3a2cc4;
+    --gp-notice: #9a4a00;
+    --gp-notice-bg: #fff7ed;
+    --gp-notice-line: #f5d9a8;
+    --gp-chip: #f4f4f5;
+    --gp-chip-ink: #3f3f46;
+    --gp-btn: #18181b;
+    --gp-btn-ink: #ffffff;
+  }
+}
+
+/* More contrast: stronger text and borders. */
+@media (prefers-contrast: more) {
+  :root {
+    --gp-muted: #3f3f46;
+    --gp-line: #71717a;
+    --gp-hair: #a1a1aa;
+    --gp-notice-line: #9a4a00;
+  }
+  [data-view="calm"] {
+    --gp-muted: #33403a;
+    --gp-line: #6b7570;
+    --gp-hair: #8a948f;
+    --gp-notice-line: #7a4a1e;
+  }
+}
+@media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+  :root:has([data-view]),
+  [data-view="calm"] {
+    --gp-muted: #e4e4e7;
+    --gp-line: #a1a1aa;
+    --gp-hair: #71717a;
+    --gp-notice-line: #f5c065;
+  }
+}
+
+/* "inline" so a utility reads the variable where it is used, which lets the
+   calm view change the colours underneath. Old names stay as aliases. */
+@theme inline {
+  --color-ground: var(--gp-bg);
+  --color-panel: var(--gp-surface);
+  --color-ink: var(--gp-ink);
+  --color-ink-soft: var(--gp-muted);
+  --color-line: var(--gp-line);
+  --color-deep: var(--gp-ink);
+  --color-deep-press: var(--gp-ink);
+  --font-sans:
+    "Geist Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+    sans-serif;
+  --font-mono: "Geist Mono Variable", ui-monospace, Menlo, monospace;
+}
+/* Small text keeps a 1.5 line height. */
 @theme {
-  --color-ground: #e8eff0;
-  --color-panel: #ffffff;
-  --color-ink: #0f2328;
-  --color-ink-soft: #3b5057;
-  --color-line: #b9c9cc;
-  --color-deep: #0d4a52;
-  --color-deep-press: #093840;
-  --font-sans: ui-rounded, "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  --text-sm--line-height: 1.5;
+  --text-xs--line-height: 1.5;
 }
 
-html {
-  font-family: var(--font-sans);
-  -webkit-text-size-adjust: 100%;
+@layer base {
+  html {
+    font-family: var(--font-sans);
+    -webkit-text-size-adjust: 100%;
+    /* Focused elements are never hidden under the sticky bar. */
+    scroll-padding-bottom: 6rem;
+  }
+  body {
+    font-size: 1rem;
+    line-height: 1.55;
+    text-align: left;
+    overflow-wrap: break-word;
+    -webkit-font-smoothing: antialiased;
+  }
+  /* The app's ground colour only where the app is on the page. */
+  :root:has([data-view]) body {
+    background: var(--gp-bg);
+  }
+  /* No italics, no justified text, body lines at 1.5 or more. */
+  em,
+  i,
+  cite,
+  address {
+    font-style: normal;
+  }
+  [data-view="calm"] {
+    font-size: 1.125rem;
+  }
+  h1,
+  h2,
+  h3 {
+    letter-spacing: -0.02em;
+  }
+  :focus-visible {
+    outline: 2px solid var(--gp-accent);
+    outline-offset: 2px;
+  }
+  /* Headings get focus from code so screen readers start there. They can't be
+     tabbed to, so a ring around them is only noise, on the staff card most. */
+  main[tabindex="-1"]:focus,
+  h1[tabindex="-1"]:focus,
+  h2[tabindex="-1"]:focus,
+  h3[tabindex="-1"]:focus {
+    outline: none;
+  }
+  /* Footer links need a real tap target. */
+  footer a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+    color: var(--gp-accent);
+    text-underline-offset: 3px;
+  }
+}
+[hidden] {
+  display: none !important;
 }
 
-/* Large, unhurried reading text. Headings and buttons set their own sizes. */
-body {
-  font-size: 1.125rem;
-  line-height: 1.6;
+.mono {
+  font-family: var(--font-mono);
 }
 
-:focus-visible {
-  outline: 4px solid #1d4ed8;
-  outline-offset: 3px;
+/* ---- Header ---- */
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.75rem;
+  min-height: 2.75rem;
 }
-/* Headings get focus from code so screen readers start there. They can't be
-   tabbed to, so a ring around them is only noise, on the staff card most. */
-[tabindex="-1"]:focus {
-  outline: none;
-}
-
-.break-button {
-  display: block;
-  width: 100%;
-  min-height: 9rem;
-  border-radius: 2rem;
-  background: var(--color-deep);
-  color: #fff;
-  font-size: 2.25rem;
-  font-weight: 700;
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1rem;
+  font-weight: 600;
   letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+.brand-mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.625rem;
+  height: 1.625rem;
+  border-radius: 0.5rem;
+  background: var(--gp-btn);
+  color: var(--gp-btn-ink);
+}
+/* The offline chip is a component of its own; this dresses its text. It stays
+   hidden while empty (that state carries sr-only). */
+.app-header p[aria-live]:not(.sr-only) {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin: 0;
+  height: 1.5rem;
+  padding: 0 0.5rem;
+  border-radius: 0.375rem;
+  background: var(--gp-ok-bg);
+  color: var(--gp-ok-ink);
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+}
+.app-header p[aria-live]:not(.sr-only)::before {
+  content: "";
+  width: 0.4375rem;
+  height: 0.4375rem;
+  border-radius: 50%;
+  background: var(--gp-ok);
+  animation: gp-pulse 2.4s ease-out infinite;
+}
+@keyframes gp-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgb(22 163 74 / 0.45);
+  }
+  100% {
+    box-shadow: 0 0 0 7px rgb(22 163 74 / 0);
+  }
+}
+
+/* ---- The break button ---- */
+.break-button {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 2.5rem;
+  width: 100%;
+  min-height: 15.5rem;
+  padding: 1.25rem;
+  border-radius: 1.25rem;
+  background: var(--gp-btn);
+  color: var(--gp-btn-ink);
+  text-align: left;
   box-shadow:
-    0 0 0 6px var(--color-ground),
-    0 0 0 8px var(--color-deep);
+    0 20px 40px -20px rgb(24 24 27 / 0.6),
+    inset 0 1px 0 rgb(255 255 255 / 0.1);
   transition:
     transform 120ms ease,
-    background-color 120ms ease;
+    box-shadow 120ms ease;
 }
 .break-button:active {
-  transform: scale(0.985);
-  background: var(--color-deep-press);
+  transform: scale(0.99);
 }
-
-.panel {
-  background: var(--color-panel);
-  border: 1px solid var(--color-line);
-  border-radius: 1.5rem;
-  padding: 1.5rem;
-}
-
-.staff-button {
-  display: block;
+.break-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   width: 100%;
-  min-height: 4rem;
-  border-radius: 1rem;
-  border: 3px solid var(--color-deep);
-  color: var(--color-deep);
-  font-size: 1.25rem;
-  font-weight: 700;
-  background: #fff;
+}
+.preview-banner {
+  background: var(--gp-btn);
+  color: var(--gp-btn-ink);
 }
 
-/* For leaving a screen: clear, but quieter than the actions on it. */
-.quiet-button {
-  display: block;
+/* Sticky repeat of the break button, shown only when the big one is off screen. */
+.break-bar {
+  position: fixed;
+  inset: auto 0 0 0;
+  z-index: 5;
+  display: flex;
+  justify-content: center;
+  padding: 0.75rem 1.25rem max(0.75rem, env(safe-area-inset-bottom));
+  background: color-mix(in srgb, var(--gp-bg) 92%, transparent);
+  box-shadow: 0 -1px 0 var(--gp-line);
+}
+.break-bar-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
   width: 100%;
-  min-height: 3.5rem;
-  border-radius: 1rem;
-  border: 2px solid var(--color-ink-soft);
-  color: var(--color-ink);
+  max-width: 36rem;
+  min-height: 3.25rem;
+  border-radius: 0.875rem;
+  background: var(--gp-btn);
+  color: var(--gp-btn-ink);
+  font-size: 1rem;
   font-weight: 600;
-  background: transparent;
+}
+.break-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 0.75rem;
+  background: var(--gp-accent);
+  color: var(--gp-accent-ink);
+}
+.break-meta {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: color-mix(in srgb, var(--gp-btn-ink) 82%, var(--gp-btn));
+}
+.break-title {
+  display: block;
+  font-size: 2.375rem;
+  font-weight: 600;
+  letter-spacing: -0.035em;
+  line-height: 1;
+}
+.break-sub {
+  display: block;
+  margin-top: 0.5rem;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: color-mix(in srgb, var(--gp-btn-ink) 82%, var(--gp-btn));
+}
+/* Calm is one thing at a time: the headline comes first. The press handler is
+   still in the page; the button just is not shown while you are already here. */
+[data-view="calm"] .break-button,
+[data-view="calm"] .app-header .focus-toggle {
+  display: none;
 }
 
+/* ---- Surfaces ---- */
+.panel {
+  background: var(--gp-surface);
+  border-radius: 0.875rem;
+  padding: 1rem;
+  box-shadow:
+    0 0 0 1px var(--gp-line),
+    0 1px 2px rgb(9 9 11 / 0.05);
+}
+[data-view="calm"] .panel {
+  border-radius: 1.5rem;
+  padding: 1.25rem;
+  box-shadow: none;
+}
+
+.notice {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem 0.875rem;
+  border-radius: 0.75rem;
+  background: var(--gp-notice-bg);
+  color: var(--gp-notice);
+  box-shadow: 0 0 0 1px var(--gp-notice-line);
+}
+.notice h2 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+[data-view="calm"] .notice {
+  border-radius: 1.25rem;
+  padding: 1rem 1.125rem;
+  box-shadow: none;
+}
+
+/* Small label: rooms, levels, status. */
+.gp-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  height: 1.5rem;
+  padding: 0 0.5rem;
+  border-radius: 0.375rem;
+  background: var(--gp-chip);
+  color: var(--gp-chip-ink);
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+[data-view="calm"] .gp-tag {
+  height: 1.75rem;
+  padding: 0 0.75rem;
+  border-radius: 999px;
+  font-size: 0.8125rem;
+}
+/* Plain-text sponsor credit, only where the tool does the work. */
+.gp-credit {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3125rem;
+  min-height: 1.375rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: 0.375rem;
+  background: var(--gp-chip);
+  color: var(--gp-muted);
+  font-size: 0.71875rem;
+  font-weight: 500;
+}
+.gp-credit b {
+  color: var(--gp-ink);
+  font-weight: 600;
+}
+[data-view="calm"] .gp-credit {
+  border-radius: 999px;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.8125rem;
+}
+
+.gp-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 3.5rem;
+  padding: 0.5rem 0;
+}
+.gp-row + .gp-row {
+  border-top: 1px solid var(--gp-hair);
+}
+.gp-icon {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.5rem;
+  background: var(--gp-chip);
+  color: var(--gp-ink);
+}
+[data-view="calm"] .gp-icon {
+  background: transparent;
+  color: var(--gp-accent);
+  width: 1.5rem;
+}
+
+.eyebrow {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gp-muted);
+}
+
+/* ---- Buttons ---- */
+.staff-button,
+.quiet-button,
+.close-button,
+.install-button,
+.btn-s,
+.choice {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 2.875rem;
+  padding: 0 1rem;
+  border-radius: 0.625rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+/* Primary */
+.staff-button {
+  width: 100%;
+  background: var(--gp-btn);
+  color: var(--gp-btn-ink);
+  box-shadow:
+    0 1px 2px rgb(9 9 11 / 0.2),
+    inset 0 1px 0 rgb(255 255 255 / 0.12);
+}
+[data-view="calm"] .staff-button {
+  min-height: 3.25rem;
+  border-radius: 1rem;
+  background: var(--gp-accent);
+  color: var(--gp-accent-ink);
+  font-size: 1.0625rem;
+  box-shadow: none;
+}
+/* Secondary button: one look for every outlined action. */
+.btn-s {
+  display: inline-flex;
+  background: var(--gp-surface);
+  color: var(--gp-ink);
+  box-shadow:
+    0 0 0 1px var(--gp-line),
+    0 1px 2px rgb(9 9 11 / 0.05);
+}
+/* Small link-style action, e.g. Replay tour. */
+.link-button {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  padding: 0;
+  background: none;
+  color: var(--gp-accent);
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+/* Secondary, for leaving a screen */
+.quiet-button {
+  width: 100%;
+  background: var(--gp-surface);
+  color: var(--gp-ink);
+  box-shadow:
+    0 0 0 1px var(--gp-line),
+    0 1px 2px rgb(9 9 11 / 0.05);
+}
+[data-view="calm"] .quiet-button {
+  min-height: 3.25rem;
+  border-radius: 1rem;
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px var(--gp-field-line);
+  font-size: 1.0625rem;
+}
 .close-button {
   width: 100%;
   min-height: 4rem;
@@ -100,7 +602,9 @@ body {
   position: absolute;
   left: -999px;
   background: #fff;
+  color: #000;
   padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
 }
 .skip-link:focus {
   left: 1rem;
@@ -108,66 +612,159 @@ body {
   z-index: 20;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  * {
-    transition: none !important;
-  }
-}
-
+/* ---- Form pieces used by the plan ---- */
 .field {
   display: block;
   width: 100%;
-  min-height: 3.5rem;
-  padding: 0 1rem;
-  border: 2px solid var(--color-deep);
-  border-radius: 1rem;
-  background: #fff;
-  color: var(--color-ink);
-  font-size: 1.125rem;
+  min-height: 2.875rem;
+  padding: 0 0.75rem;
+  border: 1px solid var(--gp-field-line);
+  border-radius: 0.625rem;
+  background: var(--gp-surface);
+  color: var(--gp-ink);
+  font-size: 1rem;
+}
+[data-view="calm"] .field {
+  min-height: 3rem;
+  border-radius: 0.875rem;
 }
 
 /* Search matches: a soft tint and bold, so the match never rests on colour alone. */
 mark {
-  background: #d3e9e6;
+  background: var(--gp-accent-soft);
   color: inherit;
   font-weight: 700;
   border-radius: 0.2em;
   padding: 0 0.1em;
 }
 
-.choice {
-  min-height: 3rem;
-  padding: 0 1.25rem;
-  border: 2px solid var(--color-deep);
-  border-radius: 1rem;
-  background: #fff;
-  color: var(--color-deep);
-  font-weight: 700;
-}
-.choice[aria-pressed="true"] {
-  background: var(--color-deep);
-  color: #fff;
-}
-
-/* Install suggestion: quiet, tap targets well above 24px. */
+.choice,
 .install-button {
-  min-height: 3rem;
-  min-width: 3rem;
-  padding: 0 1.25rem;
-  border: 2px solid var(--color-deep);
-  border-radius: 1rem;
-  background: #fff;
-  color: var(--color-deep);
-  font-weight: 700;
+  min-width: 2.75rem;
+  background: var(--gp-surface);
+  color: var(--gp-ink);
+  box-shadow:
+    0 0 0 1px var(--gp-line),
+    0 1px 2px rgb(9 9 11 / 0.05);
 }
+.choice[aria-pressed="true"],
 .install-primary {
-  background: var(--color-deep);
-  color: #fff;
+  background: var(--gp-btn);
+  color: var(--gp-btn-ink);
+  box-shadow: none;
 }
 
-/* Footer links (the organizer board link was 20px tall): give them a real tap target. */
-footer a {
-  display: inline-flex;
+/* ---- Calm: two soft rings that breathe over 8 seconds ---- */
+.calm-mark {
+  position: relative;
+  display: flex;
   align-items: center;
-  min-height: 3rem;
+  justify-content: center;
+  width: 7.5rem;
+  height: 7.5rem;
+}
+.calm-mark .c-ring {
+  position: absolute;
+  border-radius: 50%;
+  animation: gp-breathe 8s ease-in-out infinite;
+}
+.calm-mark .c-ring.c-ring-1 {
+  inset: 0;
+  background: var(--gp-ring-1);
+}
+.calm-mark .c-ring-2 {
+  inset: 0.875rem;
+  background: var(--gp-ring-2);
+  animation-delay: -4s;
+}
+.calm-mark .core {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 50%;
+  background: var(--gp-accent);
+  color: var(--gp-accent-ink);
+}
+@keyframes gp-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.55;
+  }
+  50% {
+    transform: scale(1.07);
+    opacity: 1;
+  }
+}
+
+/* ---- Staff card: black on white, maximum contrast, whatever the view ---- */
+.staff-card {
+  color-scheme: light;
+}
+.staff-card h2 {
+  letter-spacing: -0.035em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* ---- Calm: the extras sit behind one disclosure, below the essentials ---- */
+.more-support > summary {
+  display: flex;
+  align-items: center;
+  min-height: 2.75rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.more-support[open] > summary {
+  margin-bottom: 0.5rem;
+}
+.more-support-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.more-support-body .panel {
+  padding: 1rem 0 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  border-top: 1px solid var(--gp-hair);
+}
+
+/* ---- Header: the compact Focus toggle stays on one line with the brand ---- */
+.app-header .focus-hint {
+  display: none;
+}
+.app-header .focus-switch {
+  gap: 0.375rem;
+  min-height: 2.75rem;
+  padding: 0;
+  font-size: 0.8125rem;
+}
+.app-header .focus-switch-label,
+.app-header .focus-switch-state {
+  white-space: nowrap;
+}
+.app-header p[aria-live]:not(.sr-only) {
+  font-size: 0.6875rem;
+  padding: 0 0.375rem;
+}
+.app-header .focus-switch-state {
+  min-width: 0;
+}
+.app-header .focus-switch-track {
+  width: 2.25rem;
+}
+.app-header .focus-switch[aria-checked="true"] .focus-switch-thumb {
+  transform: translateX(0.75rem);
 }
