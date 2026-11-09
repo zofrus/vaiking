@@ -1,5 +1,7 @@
 # Grace Period
 
+**Judging? Start with [JUDGES.md](JUDGES.md): the app and the evidence for each sponsor tool, in 2 minutes.**
+
 **A phone app for KubeCon attendees who need a break: one button with zero setup, and a day plan that keeps itself in line with the real schedule.** Built by team vAIking at the Cloud Native Hackathon, November 9, 2026.
 
 - App: <https://grace.effulgentpoint.com>
