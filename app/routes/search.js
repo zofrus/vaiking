@@ -7,8 +7,8 @@ const CACHE_MS = 8_000;
 const tracer = trace.getTracer("vaiking-search");
 const REQUEST_OPTIONS = { requestTimeout: 3000, maxRetries: 0 };
 
-module.exports = async function search(app, { elastic, env }) {
-  const guarded = createGuard({ env, ttlMs: CACHE_MS });
+module.exports = async function search(app, { elastic, env, totalLimiter }) {
+  const guarded = createGuard({ env, ttlMs: CACHE_MS, totalLimiter });
   app.get("/api/search", async (request, reply) => {
     const q = cleanQuery(request.query.q);
     if (!q) return reply.code(400).send({ error: "q is required" });

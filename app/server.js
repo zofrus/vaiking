@@ -5,6 +5,7 @@ const path = require("node:path");
 const Fastify = require("fastify");
 const fastifyStatic = require("@fastify/static");
 const { createElastic } = require("./lib/elastic");
+const { createTotalLimiter, envInt } = require("./lib/guard");
 
 const SESSIONIZE_URL = "https://sessionize.com/api/v2/svi82w6c/view/All";
 const DEEP_CACHE_MS = 30_000;
@@ -85,6 +86,9 @@ function runDeepChecks({ elastic, env, fetchImpl }) {
 
 function build(opts = {}) {
   const env = opts.env ?? process.env;
+  const totalLimiter = createTotalLimiter({
+    total: envInt(env.RATE_LIMIT_TOTAL_PER_MIN, 600),
+  });
   const elastic = opts.elastic ?? createElastic(env);
   const fetchImpl = opts.fetch ?? globalThis.fetch;
   const publicDir = opts.publicDir ?? path.join(__dirname, "public");
@@ -148,6 +152,7 @@ function build(opts = {}) {
           elastic,
           env,
           fetch: fetchImpl,
+          totalLimiter,
         });
       }
     }

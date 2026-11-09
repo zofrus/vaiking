@@ -122,3 +122,22 @@ test("/api/similar: 404 for unknown talk, 400 for bad time, errors never leak", 
   assert.equal(res.statusCode, 502);
   assert.ok(!res.body.includes("secret"));
 });
+
+test("/api/similar adds query_shape only when asked, with no talk or typed text", async () => {
+  const client = {
+    get: async () => ({ _source: { title: "SECRET-TITLE", abstract: "SECRET-ABSTRACT" } }),
+    search: async () => ({ hits: { hits: [{ _source: { id: "7" } }] } }),
+  };
+  const app = appWith(client);
+  const base = "/api/similar?talk_id=1&after=2026-11-10T21:00:00Z&before=2026-11-10T23:00:00Z";
+  assert.equal("query_shape" in (await app.inject({ url: base })).json(), false);
+  const body = (await app.inject({ url: `${base}&shape=1` })).json();
+  assert.deepEqual(body.results, [{ id: "7" }]);
+  assert.equal(body.query_shape.method, "keyword and meaning together");
+  assert.deepEqual(body.query_shape.window, { after: "2026-11-10T21:00:00.000Z", before: "2026-11-10T23:00:00.000Z" });
+  assert.ok(body.query_shape.keyword_fields.includes("title"));
+  assert.equal(body.query_shape.meaning_field, "semantic_content");
+  assert.doesNotMatch(JSON.stringify(body.query_shape), /SECRET/);
+  // the shape request must not poison the plain cache entry
+  assert.equal("query_shape" in (await app.inject({ url: base })).json(), false);
+});

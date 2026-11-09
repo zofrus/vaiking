@@ -33,34 +33,48 @@ function envInt(value, fallback) {
 // perClient is per gateway-seen address, so it is deliberately roomy: many
 // attendees can share one address. total is the backstop for the budget and is
 // the limit that still holds if many addresses are used.
-function createLimiter({ perClient, total, windowMs = WINDOW_MS, now = Date.now }) {
-  let hits = new Map();
+function createTotalLimiter({ total, windowMs = WINDOW_MS, now = Date.now }) {
   let count = 0;
   let windowEnds = now() + windowMs;
+  return function totalLimited() {
+    const t = now();
+    if (t >= windowEnds) {
+      count = 0;
+      windowEnds = t + windowMs;
+    }
+    if (count >= total) return true;
+    count += 1;
+    return false;
+  };
+}
+
+function createLimiter({ perClient, total, windowMs = WINDOW_MS, now = Date.now, totalLimiter }) {
+  let hits = new Map();
+  let windowEnds = now() + windowMs;
+  const totalLimited = totalLimiter ?? createTotalLimiter({ total, windowMs, now });
   return function limited(key) {
     const t = now();
     if (t >= windowEnds) {
       hits = new Map();
-      count = 0;
       windowEnds = t + windowMs;
     }
     if (!hits.has(key) && hits.size >= MAX_TRACKED) return true;
     const n = (hits.get(key) ?? 0) + 1;
     if (n > perClient) return true;
-    if (count >= total) return true;
+    if (totalLimited()) return true;
     hits.set(key, n);
-    count += 1;
     return false;
   };
 }
 
 // Answers from cache, otherwise runs load() once even if many identical
 // requests arrive together. Failures are never cached.
-function createGuard({ env = process.env, ttlMs, max = 500, now = Date.now }) {
+function createGuard({ env = process.env, ttlMs, max = 500, now = Date.now, totalLimiter }) {
   const limited = createLimiter({
     perClient: envInt(env.RATE_LIMIT_PER_MIN, 120),
     total: envInt(env.RATE_LIMIT_TOTAL_PER_MIN, 600),
     now,
+    totalLimiter,
   });
   const cache = createCache(max, ttlMs, now);
   const inflight = new Map();
@@ -87,4 +101,4 @@ function createGuard({ env = process.env, ttlMs, max = 500, now = Date.now }) {
   };
 }
 
-module.exports = { clientKey, createLimiter, createGuard };
+module.exports = { clientKey, createLimiter, createTotalLimiter, createGuard, envInt };

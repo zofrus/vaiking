@@ -1,3 +1,4 @@
+import { QueryShape } from "./QueryShape";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { flushSync } from "react-dom";
 import { quietRoom, restrooms } from "./data/facilities";
@@ -13,6 +14,7 @@ import { formatTime, reconcile, type Notice, type PlanItem } from "./lib/reconci
 import { closestReachable } from "./lib/reach";
 import { placeLabel } from "./lib/place";
 import { Sticker } from "./Sticker";
+import { VenueHelp } from "./VenueHelp";
 
 type View = "home" | "calm" | "card";
 
@@ -231,7 +233,7 @@ function Calm({
       </div>
 
       {/* mount: Sticker */}<Sticker />
-      {/* mount: VenueHelp */}
+      {/* mount: VenueHelp */}<VenueHelp />
 
       {planResult}
 
@@ -355,6 +357,8 @@ export default function App() {
           Based on the {buffer} minutes you want between talks. Estimated. Confirm routes with event staff.
         </p>
       )}
+      {/* mount: QueryShape */}
+      {lines.some((l) => l.reach) && <QueryShape />}
     </>
   );
 
