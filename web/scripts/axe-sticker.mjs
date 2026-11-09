@@ -39,7 +39,7 @@ await page.keyboard.press("Escape");
 check("Escape closes the dialog", (await page.locator("dialog[open]").count()) === 0);
 check(
   "focus returns to the opener",
-  await page.evaluate(() => document.activeElement?.textContent?.includes("sticker") ?? false),
+  await page.evaluate(() => globalThis.document.activeElement?.textContent?.includes("sticker") ?? false),
 );
 
 await page.reload();
