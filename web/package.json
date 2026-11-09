@@ -9,7 +9,8 @@
     "build": "tsc --noEmit && vite build",
     "test": "vitest run",
     "axe": "node scripts/axe.mjs",
-    "asset-recovery": "node scripts/asset-recovery.mjs"
+    "asset-recovery": "node scripts/asset-recovery.mjs",
+    "sw-install": "node scripts/sw-install.mjs"
   },
   "dependencies": {
     "@dash0/sdk-web": "^0.30.0",

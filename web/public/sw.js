@@ -2,28 +2,56 @@
 // The plan lives in localStorage on the phone, so it needs no caching here.
 // v2: page loads go to the network first. v1 served the cached page first, so after a
 // deploy it ran the old build, whose lazy chunks were gone from the server: a blank page.
-const CACHE = "grace-shell-v2";
+// v3: one built file that 404s (a pod mid-rollout) no longer fails the whole install.
+const CACHE = "grace-shell-v3";
 const NAV_TIMEOUT_MS = 3000;
 
-// Keep the page and every built file it points at (scripts and styles). The page is
-// stored last, so the cached page never points at files the cache does not have.
-async function saveShell(res) {
-  const html = await res.clone().text();
-  const urls = [
+// The built files a page points at (scripts, styles, icons).
+function filesIn(html) {
+  return [
     ...html.matchAll(
       // (?!\/): a protocol-relative "//host/x.js" is another site, never ours to cache.
       /(?:src|href)="(\/(?!\/)[^"]+\.(?:js|css|svg|png|webmanifest))"/g,
     ),
   ].map((m) => m[1]);
-  const cache = await caches.open(CACHE);
-  await cache.addAll(urls);
-  await cache.put("/", res);
 }
 
+// Each file on its own, so one 404 cannot lose the rest. Never rejects.
+function addEach(cache, urls) {
+  return Promise.allSettled(
+    urls.map(async (url) => cache.add(new Request(url, { cache: "reload" }))),
+  );
+}
+
+async function hasAll(cache, urls) {
+  for (const url of urls) if (!(await cache.match(url))) return false;
+  return true;
+}
+
+// After a good page load: fetch the files not cached yet, then replace the cached page
+// only if every file it names is cached. The offline page never points at a missing
+// file; until then the previous page stays.
+async function refreshShell(res) {
+  const html = await res.clone().text();
+  const urls = filesIn(html);
+  const cache = await caches.open(CACHE);
+  const missing = [];
+  for (const url of urls) if (!(await cache.match(url))) missing.push(url);
+  await addEach(cache, missing);
+  if (await hasAll(cache, urls)) await cache.put("/", res);
+}
+
+// The page itself is required; its files are best effort. A file that fails here is
+// cached the first time the page loads it (the cache-first branch below).
 self.addEventListener("install", (event) => {
   event.waitUntil(
     (async () => {
-      await saveShell(await fetch("/", { cache: "reload" }));
+      const res = await fetch("/", { cache: "reload" });
+      if (!res.ok) throw new Error(`shell answered ${res.status}`);
+      const html = await res.clone().text();
+      const cache = await caches.open(CACHE);
+      await cache.put("/", res);
+      await addEach(cache, filesIn(html));
       await self.skipWaiting();
     })(),
   );
@@ -49,7 +77,7 @@ self.addEventListener("fetch", (event) => {
   if (req.mode === "navigate") {
     const network = fetch("/", { cache: "no-cache" });
     event.waitUntil(
-      network.then((res) => res.ok && saveShell(res.clone())).catch(() => {}),
+      network.then((res) => res.ok && refreshShell(res.clone())).catch(() => {}),
     );
     event.respondWith(
       (async () => {

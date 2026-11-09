@@ -63,12 +63,20 @@ describe("reloadOnceForNewBuild", () => {
 });
 
 // Runs public/sw.js against a fake cache and network.
-function loadWorker(network: () => Promise<Response>) {
+function loadWorker(
+  network: () => Promise<Response>,
+  failing = new Set<string>(),
+) {
   const handlers: Record<string, (event: unknown) => void> = {};
   const stored = new Map<string, Response>();
   const cache = {
     put: async (k: string, r: Response) => void stored.set(k, r),
-    addAll: async () => {},
+    // Like Cache.add: rejects when the file does not answer 200.
+    add: async (req: { url: string }) => {
+      if (failing.has(req.url)) throw new TypeError(`404 ${req.url}`);
+      stored.set(req.url, new Response("file"));
+    },
+    match: async (k: string) => stored.get(k)?.clone(),
   };
   const caches = {
     open: async () => cache,
@@ -80,15 +88,28 @@ function loadWorker(network: () => Promise<Response>) {
     addEventListener: (type: string, fn: (event: unknown) => void) =>
       (handlers[type] = fn),
   };
-  new Function("self", "caches", "fetch", "location", swSource)(
-    self,
+  // The worker resolves "/assets/x.js" against its own origin; this stand-in keeps the path.
+  class FakeRequest {
+    url: string;
+    constructor(url: string) {
+      this.url = url;
+    }
+  }
+  new Function("self", "caches", "fetch", "location", "Request", swSource)(
+    { ...self, skipWaiting: async () => {} },
     caches,
     network,
     new URL("https://grace.test"),
+    FakeRequest,
   );
 
   return {
     stored,
+    install() {
+      const waits: Promise<unknown>[] = [];
+      handlers.install({ waitUntil: (p: Promise<unknown>) => waits.push(p) });
+      return Promise.all(waits);
+    },
     navigate() {
       let page: Promise<Response> | undefined;
       const waits: Promise<unknown>[] = [];
@@ -134,5 +155,41 @@ describe("service worker page loads", () => {
     const { page } = sw.navigate();
     await vi.advanceTimersByTimeAsync(3000);
     expect(await (await page).text()).toContain("index-old.js");
+  });
+});
+
+const shell = (...files: string[]) =>
+  new Response(files.map((f) => `<script src="${f}"></script>`).join(""));
+
+describe("service worker install", () => {
+  it("still installs when one built file 404s, keeping the page and the other files", async () => {
+    const sw = loadWorker(
+      async () => shell("/assets/index-new.js", "/assets/index-new.css"),
+      new Set(["/assets/index-new.css"]),
+    );
+    await sw.install();
+    expect(await sw.stored.get("/")!.clone().text()).toContain("index-new.js");
+    expect(sw.stored.has("/assets/index-new.js")).toBe(true);
+    expect(sw.stored.has("/assets/index-new.css")).toBe(false);
+  });
+
+  it("fails the install only when the page itself does not answer", async () => {
+    const sw = loadWorker(async () => new Response("down", { status: 502 }));
+    await expect(sw.install()).rejects.toThrow();
+  });
+
+  it("keeps the old cached page until every file of the new one is cached", async () => {
+    const failing = new Set(["/assets/index-new.js"]);
+    const sw = loadWorker(async () => shell("/assets/index-new.js"), failing);
+    sw.stored.set("/", html("old"));
+    const first = sw.navigate();
+    await first.page;
+    await first.settled();
+    expect(await sw.stored.get("/")!.clone().text()).toContain("index-old.js");
+    failing.clear();
+    const second = sw.navigate();
+    await second.page;
+    await second.settled();
+    expect(await sw.stored.get("/")!.clone().text()).toContain("index-new.js");
   });
 });
