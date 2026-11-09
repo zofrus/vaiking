@@ -6,8 +6,10 @@ const {
 const sdk = new NodeSDK({
   instrumentations: getNodeAutoInstrumentations({
     "@opentelemetry/instrumentation-http": {
+      // No server span for the break beacon or the similar-talk lookup that
+      // follows a press, so traces can't reveal that someone took a break.
       ignoreIncomingRequestHook: (req) =>
-        (req.url ?? "").startsWith("/api/grace"),
+        ["/api/grace", "/api/similar"].some((p) => (req.url ?? "").startsWith(p)),
     },
   }),
 });
