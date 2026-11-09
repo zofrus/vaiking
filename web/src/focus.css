@@ -82,3 +82,11 @@
   outline-offset: 4px;
   box-shadow: 0 0 0 9px #fff;
 }
+
+/* The staff card is already as large and plain as it can be. Focus mode must not
+   push its words past the screen, which would make the card scroll. */
+[data-focus="on"] [aria-modal="true"] {
+  font-size: calc(100% / 1.12);
+  line-height: 1.1;
+  letter-spacing: normal;
+}
