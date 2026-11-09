@@ -16,6 +16,7 @@ import { formatTime, reconcile, type Notice, type PlanItem } from "./lib/reconci
 import { closestReachable } from "./lib/reach";
 import { placeLabel } from "./lib/place";
 import { Sticker } from "./Sticker";
+import { ShareQR } from "./ShareQR";
 import { ChangesChecked } from "./ChangesChecked";
 import { nextRoom } from "./lib/nextRoom";
 import { BreakBar } from "./BreakBar";
@@ -149,7 +150,7 @@ function Footer({ showReplay }: { showReplay: boolean }) {
       <a className="self-start font-medium underline" href="/board">
         Organizer board
       </a>
-      {/* mount: ShareQR */}
+      <div className="mt-2"><ShareQR /></div>{/* mount: ShareQR */}
     </footer>
   );
 }

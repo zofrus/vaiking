@@ -14,6 +14,8 @@ const pages = [
   { name: "sample plan, home (calendar button)", url: sample },
   { name: "staff card, with next talk line", url: sample + "#/card" },
   { name: "board", url: "/board" },
+  { name: "share dialog open", url: "/", shareQr: true },
+  { name: "demo page", url: "/demo" },
   { name: "first visit, invite shown", url: "/", firstVisit: true },
   { name: "tour open (after Take the tour)", url: "/", firstVisit: true, openTour: true },
   // Focus mode on: saved choice read at startup, as after a reload.
@@ -38,6 +40,7 @@ for (const p of pages) {
     console.log(`  ${p.name}: data-focus was not set at startup`);
     failed++;
   }
+  if (p.shareQr) await page.getByRole("button", { name: "Share this app" }).click();
   if (p.openTour) await page.getByRole("button", { name: "Take the 5-step tour" }).click();
   if (p.press) await page.locator("#break-main").click();
   if (p.press) await page.locator(".more-support > summary").click(); // the extras sit behind one disclosure
