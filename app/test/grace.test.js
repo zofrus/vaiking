@@ -142,3 +142,26 @@ test("rejected requests do not drain the global cap", async () => {
   }
   assert.equal((await post(app, "10.3.0.1")).statusCode, 429);
 });
+
+const proxied = (app, egress) =>
+  app.inject({
+    method: "POST",
+    url: "/api/grace",
+    headers: {
+      "x-forwarded-for": `198.51.100.7, ${egress}`,
+      "x-forwarded-host": "grace.effulgentpoint.com",
+    },
+    payload: { mode: "live" },
+  });
+
+test("POST /api/grace: grace.effulgentpoint.com visitors share proxy:grace at 20x the cap", async () => {
+  const app = appWith();
+  // 30 x 20 = 600 presses a minute through the proxy, whichever Vercel address they come from.
+  for (let i = 0; i < 600; i++) {
+    assert.equal((await proxied(app, `76.76.21.${i % 50}`)).statusCode, 204);
+  }
+  assert.equal((await proxied(app, "76.76.21.200")).statusCode, 429);
+  // A direct visitor still has a bucket of its own, at the normal 30.
+  for (let i = 0; i < 30; i++) assert.equal((await post(app, "10.4.4.4")).statusCode, 204);
+  assert.equal((await post(app, "10.4.4.4")).statusCode, 429);
+});

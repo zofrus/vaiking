@@ -3,7 +3,7 @@ const assert = require("node:assert/strict");
 const path = require("node:path");
 const os = require("node:os");
 const { build } = require("../server");
-const { clientKey, createLimiter } = require("../lib/guard");
+const { clientKey, clientBucket, createLimiter } = require("../lib/guard");
 const { normalize, safeHttpUrl } = require("../lib/feed");
 
 const NO_PUBLIC = path.join(os.tmpdir(), "vaiking-no-public-dir");
@@ -104,7 +104,7 @@ test("changes: cached for the same since, limited per client", async () => {
   assert.equal((await app.inject("/api/changes?since=2026-11-10T21:00:00Z")).statusCode, 429);
 });
 
-test("search, changes and similar share the total rate-limit backstop", async () => {
+test("search and similar share the total rate-limit backstop; changes do not use it", async () => {
   let searchCalls = 0;
   let talkLookups = 0;
   const client = {
@@ -118,11 +118,12 @@ test("search, changes and similar share the total rate-limit backstop", async ()
 
   assert.equal((await app.inject("/api/search?q=mesh")).statusCode, 200);
   assert.equal((await app.inject("/api/changes")).statusCode, 200);
+  assert.equal((await app.inject("/api/search?q=grpc")).statusCode, 200);
   const similar = await app.inject(
     "/api/similar?talk_id=1&after=2026-11-10T21:00:00Z",
   );
   assert.equal(similar.statusCode, 429);
-  assert.equal(searchCalls, 2);
+  assert.equal(searchCalls, 3);
   assert.equal(talkLookups, 0);
 });
 
@@ -184,4 +185,81 @@ test("normalize drops a javascript: slides link and keeps a good one", () => {
   assert.match(normalize(feed("https://example.com/d")).docs[0].url, /^https:\/\//);
   // Decoded entities stay plain text here; the search route escapes them for the page.
   assert.equal(normalize(feed(null)).docs[0].abstract, "<img src=x onerror=alert(1)>");
+});
+
+const PROXIED = (xff) => ({ "x-forwarded-for": xff, "x-forwarded-host": "grace.effulgentpoint.com" });
+
+test("grace proxy: requests naming grace.effulgentpoint.com share one bucket with a larger cap", () => {
+  const req = (headers) => ({ headers, ip: "10.0.0.1" });
+  const shared = { key: "proxy:grace", scale: 20 };
+  assert.deepEqual(clientBucket(req(PROXIED("6.6.6.6, 76.76.21.9"))), shared);
+  assert.deepEqual(clientBucket(req({ "x-vercel-forwarded-host": "Grace.EffulgentPoint.com", "x-forwarded-for": "76.76.21.10" })), shared);
+  assert.deepEqual(clientBucket(req({ "x-forwarded-host": "grace.effulgentpoint.com, vaiking.cnh.radarhq.io" })), shared);
+  // Direct requests are keyed exactly as before.
+  assert.deepEqual(clientBucket(req({ "x-forwarded-for": "6.6.6.6, 203.0.113.5" })), { key: "203.0.113.5", scale: 1 });
+  assert.deepEqual(clientBucket(req({ "x-forwarded-host": "vaiking.cnh.radarhq.io", "x-forwarded-for": "203.0.113.5" })), { key: "203.0.113.5", scale: 1 });
+  assert.deepEqual(clientBucket(req({})), { key: "10.0.0.1", scale: 1 });
+  // Host and multiplier come from env.
+  const env = { GRACE_PROXY_HOST: "grace.example.test", GRACE_PROXY_MULTIPLIER: "5" };
+  assert.deepEqual(clientBucket(req({ "x-forwarded-host": "grace.example.test" }), env), { key: "proxy:grace", scale: 5 });
+  assert.deepEqual(clientBucket(req({ "x-forwarded-host": "grace.effulgentpoint.com", "x-forwarded-for": "203.0.113.5" }), env), { key: "203.0.113.5", scale: 1 });
+});
+
+test("limiter scale raises only that bucket's cap, never the total", () => {
+  const limited = createLimiter({ perClient: 2, total: 100, now: () => 0 });
+  for (let i = 0; i < 6; i++) assert.equal(limited("proxy:grace", 3), false);
+  assert.equal(limited("proxy:grace", 3), true);
+  assert.equal(limited("a"), false);
+  assert.equal(limited("a"), false);
+  assert.equal(limited("a"), true);
+  const tight = createLimiter({ perClient: 10, total: 2, now: () => 0 });
+  assert.equal(tight("proxy:grace", 20), false);
+  assert.equal(tight("proxy:grace", 20), false);
+  assert.equal(tight("proxy:grace", 20), true, "the total cap still holds");
+});
+
+test("search: grace proxy visitors share proxy:grace with the larger cap, direct clients unchanged", async () => {
+  let calls = 0;
+  const app = appWith({ search: async () => (calls++, HITS) }, { RATE_LIMIT_PER_MIN: "2", GRACE_PROXY_MULTIPLIER: "3" });
+  const codes = [];
+  // A different Vercel address each time, still one shared bucket of 2 x 3 = 6.
+  for (let i = 0; i < 7; i++) {
+    codes.push((await app.inject({ url: `/api/search?q=p${i}`, headers: PROXIED(`198.51.100.${i}, 76.76.21.${i}`) })).statusCode);
+  }
+  assert.deepEqual(codes, [200, 200, 200, 200, 200, 200, 429]);
+  const direct = [];
+  for (let i = 0; i < 3; i++) {
+    direct.push((await app.inject({ url: `/api/search?q=d${i}`, headers: { "x-forwarded-for": "203.0.113.5" } })).statusCode);
+  }
+  assert.deepEqual(direct, [200, 200, 429]);
+  assert.equal(calls, 8);
+});
+
+test("a room of phones polling changes cannot use up the total that search needs", async () => {
+  let searches = 0;
+  const client = { search: async (body) => (body.index === "changes" || searches++, { took: 1, hits: { hits: [] } }) };
+  const app = appWith(client, { RATE_LIMIT_PER_MIN: "100", RATE_LIMIT_TOTAL_PER_MIN: "3" });
+  // Each phone polls with its own since=, so every poll misses the cache.
+  for (let i = 0; i < 3; i++) {
+    const poll = await app.inject({ url: `/api/changes?since=2026-11-10T21:00:0${i}Z`, headers: { "x-forwarded-for": `203.0.113.${i}` } });
+    assert.equal(poll.statusCode, 200);
+  }
+  // Search still has its whole total of 3.
+  const codes = [];
+  for (let i = 0; i < 4; i++) codes.push((await app.inject(`/api/search?q=talk${i}`)).statusCode);
+  assert.deepEqual(codes, [200, 200, 200, 429]);
+  assert.equal(searches, 3);
+});
+
+test("search is limited at the new default total of 3000 a minute", async () => {
+  let calls = 0;
+  const app = appWith({ search: async () => (calls++, HITS) });
+  // 30 clients x 100 new queries: each under its per-client cap of 120, 3000 in all.
+  for (let i = 0; i < 3000; i++) {
+    const r = await app.inject({ url: `/api/search?q=t${i}`, headers: { "x-forwarded-for": `203.0.113.${i % 30}` } });
+    assert.equal(r.statusCode, 200);
+  }
+  const over = await app.inject({ url: "/api/search?q=one-more", headers: { "x-forwarded-for": "198.51.100.1" } });
+  assert.equal(over.statusCode, 429, "a fresh client is refused once the total is spent");
+  assert.equal(calls, 3000);
 });

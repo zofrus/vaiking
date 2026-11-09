@@ -3,7 +3,7 @@ const {
   parseWhen, parseLimit, seedText, buildSimilarRequest, describeQuery, createCache,
 } = require("../lib/search-similar");
 
-const { clientKey, createLimiter } = require("../lib/guard");
+const { clientBucket, createLimiter } = require("../lib/guard");
 
 const BUDGET_MS = 800;
 const OPTIONS = { maxRetries: 0, openTelemetry: { enabled: false } };
@@ -24,7 +24,7 @@ function floorToMinute(iso) {
 
 module.exports = async function similar(app, { elastic, env = process.env, totalLimiter }) {
   const perClient = Number.parseInt(env.RATE_LIMIT_PER_MIN, 10) || 120;
-  const total = Number.parseInt(env.RATE_LIMIT_TOTAL_PER_MIN, 10) || 600;
+  const total = Number.parseInt(env.RATE_LIMIT_TOTAL_PER_MIN, 10) || 3000;
   const limited = createLimiter({ perClient, total, totalLimiter });
   const seeds = createCache(500, 10 * 60_000);
   const answers = createCache(500, 60_000);
@@ -47,7 +47,8 @@ module.exports = async function similar(app, { elastic, env = process.env, total
     const cached = answers.get(key);
     if (cached) return cached;
     // Only requests that would reach Elasticsearch are counted.
-    if (limited(clientKey(request))) {
+    const bucket = clientBucket(request, env);
+    if (limited(bucket.key, bucket.scale)) {
       return reply.code(429).header("retry-after", "60").send({
         error: "too many requests, try again in a minute",
       });
