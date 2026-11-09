@@ -96,7 +96,7 @@ function createLimiter({ perClient, total, windowMs = WINDOW_MS, now = Date.now,
 function createGuard({ env = process.env, ttlMs, max = 500, now = Date.now, totalLimiter }) {
   const limited = createLimiter({
     perClient: envInt(env.RATE_LIMIT_PER_MIN, 120),
-    total: envInt(env.RATE_LIMIT_TOTAL_PER_MIN, 600),
+    total: envInt(env.RATE_LIMIT_TOTAL_PER_MIN, 3000),
     now,
     totalLimiter,
   });

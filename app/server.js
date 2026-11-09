@@ -86,8 +86,9 @@ function runDeepChecks({ elastic, env, fetchImpl }) {
 
 function build(opts = {}) {
   const env = opts.env ?? process.env;
+  // Shared by /api/search and /api/similar (not /api/changes: see routes/changes.js).
   const totalLimiter = createTotalLimiter({
-    total: envInt(env.RATE_LIMIT_TOTAL_PER_MIN, 600),
+    total: envInt(env.RATE_LIMIT_TOTAL_PER_MIN, 3000),
   });
   const elastic = opts.elastic ?? createElastic(env);
   const fetchImpl = opts.fetch ?? globalThis.fetch;

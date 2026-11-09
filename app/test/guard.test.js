@@ -104,7 +104,7 @@ test("changes: cached for the same since, limited per client", async () => {
   assert.equal((await app.inject("/api/changes?since=2026-11-10T21:00:00Z")).statusCode, 429);
 });
 
-test("search, changes and similar share the total rate-limit backstop", async () => {
+test("search and similar share the total rate-limit backstop; changes do not use it", async () => {
   let searchCalls = 0;
   let talkLookups = 0;
   const client = {
@@ -118,11 +118,12 @@ test("search, changes and similar share the total rate-limit backstop", async ()
 
   assert.equal((await app.inject("/api/search?q=mesh")).statusCode, 200);
   assert.equal((await app.inject("/api/changes")).statusCode, 200);
+  assert.equal((await app.inject("/api/search?q=grpc")).statusCode, 200);
   const similar = await app.inject(
     "/api/similar?talk_id=1&after=2026-11-10T21:00:00Z",
   );
   assert.equal(similar.statusCode, 429);
-  assert.equal(searchCalls, 2);
+  assert.equal(searchCalls, 3);
   assert.equal(talkLookups, 0);
 });
 
@@ -232,4 +233,31 @@ test("search: grace proxy visitors share proxy:grace with the larger cap, direct
   }
   assert.deepEqual(direct, [200, 200, 429]);
   assert.equal(calls, 8);
+});
+
+test("a room of phones polling changes cannot use up the total that search needs", async () => {
+  let searches = 0;
+  const client = { search: async (body) => (body.index === "changes" || searches++, { took: 1, hits: { hits: [] } }) };
+  const app = appWith(client, { RATE_LIMIT_PER_MIN: "100", RATE_LIMIT_TOTAL_PER_MIN: "3" });
+  // Each phone polls with its own since=, so every poll misses the cache.
+  for (let i = 0; i < 3; i++) {
+    const poll = await app.inject({ url: `/api/changes?since=2026-11-10T21:00:0${i}Z`, headers: { "x-forwarded-for": `203.0.113.${i}` } });
+    assert.equal(poll.statusCode, 200);
+  }
+  // Search still has its whole total of 3.
+  const codes = [];
+  for (let i = 0; i < 4; i++) codes.push((await app.inject(`/api/search?q=talk${i}`)).statusCode);
+  assert.deepEqual(codes, [200, 200, 200, 429]);
+  assert.equal(searches, 3);
+});
+
+test("the total limit defaults to 3000 a minute", async () => {
+  let calls = 0;
+  const app = appWith({ search: async () => (calls++, HITS) });
+  // Far more than the old 600, from enough clients to stay under each per-client cap.
+  for (let i = 0; i < 700; i++) {
+    const r = await app.inject({ url: `/api/search?q=t${i}`, headers: { "x-forwarded-for": `203.0.${Math.floor(i / 100)}.${i % 100}` } });
+    assert.equal(r.statusCode, 200);
+  }
+  assert.equal(calls, 700);
 });
