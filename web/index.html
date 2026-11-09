@@ -2,6 +2,33 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <!-- Rollout guard. While old and new pods both serve, this page can name a built file
+         (/assets/...) that the other pod does not have, and the app never starts. Reload
+         after 1.5 s, at most twice in 2 minutes per tab, so it can never loop. Plain ES5
+         and inline on purpose: it has to work when the app's own script fails to load. -->
+    <script>
+      (function () {
+        var KEY = "grace-asset-reloads-v1", WINDOW_MS = 120000, MAX = 2, scheduled = false;
+        window.addEventListener("error", function (e) {
+          var el = e.target, tag = el && el.tagName, url = tag === "SCRIPT" ? el.src : tag === "LINK" ? el.href : "";
+          if (scheduled || typeof url !== "string" || url.indexOf("/assets/") === -1) return;
+          try {
+            var now = Date.now(), recent = [], seen = JSON.parse(sessionStorage.getItem(KEY) || "[]");
+            if (!Array.isArray(seen)) seen = [];
+            for (var i = 0; i < seen.length; i++) {
+              if (typeof seen[i] === "number" && seen[i] <= now && now - seen[i] < WINDOW_MS) recent.push(seen[i]);
+            }
+            if (recent.length >= MAX) return;
+            recent.push(now);
+            sessionStorage.setItem(KEY, JSON.stringify(recent));
+          } catch (err) {
+            return; // no storage means no guard against a loop: do not reload
+          }
+          scheduled = true;
+          setTimeout(function () { location.reload(); }, 1500);
+        }, true);
+      })();
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>Grace Period</title>
     <meta name="description" content="The button for when you need to leave a talk. A quiet room, a card for staff and your day plan, one tap away." />
