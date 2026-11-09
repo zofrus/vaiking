@@ -19,17 +19,40 @@ Semantic search through Elasticsearch's embeddings is the only AI in the product
 
 ## Run it yourself
 
-You need Node 22. Elasticsearch and Dash0 are optional: without them the app still starts, and the routes that need them answer 503.
+You need Node 22 or newer. Elasticsearch and Dash0 are optional: without them the app still starts, and the routes that need them answer 503.
+
+Run the API and the UI in two terminals, each starting from the repo root:
 
 ```bash
-cd app && npm ci && npm test && npm start   # API on http://localhost:8080
-cd web && npm ci && npm run dev             # UI, in a second terminal
+# Terminal 1: the API on http://localhost:8080. It serves /healthz, /readyz and /api/*, not the UI.
+cd app && npm ci && npm test && npm start
 ```
 
-To run the complete image, as production does:
+```bash
+# Terminal 2: the UI. Open http://localhost:5173. It sends /api calls to localhost:8080.
+cd web && npm ci && npm run dev
+```
+
+To check the code the way CI does, from the repo root:
 
 ```bash
-docker build -t grace-period . && docker run -p 8080:8080 grace-period
+(cd app && npm ci && npm run lint && npm test)
+(cd web && npm ci && npm run lint && npm test && npm run build)
+```
+
+To run the complete image, as production does (this is also how to see the UI on port 8080):
+
+```bash
+docker build -t grace-period .
+docker run --rm -p 8080:8080 grace-period
+```
+
+Then, in another terminal:
+
+```bash
+curl localhost:8080/healthz                                   # ok
+curl localhost:8080/readyz                                    # ok
+curl -s -o /dev/null -w '%{http_code}\n' localhost:8080/      # 200, the web app
 ```
 
 Connecting Elasticsearch needs two environment variables, which also let you load the data:
@@ -42,7 +65,7 @@ node scripts/ingest-facilities.mjs
 cd app && node reconciler.js         # optional: the schedule loop
 ```
 
-To deploy on a cluster, create Secret `app-credentials` in the app's namespace with the keys `elasticsearch-url`, `elasticsearch-api-key`, `otlp-endpoint`, `dash0-auth-token`, `rum-endpoint`, `rum-token` and `dataset`, then apply `argocd/application.yaml`. Every key is optional, so pods start without it.
+To deploy on a cluster, create Secret `app-credentials` in the app's namespace with the keys `elasticsearch-url`, `elasticsearch-api-key`, `otlp-endpoint`, `dash0-auth-token`, `rum-endpoint`, `rum-token`, `dataset`, `dash0-read-token` and `dash0-api-url`, then apply `argocd/application.yaml`. Every key is optional, so pods start without it.
 
 ## How Gitar was used to build this
 
