@@ -1,0 +1,13 @@
+[
+  {"id":"quiet-260a","kind":"quiet_room","name":"Quiet room 260A","audience":"all","venue":"Salt Palace","floor":2,"notes":"Open to all attendees.","hours":null},
+  {"id":"quiet-260b","kind":"quiet_room","name":"Quiet room 260B","audience":"women_nonbinary","venue":"Salt Palace","floor":2,"notes":"For women and non-binary attendees only.","hours":null},
+  {"id":"prayer-zion","kind":"prayer_room","name":"Prayer room: Zion","audience":"all","venue":"Hyatt Regency","floor":5,"notes":null,"hours":null},
+  {"id":"restroom-sp1","kind":"all_gender_restroom","name":"All-gender restroom: Solutions Showcase, Halls A-C, Halls 1-5, Amber Hive Zone","audience":"all","venue":"Salt Palace","floor":1,"notes":null,"hours":null},
+  {"id":"restroom-sp2","kind":"all_gender_restroom","name":"All-gender restroom: outside 255","audience":"all","venue":"Salt Palace","floor":2,"notes":null,"hours":null},
+  {"id":"restroom-hy1","kind":"all_gender_restroom","name":"All-gender restroom: hotel lobby by the entrance doors to Salt Palace","audience":"all","venue":"Hyatt Regency","floor":1,"notes":null,"hours":null},
+  {"id":"restroom-hy2","kind":"all_gender_restroom","name":"All-gender restroom: by Juniper","audience":"all","venue":"Hyatt Regency","floor":2,"notes":null,"hours":null},
+  {"id":"restroom-hy3","kind":"all_gender_restroom","name":"All-gender restroom: by Powder Mountain","audience":"all","venue":"Hyatt Regency","floor":3,"notes":null,"hours":null},
+  {"id":"restroom-hy4","kind":"all_gender_restroom","name":"All-gender restroom: by Broadcast Lounge","audience":"all","venue":"Hyatt Regency","floor":4,"notes":null,"hours":null},
+  {"id":"firstaid-150","kind":"first_aid","name":"First aid: by Room 150","audience":"all","venue":"Salt Palace","floor":1,"notes":null,"hours":null},
+  {"id":"firstaid-halls23","kind":"first_aid","name":"First aid: outside Halls 2 + 3","audience":"all","venue":"Salt Palace","floor":1,"notes":null,"hours":null}
+]
