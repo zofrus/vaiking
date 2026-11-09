@@ -25,7 +25,7 @@ test("records a fast /api/talks answer and ignores other routes, including /api/
   assert.ok(recorded[0] < 1000);
 });
 
-test("records the search and changes requests the plan screen makes", async () => {
+test("records search but excludes the background changes poll", async () => {
   const recorded = [];
   const app = Fastify();
   await app.register(planTiming, {
@@ -36,8 +36,8 @@ test("records the search and changes requests the plan screen makes", async () =
   await app.inject({ url: "/api/search?q=kubernetes" });
   await app.inject({ url: "/api/changes?since=2026-11-09T00:00:00Z" });
   await app.close();
-  assert.equal(recorded.length, 2);
-  assert.ok(recorded.every((ms) => ms < 1000));
+  assert.equal(recorded.length, 1);
+  assert.ok(recorded[0] < 1000);
 });
 
 test("a 5xx counts as slow", async () => {
