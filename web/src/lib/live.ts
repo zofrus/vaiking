@@ -3,6 +3,7 @@ import type { Change, PlanItem } from "./reconcile";
 import { reachWindow, type Talk } from "./reach";
 import { now, isDrill, samplePlan } from "./clock";
 import { reportRequestFailure } from "../telemetry";
+import { markChecked } from "./checked";
 
 // Demo drill: the KServe talk (a must-see) shifts to 5:15 PM, inside the buffer after the Lima talk.
 // A reschedule, because the fit check compares times only. Labelled Drill in the notice text.
@@ -26,6 +27,7 @@ export function useChanges(): Change[] {
         if (!res.ok) throw new Error(`Changes request failed with status ${res.status}`);
         const body = (await res.json()) as { now: string; changes: Change[] };
         since = body.now;
+        markChecked(body.now); // for the "last checked" line; the return value is unchanged
         if (body.changes.length) {
           setChanges((old) => [...old, ...body.changes.filter((c) => !old.some((o) => o.id === c.id))]);
         }
