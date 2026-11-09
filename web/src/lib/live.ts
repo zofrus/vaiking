@@ -33,28 +33,26 @@ export function useChanges(): Change[] {
 
 // One similar talk, fetched after the calm screen is already showing.
 // 800 ms budget, no spinner: if it is late, nothing appears.
-export function useSimilar(talk: PlanItem | undefined): string | null {
-  const [line, setLine] = useState<{ id: string; title: string } | null>(null);
+// Returns up to three candidates; the caller shows the first that fits the plan.
+export function useSimilar(talk: PlanItem | undefined): Talk[] {
+  const [found, setFound] = useState<{ id: string; talks: Talk[] } | null>(null);
   const id = talk?.id;
   const after = talk?.ends_at;
   useEffect(() => {
     if (!id || !after || !navigator.onLine) return;
     const day = new Date(after);
     const before = new Date(day.getTime() + 8 * 3_600_000).toISOString();
-    fetch(`/api/similar?talk_id=${encodeURIComponent(id)}&after=${encodeURIComponent(after)}&before=${encodeURIComponent(before)}&limit=1`, {
+    fetch(`/api/similar?talk_id=${encodeURIComponent(id)}&after=${encodeURIComponent(after)}&before=${encodeURIComponent(before)}&limit=3`, {
       signal: AbortSignal.timeout(800),
     })
       .then((r) => (r.ok ? r.json() : null))
-      .then((b: { results?: { title: string }[] } | null) => {
-        const first = b?.results?.[0];
-        setLine(first ? { id, title: first.title } : null);
-      })
+      .then((b: { results?: Talk[] } | null) => setFound({ id, talks: b?.results ?? [] }))
       .catch(() => {
         // Not reported on purpose: this request follows a button press, so a
         // failure report would reveal the press. Offline or slow just means no line.
       });
   }, [id, after]);
-  return line && line.id === id ? line.title : null;
+  return found && found.id === id ? found.talks : [];
 }
 
 // For each notice that says a talk no longer fits, ask once for similar talks

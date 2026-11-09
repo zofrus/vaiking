@@ -227,7 +227,13 @@ export default function App() {
     r.clearUntil && Date.parse(r.clearUntil) > now().getTime()
       ? `You're clear until ${formatTime(r.clearUntil)} MST.`
       : "You're clear for the rest of your plan.";
-  const similar = useSimilar(grace ? result.dropped[0] : undefined);
+  // A similar talk is only worth naming if the person could go: it starts after
+  // their own buffer and clashes with nothing in their plan (same rule as notices).
+  const similarTalks = useSimilar(grace ? result.dropped[0] : undefined);
+  const similar =
+    grace && result.dropped[0]
+      ? closestReachable(similarTalks, [...result.kept, ...result.dropped], result.dropped[0].id, now(), buffer)
+      : null;
   const alternatives = useAlternatives(result.notices.filter((n) => !n.fits), buffer);
   // A notice that no longer fits names the first similar talk the person still
   // has time for, once /api/similar has answered. Until then it says only what changed.
@@ -365,7 +371,11 @@ export default function App() {
                     </h3>
                     {grace && <p>Nothing is cancelled. Your plan is saved.</p>}
                     {notices}
-                    {similar && <p className="text-ink-soft">Similar talk later today: {similar}.</p>}
+                    {similar && (
+                      <p className="text-ink-soft">
+                        Similar talk later today: {similar.title}, {formatTime(similar.starts_at)} MST, {placeLabel(similar.room)}.
+                      </p>
+                    )}
                     {result.dropped.length > 0 && (
                       <>
                         <p id="aside-h" className="font-semibold">Set aside for now</p>
