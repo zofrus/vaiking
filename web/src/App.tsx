@@ -94,8 +94,6 @@ function Calm({
         </p>
       </div>
 
-      {planResult}
-
       <div className="panel">
         <h3 className="text-2xl font-semibold">{quietRoom.name}</h3>
         <p className="mt-1 text-lg">
@@ -138,6 +136,8 @@ function Calm({
           Estimated. Confirm routes with event staff.
         </p>
       </div>
+
+      {planResult}
 
       <button type="button" onClick={onBack} className="quiet-button">
         Back to the start
@@ -243,7 +243,6 @@ export default function App() {
     };
   };
   const lines = result.notices.map((n) => ({ id: n.changeId, ...noticeLine(n) }));
-  const noticeText = lines.map((l) => l.text).join(" ");
   const notices = lines.length > 0 && (
     <>
       {lines.map((l) => (
@@ -295,9 +294,12 @@ export default function App() {
       <p role="status" aria-live="polite" className="sr-only">
         {view === "home" ? "" : announce}
       </p>
-      <p aria-live="polite" className="sr-only">
-        {noticeText}
-      </p>
+      {/* One node per notice, so additions and text changes are announced independently. */}
+      <div role="status" aria-live="polite" aria-atomic="false" aria-relevant="additions text" className="sr-only">
+        {lines.map((l) => (
+          <p key={l.id}>{l.text}</p>
+        ))}
+      </div>
       {/* Everything but the live region goes quiet while the staff card is up,
           so Tab and the screen reader stay on the card. */}
       <div aria-hidden={showCard || undefined} inert={showCard || undefined}>
