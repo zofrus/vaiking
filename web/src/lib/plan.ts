@@ -37,3 +37,22 @@ export function saveBuffer(minutes: number): void {
     // Same as above: fall back to memory only.
   }
 }
+
+// Display preference only. Stored even in preview, since it holds no plan data.
+const KUBECTL_KEY = "grace-kubectl-v1";
+
+export function loadKubectl(): boolean {
+  try {
+    return localStorage.getItem(KUBECTL_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+export function saveKubectl(on: boolean): void {
+  try {
+    localStorage.setItem(KUBECTL_KEY, on ? "1" : "0");
+  } catch {
+    // Falls back to off on the next visit.
+  }
+}
