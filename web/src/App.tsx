@@ -15,6 +15,9 @@ import { closestReachable } from "./lib/reach";
 import { placeLabel } from "./lib/place";
 import { Sticker } from "./Sticker";
 import { VenueHelp } from "./VenueHelp";
+import { SoundPanel } from "./SoundPanel";
+import { Breathe } from "./Breathe";
+import { ReadAloud } from "./ReadAloud";
 
 type View = "home" | "calm" | "card";
 
@@ -107,6 +110,7 @@ function Calm({
         <p className="mt-1 text-ink-soft">
           Estimated. Confirm routes with event staff.
         </p>
+        {/* mount: ReadAloud */}<div className="mt-4"><ReadAloud text={`${quietRoom.name}, ${quietRoom.venue}, Level ${quietRoom.level}.`} /></div>
         <button
           ref={staffBtn}
           type="button"
@@ -143,6 +147,8 @@ function Calm({
 
       {/* mount: Sticker */}<Sticker />
       {/* mount: VenueHelp */}<VenueHelp />
+      {/* mount: Breathe */}<Breathe />
+      {/* mount: SoundPanel */}<SoundPanel />
 
       {planResult}
 
@@ -195,6 +201,7 @@ function StaffCard({ onClose }: { onClose: () => void }) {
         </div>
       </div>
       <div className="border-t-2 border-black px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+        {/* mount: ReadAloud */}<div className="mb-3 text-black"><ReadAloud text={`Please point me to ${quietRoom.name}, Level ${quietRoom.level}. I may not be able to talk right now. ${quietRoom.venue}.`} /></div>
         <button type="button" onClick={onClose} className="close-button">
           Close card
         </button>
