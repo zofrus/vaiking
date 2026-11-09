@@ -349,7 +349,8 @@
   margin: 0;
   display: flex;
   align-items: flex-end;
-  min-height: 1em;
+  /* Fixed line box: the size changes with length, the tile height does not. */
+  min-height: 3rem;
   /* A mono digit is about 0.6em wide: --gp-len characters fill the tile at
      100cqw / (len * 0.64). The cap grows with the screen's height, so a
      projector gets big numbers and a laptop still fits without scrolling.
