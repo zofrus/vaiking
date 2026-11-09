@@ -65,9 +65,7 @@ function StatTile({
 }) {
   const total = rows.reduce((sum, r) => sum + r.count, 0);
   return (
-    <div
-      className={"gp-box gp-stat" + (secondary ? " gp-stat-secondary" : "")}
-    >
+    <div className={"gp-box gp-stat" + (secondary ? " gp-stat-secondary" : "")}>
       {rows.length > 0 ? (
         <p className="gp-stat-num gp-digits">{total.toLocaleString("en-US")}</p>
       ) : (
@@ -162,14 +160,32 @@ export default function BoardPage() {
           For event staff: how many breaks were taken in the last hour, by
           floor. Counts only, nobody's identity.
         </p>
-        <p role="status" aria-live="polite" className="gp-load-status gp-muted">
-          {load.state === "loading" && "Loading counts."}
-          {load.state === "error" && "Counts are unavailable right now."}
-          {load.state === "ready" &&
-            (load.stale || load.board.stale) &&
-            "Couldn't refresh; these counts may be out of date. "}
-          {load.state === "ready" && load.board.sample_note}
-        </p>
+        {/* The wrapper only changes class on failure, so the live region
+            inside stays mounted and the failure is still announced. Retry
+            reloads the page; the fetch itself is unchanged. */}
+        <div className={load.state === "error" ? "gp-box gp-fail" : undefined}>
+          <p
+            role="status"
+            aria-live="polite"
+            className="gp-load-status gp-muted"
+          >
+            {load.state === "loading" && "Loading counts."}
+            {load.state === "error" && "Counts are unavailable right now."}
+            {load.state === "ready" &&
+              (load.stale || load.board.stale) &&
+              "Couldn't refresh; these counts may be out of date. "}
+            {load.state === "ready" && load.board.sample_note}
+          </p>
+          {load.state === "error" && (
+            <button
+              type="button"
+              className="gp-retry"
+              onClick={() => location.reload()}
+            >
+              Retry
+            </button>
+          )}
+        </div>
         {load.state === "ready" && (
           <>
             <div className="gp-stats">

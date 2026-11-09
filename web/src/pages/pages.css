@@ -259,9 +259,67 @@
 /* ---------- Live demo ---------- */
 
 .gp-demo-app {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   height: 70vh;
+  padding: 1rem;
   border-bottom: 1px solid var(--gp-line, #e4e4e7);
-  background: var(--gp-surface, #ffffff);
+  background: var(--gp-bg, #fafafa);
+}
+/* The app in a phone frame, centred: it is a phone UI. Never taller than its
+   pane, so the projector fit holds. */
+.gp-phone {
+  width: min(390px, 100%);
+  height: min(844px, 100%);
+  border-radius: 44px;
+  overflow: hidden;
+  background: #ffffff;
+  box-shadow:
+    0 0 0 1px var(--gp-line, #e4e4e7),
+    0 30px 60px -30px rgba(9, 9, 11, 0.3);
+}
+@media (max-width: 639.98px) {
+  .gp-demo-tools .gp-header {
+    position: static;
+  }
+}
+/* A tool with nothing live: one line instead of a tile per stat. */
+.gp-unavail {
+  margin: 0;
+  padding: 0.75rem;
+  border-radius: 10px;
+  background: var(--gp-bg, #fafafa);
+  box-shadow: inset 0 0 0 1px var(--gp-line, #e4e4e7);
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+/* Board failure: one panel with the message and a way to try again. */
+.gp-fail {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+.gp-fail .gp-load-status {
+  color: var(--gp-ink, #18181b);
+  font-size: 1rem;
+  font-weight: 600;
+}
+.gp-retry {
+  font: inherit;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  min-height: 44px;
+  padding: 0 1.125rem;
+  border: 0;
+  border-radius: 10px;
+  background: var(--gp-ink, #18181b);
+  color: var(--gp-surface, #ffffff);
+  cursor: pointer;
 }
 .gp-demo-app iframe {
   display: block;

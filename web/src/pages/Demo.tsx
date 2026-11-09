@@ -238,10 +238,12 @@ export default function Demo() {
             : ""}
       </p>
       <section aria-label="The app" className="gp-demo-app">
-        <iframe
-          title="Grace Period app in preview mode, Tuesday 3:25 PM Mountain, with a sample plan"
-          src={APP_SRC}
-        />
+        <div className="gp-phone">
+          <iframe
+            title="Grace Period app in preview mode, Tuesday 3:25 PM Mountain, with a sample plan"
+            src={APP_SRC}
+          />
+        </div>
       </section>
       <div className="gp-demo-tools">
         {/* The QR sits in the header so the four columns fit a 1280x800
@@ -276,18 +278,25 @@ export default function Demo() {
                   </div>
                   <Chip state={state} />
                 </div>
-                <div className="gp-tiles">
-                  {col.stats.map((s) => (
-                    <StatBlock
-                      key={s.key}
-                      label={s.label}
-                      unit={s.unit}
-                      decimals={s.decimals}
-                      stat={src?.stats?.[s.key]}
-                      loading={loading}
-                    />
-                  ))}
-                </div>
+                {/* A tool with no live stat at all gets one line, not a wall
+                    of "Unavailable" tiles. Partly live keeps its tiles, so
+                    each missing stat is still named. */}
+                {state === "unavailable" ? (
+                  <p className="gp-unavail gp-muted">Live data unavailable</p>
+                ) : (
+                  <div className="gp-tiles">
+                    {col.stats.map((s) => (
+                      <StatBlock
+                        key={s.key}
+                        label={s.label}
+                        unit={s.unit}
+                        decimals={s.decimals}
+                        stat={src?.stats?.[s.key]}
+                        loading={loading}
+                      />
+                    ))}
+                  </div>
+                )}
                 {col.key === "gitar" && src?.latest_reviewed_pr && (
                   <div className="gp-block">
                     <p className="gp-tile-label gp-muted">
