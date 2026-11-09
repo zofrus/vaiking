@@ -1,6 +1,9 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { quietRoom, restrooms } from "./data/facilities";
 import { countPress } from "./lib/grace";
+import { PlanSection } from "./Plan";
+import { loadBuffer, loadPlan, saveBuffer, savePlan } from "./lib/plan";
+import { formatTime, reconcile, type PlanItem } from "./lib/reconcile";
 
 type View = "home" | "calm" | "card";
 
@@ -42,7 +45,9 @@ function Footer() {
 function Calm({
   onCard,
   staffBtn,
+  planResult,
 }: {
+  planResult: ReactNode;
   onCard: () => void;
   staffBtn: { current: HTMLButtonElement | null };
 }) {
@@ -68,6 +73,8 @@ function Calm({
           Nothing here needs an answer from you.
         </p>
       </div>
+
+      {planResult}
 
       <div className="panel">
         <h3 className="text-2xl font-semibold">{quietRoom.name}</h3>
@@ -159,7 +166,21 @@ export default function App() {
     prev.current = view;
   }, [view]);
 
+  const [plan, setPlanState] = useState<PlanItem[]>(loadPlan);
+  const [buffer, setBufferState] = useState(loadBuffer);
+  const [grace, setGrace] = useState(false);
+  const setPlan = (p: PlanItem[]) => {
+    setPlanState(p);
+    savePlan(p);
+  };
+  const setBuffer = (n: number) => {
+    setBufferState(n);
+    saveBuffer(n);
+  };
+  const result = reconcile(plan, [], { now: new Date(), bufferMinutes: buffer, graceActive: grace });
+
   const press = () => {
+    setGrace(true);
     countPress("live");
     setAnnounce((current) =>
       current === "Quiet room details are on screen."
@@ -200,6 +221,7 @@ export default function App() {
           <h1 className="sr-only">Grace Period</h1>
           <BreakButton onPress={press} />
           {view === "home" ? (
+            <>
             <section aria-labelledby="home-h" className="space-y-3">
               <h2 id="home-h" className="text-2xl font-semibold">
                 One tap, no setup.
@@ -210,8 +232,35 @@ export default function App() {
                 works with no account and no signal.
               </p>
             </section>
+            <PlanSection plan={plan} setPlan={setPlan} buffer={buffer} setBuffer={setBuffer} />
+            </>
           ) : (
-            <Calm onCard={() => go("card")} staffBtn={staffBtn} />
+            <Calm
+              onCard={() => go("card")}
+              staffBtn={staffBtn}
+              planResult={
+                plan.length > 0 && (
+                  <div className="panel space-y-3" aria-labelledby="clear-h" role="group">
+                    <h3 id="clear-h" className="text-2xl font-semibold">
+                      {result.clearUntil ? `You're clear until ${formatTime(result.clearUntil)} MST.` : "You're clear for the rest of your plan."}
+                    </h3>
+                    <p>Nothing is cancelled. Your plan is saved.</p>
+                    {result.dropped.length > 0 && (
+                      <>
+                        <ul className="list-disc pl-6 text-ink-soft">
+                          {result.dropped.map((d) => (
+                            <li key={d.id}>Set aside: {d.title}</li>
+                          ))}
+                        </ul>
+                        <button type="button" className="staff-button" onClick={() => setGrace(false)}>
+                          Put them back
+                        </button>
+                      </>
+                    )}
+                  </div>
+                )
+              }
+            />
           )}
         </main>
         <Footer />
