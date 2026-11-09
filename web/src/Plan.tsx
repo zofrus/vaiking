@@ -155,8 +155,8 @@ export function PlanSection({
         See a sample day with a room change
       </a>
       <form onSubmit={search} className="space-y-3">
-        <label htmlFor="q" className="gp-label">What's the one thing you came for?</label>
-        <p id="q-hint" className="gp-hint">Any topic, project or speaker works.</p>
+        <label htmlFor="q" className="gp-label">What did you come for?</label>
+        <p id="q-hint" className="gp-hint">Topic, project or speaker.</p>
         <div className="gp-searchbox">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
           <input id="q" type="search" value={q} onChange={(e) => setQ(e.target.value)} aria-describedby="q-hint" className="gp-input" autoComplete="off" />
@@ -236,7 +236,7 @@ export function PlanSection({
             ))}
           </ul>
           <label htmlFor="buffer" className="gp-label">Minutes you want between talks</label>
-          <p id="buffer-hint" className="gp-hint">Any number from 5 to 120.</p>
+          <p id="buffer-hint" className="gp-hint">5 to 120.</p>
           <input
             id="buffer"
             type="number"
@@ -250,7 +250,7 @@ export function PlanSection({
             onBlur={leaveBuffer}
             className="gp-field"
           />
-          <p className="gp-hint">Your reasons and your plan are saved only on this phone. The app sends the words you type, and talk numbers to find similar talks. When you press the button, it sends the floor of your current or next talk, if it knows one, and whether this is a preview.</p>
+          <p className="gp-hint">Your plan stays on this phone. We send only your search words and talk numbers, and on a break press, a floor number and whether this is a preview.</p>
         </div>
       )}
     </section>
