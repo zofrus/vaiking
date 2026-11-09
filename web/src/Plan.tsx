@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { formatTime, type PlanItem } from "./lib/reconcile";
+import { placeLabel } from "./lib/place";
 
 interface Talk {
   id: string;
@@ -19,7 +20,17 @@ const dayLabel = (iso: string) =>
 // Only the server's <mark> tags are kept; everything else is shown as text.
 function Highlight({ html }: { html: string }) {
   const parts = html.split(/(<mark>.*?<\/mark>)/g);
-  const decode = (t: string) => t.replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, "&");
+  // Elastic's html encoder also writes numeric codes such as &#x2F; for "/" and
+  // &#x27; for "'". The result is React text, never HTML, so decoding is safe.
+  const code = (whole: string, n: number) => (n > 0 && n <= 0x10ffff ? String.fromCodePoint(n) : whole);
+  const decode = (t: string) =>
+    t
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .replace(/&quot;/g, '"')
+      .replace(/&#x([0-9a-f]+);/gi, (whole, hex: string) => code(whole, parseInt(hex, 16)))
+      .replace(/&#(\d+);/g, (whole, dec: string) => code(whole, Number(dec)))
+      .replace(/&amp;/g, "&");
   return <>{parts.map((p, i) => (p.startsWith("<mark>") ? <mark key={i}>{decode(p.slice(6, -7))}</mark> : decode(p)))}</>;
 }
 
@@ -27,7 +38,7 @@ const toItem = (t: Talk, priority: PlanItem["priority"]): PlanItem => ({
   id: t.id, title: t.title, room: t.room, starts_at: t.starts_at, ends_at: t.ends_at, priority,
 });
 
-const when = (t: Talk) => `${formatTime(t.starts_at)} to ${formatTime(t.ends_at)} MST, room ${t.room}`;
+const when = (t: Talk) => `${formatTime(t.starts_at)} to ${formatTime(t.ends_at)} MST`;
 
 export function PlanSection({
   plan, setPlan, buffer, setBuffer,
@@ -40,7 +51,6 @@ export function PlanSection({
   const [q, setQ] = useState("");
   const [results, setResults] = useState<Talk[] | null>(null);
   const [status, setStatus] = useState("");
-  const [tookMs, setTookMs] = useState<number | null>(null);
   const [facets, setFacets] = useState<Facets | null>(null);
   const [track, setTrack] = useState("");
   const [day, setDay] = useState("");
@@ -74,7 +84,6 @@ export function PlanSection({
       if (!res.ok) throw new Error();
       const body = (await res.json()) as { results: Talk[]; took_ms?: number | null; facets?: Facets };
       setResults(body.results);
-      setTookMs(typeof body.took_ms === "number" ? body.took_ms : null);
       // Keep the unfiltered counts so the choices don't disappear once one is picked.
       if (body.facets && !nextTrack && !nextDay) setFacets(body.facets);
       setStatus(body.results.length === 0 ? "No talks found. Try a broader search." : `${body.results.length} talks found${typeof body.took_ms === "number" ? `. Found in ${body.took_ms} ms` : ""}.`);
@@ -136,13 +145,14 @@ export function PlanSection({
               <li key={t.id} className="panel space-y-3">
                 <h3 className="text-lg font-semibold">{t.title}</h3>
                 <p className="text-ink-soft">{when(t)}</p>
-                {t.highlight && <p className="text-sm"><Highlight html={t.highlight} /></p>}
+                <p className="text-ink-soft">{placeLabel(t.room)}</p>
+                {t.highlight && <p className="text-base"><Highlight html={t.highlight} /></p>}
                 {t.why && (t.why.keyword_rank || t.why.semantic_rank) && (
-                  <p className="text-sm text-ink-soft">
+                  <p className="text-base text-ink-soft">
                     {t.why.keyword_rank ? "Matched your words" : ""}
                     {t.why.keyword_rank && t.why.semantic_rank ? " and " : ""}
                     {t.why.semantic_rank ? (t.why.keyword_rank ? "your meaning" : "Matched your meaning") : ""}
-                    {tookMs !== null ? `. Found in ${tookMs} ms.` : "."}
+                    .
                   </p>
                 )}
                 <div className="flex flex-wrap gap-3">
@@ -162,7 +172,8 @@ export function PlanSection({
             {[...plan].sort((a, b) => a.starts_at.localeCompare(b.starts_at)).map((p) => (
               <li key={p.id} className="panel">
                 <p className="font-semibold">{p.title}</p>
-                <p className="text-ink-soft">{p.priority === "must" ? "Must-see" : "Nice to have"}, {formatTime(p.starts_at)} MST, room {p.room}</p>
+                <p className="text-ink-soft">{p.priority === "must" ? "Must-see" : "Nice to have"}, {formatTime(p.starts_at)} MST</p>
+                <p className="text-ink-soft">{placeLabel(p.room)}</p>
               </li>
             ))}
           </ul>

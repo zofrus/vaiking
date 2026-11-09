@@ -4,6 +4,7 @@ import { quietRoom, restrooms } from "./data/facilities";
 import { countPress } from "./lib/grace";
 import { PlanSection } from "./Plan";
 import { DayViewSection } from "./DayView";
+import { InstallPrompt } from "./InstallPrompt";
 import { loadBreak, loadBuffer, loadPlan, saveBreak, saveBuffer, savePlan } from "./lib/plan";
 import { isPreview, now, samplePlan, useSample } from "./lib/clock";
 import { useAlternatives, useChanges, useSimilar } from "./lib/live";
@@ -211,7 +212,7 @@ export default function App() {
   const [plan, setPlanState] = useState<PlanItem[]>(() => (useSample ? [...samplePlan] : loadPlan()));
   const [buffer, setBufferState] = useState(loadBuffer);
   // A reload keeps a break only when the person pressed the button and it is still valid.
-  const [grace, setGrace] = useState(() => viewFromHash() !== "home" && loadBreak(now().getTime(), isPreview));
+  const [grace, setGrace] = useState(() => viewFromHash() !== "home" && loadBreak(now().getTime(), isPreview ? "preview" : "live"));
   const setPlan = (p: PlanItem[]) => {
     setPlanState(p);
     if (!isPreview) savePlan(p); // a preview never overwrites the real plan
@@ -258,7 +259,7 @@ export default function App() {
 
   const press = () => {
     setGrace(true);
-    saveBreak(result.clearUntil ?? new Date(now().getTime() + 3 * 3_600_000).toISOString(), isPreview);
+    saveBreak(result.clearUntil ?? new Date(now().getTime() + 3 * 3_600_000).toISOString(), isPreview ? "preview" : "live");
     countPress(isPreview ? "preview" : "live");
     // Focus moving to the calm heading says where you are, so the live region
     // adds only the result. It is worked out here from the same plan, so
@@ -274,7 +275,7 @@ export default function App() {
   // The heading's words change, then focus moves to it so a screen reader
   // reads the new words. The button that was pressed is gone by then.
   const putBack = () => {
-    saveBreak(null, isPreview);
+    saveBreak(null, isPreview ? "preview" : "live");
     flushSync(() => {
       setGrace(false);
       setAnnounce("");
@@ -345,6 +346,7 @@ export default function App() {
                 {notices}
               </section>
             )}
+            <InstallPrompt />
             <PlanSection plan={plan} setPlan={setPlan} buffer={buffer} setBuffer={setBuffer} />
             <DayViewSection plan={plan} changes={changes} result={result} now={now()} bufferMinutes={buffer} />
             </>
