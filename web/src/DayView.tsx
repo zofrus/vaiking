@@ -41,10 +41,9 @@ export function DayViewSection({
           />
           Show as kubectl
         </label>
-        <p className="sr-only" role="status" aria-live="polite">{kubectl ? "Showing kubectl output." : "Showing plain text only."}</p>
       </div>
       {kubectl && (
-        <pre tabIndex={0} aria-label="Your plan as kubectl output" className="panel overflow-x-auto font-mono text-sm leading-relaxed">{toKubectl(view)}</pre>
+        <pre tabIndex={0} role="region" aria-label="Your plan as kubectl output" className="panel overflow-x-auto font-mono text-sm leading-relaxed">{toKubectl(view)}</pre>
       )}
     </section>
   );

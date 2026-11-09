@@ -80,8 +80,6 @@ function Calm({
         </p>
       </div>
 
-      {planResult}
-
       <div className="panel">
         <h3 className="text-2xl font-semibold">{quietRoom.name}</h3>
         <p className="mt-1 text-lg">
@@ -124,6 +122,8 @@ function Calm({
           Estimated. Confirm routes with event staff.
         </p>
       </div>
+
+      {planResult}
     </section>
   );
 }
@@ -204,7 +204,6 @@ export default function App() {
   const result = reconcile(plan, changes, { now: now(), bufferMinutes: buffer, graceActive: grace });
   const clearUntil = result.clearUntil && Date.parse(result.clearUntil) > now().getTime() ? result.clearUntil : null;
   const similar = useSimilar(grace ? result.dropped[0] : undefined);
-  const noticeText = result.notices.map((n) => n.text).join(" ");
 
   const press = () => {
     setGrace(true);
@@ -217,13 +216,25 @@ export default function App() {
     go("calm");
   };
 
+  // The button removes itself, so focus moves to the heading that stays.
+  const putBack = () => {
+    setGrace(false);
+    const msg = "Your talks are back in your plan.";
+    setAnnounce((c) => (c === msg ? `${msg}\u00a0` : msg));
+    document.getElementById("clear-h")?.focus();
+  };
+
   const showCard = view === "card";
 
   return (
     <div className="min-h-screen bg-ground text-ink">
-      <p role="status" aria-live="polite" className="sr-only">
-        {announce} {noticeText}
-      </p>
+      <p role="status" aria-live="polite" className="sr-only">{announce}</p>
+      {/* One node per notice, so only a new notice is read, not the whole list. */}
+      <div role="status" aria-live="polite" aria-relevant="additions" className="sr-only">
+        {result.notices.map((n) => (
+          <p key={n.changeId}>{n.text}</p>
+        ))}
+      </div>
       {/* Everything but the live region goes quiet while the staff card is up,
           so Tab and the screen reader stay on the card. */}
       <div aria-hidden={showCard || undefined} inert={showCard || undefined}>
@@ -285,7 +296,7 @@ export default function App() {
               planResult={
                 plan.length > 0 && (
                   <div className="panel space-y-3" aria-labelledby="clear-h" role="group">
-                    <h3 id="clear-h" className="text-2xl font-semibold">
+                    <h3 id="clear-h" tabIndex={-1} className="text-2xl font-semibold outline-none">
                       {clearUntil ? `You're clear until ${formatTime(clearUntil)} MST.` : "You're clear for the rest of your plan."}
                     </h3>
                     <p>Nothing is cancelled. Your plan is saved.</p>
@@ -300,7 +311,7 @@ export default function App() {
                             <li key={d.id}>Set aside: {d.title}</li>
                           ))}
                         </ul>
-                        <button type="button" className="staff-button" onClick={() => setGrace(false)}>
+                        <button type="button" className="staff-button" onClick={putBack}>
                           Put them back
                         </button>
                       </>

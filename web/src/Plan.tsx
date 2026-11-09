@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { formatTime, type PlanItem } from "./lib/reconcile";
 
 interface Talk {
@@ -44,6 +44,17 @@ export function PlanSection({
   const [facets, setFacets] = useState<Facets | null>(null);
   const [track, setTrack] = useState("");
   const [day, setDay] = useState("");
+
+  // Typing is kept as text; the number is clamped and saved only when the
+  // person leaves the field, so "30" never becomes "50" on the way.
+  const [bufferText, setBufferText] = useState(String(buffer));
+  useEffect(() => setBufferText(String(buffer)), [buffer]);
+  const commitBuffer = () => {
+    const value = bufferText.trim() === "" ? 15 : Number(bufferText);
+    const next = Number.isFinite(value) ? Math.min(120, Math.max(5, Math.round(value))) : 15;
+    setBuffer(next);
+    setBufferText(String(next));
+  };
 
   const mark = (t: Talk, priority: PlanItem["priority"]) => {
     const current = plan.find((p) => p.id === t.id);
@@ -133,8 +144,8 @@ export function PlanSection({
                   </p>
                 )}
                 <div className="flex flex-wrap gap-3">
-                  <button type="button" aria-pressed={mine === "must"} onClick={() => mark(t, "must")} className="choice">Must-see</button>
-                  <button type="button" aria-pressed={mine === "nice"} onClick={() => mark(t, "nice")} className="choice">Nice to have</button>
+                  <button type="button" aria-pressed={mine === "must"} onClick={() => mark(t, "must")} aria-label={`Must-see: ${t.title}`} className="choice">Must-see</button>
+                  <button type="button" aria-pressed={mine === "nice"} onClick={() => mark(t, "nice")} aria-label={`Nice to have: ${t.title}`} className="choice">Nice to have</button>
                 </div>
               </li>
             );
@@ -154,10 +165,21 @@ export function PlanSection({
             ))}
           </ul>
           <label htmlFor="buffer" className="block text-lg">Minutes you want between talks</label>
-          <input id="buffer" type="number" min={5} max={120} step={1} value={buffer} onChange={(e) => {
-            const value = e.target.value === "" ? 15 : Number(e.target.value);
-            setBuffer(Number.isFinite(value) ? Math.min(120, Math.max(5, Math.round(value))) : 15);
-          }} className="field" />
+          <input
+            id="buffer"
+            type="number"
+            inputMode="numeric"
+            min={5}
+            max={120}
+            step={1}
+            value={bufferText}
+            aria-describedby="buffer-hint"
+            onChange={(e) => setBufferText(e.target.value)}
+            onBlur={commitBuffer}
+            onKeyDown={(e) => { if (e.key === "Enter") commitBuffer(); }}
+            className="field"
+          />
+          <p id="buffer-hint" className="text-sm text-ink-soft">5 to 120</p>
           <p className="text-sm text-ink-soft">Your reasons and your plan stay on this phone. The words you type in the search box are sent to search talks.</p>
         </div>
       )}
