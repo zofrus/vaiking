@@ -11,7 +11,9 @@ interface Board {
   sample_note: string;
 }
 type Load =
-  { state: "loading" } | { state: "error" } | { state: "ready"; board: Board };
+  | { state: "loading" }
+  | { state: "error" }
+  | { state: "ready"; board: Board; stale?: boolean };
 
 const floorLabel = (f: string) =>
   f === "unknown" ? "Floor not known" : `Floor ${f}`;
@@ -58,12 +60,16 @@ export default function BoardPage() {
         const board = (await res.json()) as Board;
         if (current) setLoad({ state: "ready", board });
       } catch (err) {
-        if (current) {
-          console.warn("Board load failed", err instanceof Error ? err.name : "unknown");
+        console.warn(
+          "Board counts unavailable",
+          err instanceof Error ? err.name : "unknown",
+        );
+        if (current)
           setLoad((prev) =>
-            prev.state === "ready" ? prev : { state: "error" },
+            prev.state === "ready"
+              ? { ...prev, stale: true }
+              : { state: "error" },
           );
-        }
       }
     };
     void run();
@@ -80,6 +86,9 @@ export default function BoardPage() {
       <p role="status" aria-live="polite" className="mt-4">
         {load.state === "loading" && "Loading counts."}
         {load.state === "error" && "Counts are unavailable right now."}
+        {load.state === "ready" &&
+          load.stale &&
+          "Couldn't refresh; these counts may be out of date. "}
         {load.state === "ready" && load.board.sample_note}
       </p>
       {load.state === "ready" && (
