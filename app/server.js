@@ -81,7 +81,10 @@ function build(opts = {}) {
   const publicDir = opts.publicDir ?? path.join(__dirname, "public");
   const version = env.APP_VERSION || "dev";
 
-  const app = Fastify({ logger: opts.logger ?? false });
+  const app = Fastify({
+    logger: opts.logger ?? false,
+    trustProxy: env.TRUST_PROXY || false,
+  });
 
   if (elastic.client) app.addHook("onClose", () => elastic.client.close());
 

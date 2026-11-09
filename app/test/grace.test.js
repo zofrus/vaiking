@@ -1,5 +1,8 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
+const Fastify = require("fastify");
+const { SpanStatusCode, trace } = require("@opentelemetry/api");
+const graceRoute = require("../routes/grace");
 const os = require("node:os");
 const path = require("node:path");
 const { build } = require("../server");
@@ -17,6 +20,8 @@ test("normalizeFloor maps to the allowlist or unknown", () => {
   assert.equal(normalizeFloor("Level 2"), "2");
   assert.equal(normalizeFloor("L3"), "3");
   assert.equal(normalizeFloor("Ground"), "ground");
+  assert.equal(normalizeFloor("lobby"), "lobby");
+  assert.equal(normalizeFloor("Lobby"), "lobby");
   assert.equal(normalizeFloor("room 355F, jane@example.com"), "unknown");
   assert.equal(normalizeFloor(undefined), "unknown");
   assert.equal(normalizeFloor("unknown"), "unknown");
@@ -80,6 +85,45 @@ test("POST /api/grace rejects bad or missing mode with JSON error", async () => 
   }
 });
 
+test("5xx errors are recorded on the active span without exposing details", async () => {
+  const originalGetActiveSpan = trace.getActiveSpan;
+  const recorded = [];
+  const span = {
+    recordException: (exception) => recorded.push(exception),
+    setStatus: (status) => recorded.push(status),
+  };
+  trace.getActiveSpan = () => span;
+
+  const app = Fastify();
+  app.register(graceRoute, {
+    metrics: {
+      recordGrace() {
+        const error = new Error("sensitive request contents");
+        error.code = "INTERNAL_FAILURE";
+        throw error;
+      },
+    },
+  });
+
+  try {
+    const res = await app.inject({
+      method: "POST",
+      url: "/api/grace",
+      payload: { mode: "live" },
+    });
+    assert.equal(res.statusCode, 500);
+    assert.deepEqual(res.json(), { error: "request failed" });
+    assert.doesNotMatch(res.body, /sensitive request contents|INTERNAL_FAILURE/);
+    assert.deepEqual(recorded, [
+      { name: "Error", message: "INTERNAL_FAILURE" },
+      { code: SpanStatusCode.ERROR },
+    ]);
+  } finally {
+    trace.getActiveSpan = originalGetActiveSpan;
+    await app.close();
+  }
+});
+
 test("POST /api/grace ignores extra fields instead of reading them", async () => {
   const app = build({ env: {}, publicDir: NO_PUBLIC });
   test.after(() => app.close());
@@ -91,14 +135,19 @@ test("POST /api/grace ignores extra fields instead of reading them", async () =>
   assert.equal(res.statusCode, 204);
 });
 
-test("POST /api/grace rate limits per IP", async () => {
-  const app = appWith();
+test("POST /api/grace rate limits per client IP behind the gateway", async () => {
+  const app = build({
+    env: { TRUST_PROXY: "10.0.0.1/32" },
+    publicDir: NO_PUBLIC,
+  });
+  test.after(() => app.close());
   let last;
   for (let i = 0; i < 31; i++) {
     last = await app.inject({
       method: "POST",
       url: "/api/grace",
-      remoteAddress: "10.9.9.9",
+      remoteAddress: "10.0.0.1",
+      headers: { "x-forwarded-for": "10.9.9.9" },
       payload: { mode: "live" },
     });
   }
@@ -106,7 +155,8 @@ test("POST /api/grace rate limits per IP", async () => {
   const other = await app.inject({
     method: "POST",
     url: "/api/grace",
-    remoteAddress: "10.9.9.8",
+    remoteAddress: "10.0.0.1",
+    headers: { "x-forwarded-for": "10.9.9.8" },
     payload: { mode: "live" },
   });
   assert.equal(other.statusCode, 204);

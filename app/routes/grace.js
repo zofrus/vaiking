@@ -1,6 +1,7 @@
 // POST /api/grace: counts one press of the break button. The body carries only
 // the floor of the last planned talk and live/preview. Nothing identifying is
 // read, stored or logged, and the request log line is silenced for this route.
+const { SpanStatusCode, trace } = require("@opentelemetry/api");
 const { FLOORS, MODES, getMetrics, normalizeFloor } = require("../lib/metrics");
 
 const WINDOW_MS = 60_000;
@@ -56,6 +57,11 @@ module.exports = async function grace(app, opts) {
   app.setErrorHandler((err, request, reply) => {
     const status =
       err.statusCode >= 400 && err.statusCode < 500 ? err.statusCode : 500;
+    if (status >= 500) {
+      const span = trace.getActiveSpan();
+      span?.recordException({ name: err.name, message: err.code ?? err.name });
+      span?.setStatus({ code: SpanStatusCode.ERROR });
+    }
     reply.code(status).send({
       error: status === 400 ? "invalid request" : "request failed",
     });
