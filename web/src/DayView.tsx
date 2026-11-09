@@ -13,6 +13,7 @@ import {
   type PlanItem,
   type reconcile,
 } from "./lib/reconcile";
+import { placeLabel } from "./lib/place";
 import "./day.css";
 
 // Colour only. The words come from STATUS_LABEL.
@@ -63,6 +64,28 @@ function termLine(line: string): ReactNode {
   return tone ? <span className={tone}>{line}</span> : line;
 }
 
+// True when the newest change to this talk is a simulated drill.
+export function isDrillFor(id: string, changes: Change[]): boolean {
+  let newest: Change | undefined;
+  for (const c of changes) {
+    if (c.talk_id !== id) continue;
+    if (!newest || new Date(c.detected_at) >= new Date(newest.detected_at)) newest = c;
+  }
+  return newest?.drill === true;
+}
+
+// Radar is only credited for real changes. A drill is made up by the demo, so
+// it says so in words and never names a tool.
+export function NoticeCredit({ drill }: { drill: boolean }) {
+  return drill ? (
+    <span className="gp-credit">Drill · simulated</span>
+  ) : (
+    <span className="gp-credit">
+      Change detected by <b>Radar</b>
+    </span>
+  );
+}
+
 export function DayViewSection({
   plan,
   changes,
@@ -87,7 +110,7 @@ export function DayViewSection({
   const inNotice = new Set(movedNow.map((e) => e.id));
 
   return (
-    <section aria-labelledby="day-h" className="gp-day space-y-4">
+    <section aria-labelledby="day-h" className="gp-day">
       <div className="gp-head">
         <div>
           <h2 id="day-h" className="gp-h">
@@ -148,9 +171,7 @@ export function DayViewSection({
               <p className="gp-notice-body">
                 <strong>{e.title}</strong>. {e.reason}
               </p>
-              <span className="gp-credit">
-                Change detected by <b>Radar</b>
-              </span>
+              <NoticeCredit drill={isDrillFor(e.id, changes)} />
             </li>
           ))}
         </ul>
@@ -160,6 +181,11 @@ export function DayViewSection({
       <ul className="gp-card">
         {view.entries.map((e) => {
           const start = startTimeFor(e.id, live, plan);
+          const room = live.find((l) => l.id === e.id)?.room ?? plan.find((p) => p.id === e.id)?.room;
+          // The last part of "Salt Palace | Level 2 | 251 A-C" is the room itself.
+          const short = room ? placeLabel(room.split("|").pop() ?? room) : "";
+          // Kept talks need no sentence: the tag says it. Everything else keeps its reason.
+          const showReason = e.status !== "kept";
           return (
             <li key={e.id} className="gp-row">
               <span className="gp-time gp-mono">
@@ -167,17 +193,24 @@ export function DayViewSection({
               </span>
               <span className="gp-title">
                 {e.title}
-                {/* The notice above already says this; hide the repeat from screen readers. */}
-                <span
-                  className="gp-sub"
-                  aria-hidden={inNotice.has(e.id) || undefined}
-                >
-                  {e.reason}
+                {showReason && (
+                  /* The notice above already says this; hide the repeat from screen readers. */
+                  <span
+                    className="gp-sub"
+                    aria-hidden={inNotice.has(e.id) || undefined}
+                  >
+                    {e.reason}
+                  </span>
+                )}
+              </span>
+              {short && <span className="gp-tag">{short}</span>}
+              {e.status === "kept" ? (
+                <span className="sr-only">{STATUS_LABEL[e.status]}</span>
+              ) : (
+                <span className={`gp-tag ${TAG_CLASS[e.status]}`}>
+                  {STATUS_LABEL[e.status]}
                 </span>
-              </span>
-              <span className={`gp-tag ${TAG_CLASS[e.status]}`}>
-                {STATUS_LABEL[e.status]}
-              </span>
+              )}
             </li>
           );
         })}
