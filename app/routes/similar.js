@@ -3,6 +3,8 @@ const {
   parseWhen, parseLimit, seedText, buildSimilarRequest, createCache,
 } = require("../lib/search-similar");
 
+const { clientKey, createLimiter } = require("../lib/guard");
+
 const BUDGET_MS = 800;
 const OPTIONS = { maxRetries: 0 };
 
@@ -12,7 +14,18 @@ function similarResponse(results) {
     : { results };
 }
 
-module.exports = async function similar(app, { elastic }) {
+// Phones send times with seconds that differ on every tap. Cutting to the minute
+// makes repeat taps share one cache entry; talks start on whole minutes.
+function floorToMinute(iso) {
+  if (iso === null) return null;
+  const t = Date.parse(iso);
+  return new Date(t - (t % 60_000)).toISOString();
+}
+
+module.exports = async function similar(app, { elastic, env = process.env }) {
+  const perClient = Number.parseInt(env.RATE_LIMIT_PER_MIN, 10) || 120;
+  const total = Number.parseInt(env.RATE_LIMIT_TOTAL_PER_MIN, 10) || 600;
+  const limited = createLimiter({ perClient, total });
   const seeds = createCache(500, 10 * 60_000);
   const answers = createCache(500, 60_000);
 
@@ -25,9 +38,17 @@ module.exports = async function similar(app, { elastic }) {
     if (!elastic.configured) return reply.code(503).send({ error: "similar talks are not available right now" });
     const limit = parseLimit(request.query.limit);
 
-    const key = [talkId, after.value, before.value, limit].join("|");
+    const afterMin = floorToMinute(after.value);
+    const beforeMin = floorToMinute(before.value);
+    const key = [talkId, afterMin, beforeMin, limit].join("|");
     const cached = answers.get(key);
     if (cached) return cached;
+    // Only requests that would reach Elasticsearch are counted.
+    if (limited(clientKey(request))) {
+      return reply.code(429).header("retry-after", "60").send({
+        error: "too many requests, try again in a minute",
+      });
+    }
     const deadline = Date.now() + BUDGET_MS;
 
     try {
@@ -51,7 +72,7 @@ module.exports = async function similar(app, { elastic }) {
       if (!text) return similarResponse([]);
       const res = await withSpan("elasticsearch.similar", "search", () =>
         elastic.client.search(
-          buildSimilarRequest({ talkId, text, after: after.value, before: before.value, limit }),
+          buildSimilarRequest({ talkId, text, after: afterMin, before: beforeMin, limit }),
           requestOptions(),
         ),
       );
