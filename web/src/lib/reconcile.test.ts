@@ -77,6 +77,11 @@ describe("reconcile", () => {
     expect(reconcile([b, c], [change], opts).notices[0].text).toBe("Your 2:30 PM MST talk now ends at 3:50 PM MST. It no longer fits.");
   });
 
+  it("writes the new room as plain words", () => {
+    const change: Change = { id: "9", talk_id: "c", kind: "moved", before: null, after: { room: "Salt Palace | Level 3 | 355F" }, detected_at: at("13:05") };
+    expect(reconcile([c], [change], opts).notices[0].text).toBe("Your 4:00 PM MST talk moved to Salt Palace, Level 3, 355F. It still fits.");
+  });
+
   it("removes a cancelled talk and says so", () => {
     const change: Change = { id: "3", talk_id: "c", kind: "cancelled", before: null, after: null, detected_at: at("13:05") };
     const r = reconcile([a, c], [change], opts);
