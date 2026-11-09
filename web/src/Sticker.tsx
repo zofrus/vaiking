@@ -7,6 +7,8 @@ import {
   saveSticker,
   type StickerId,
 } from "./lib/sticker";
+import { clickedOutside } from "./lib/dialogFit";
+import "./dialogfit.css";
 
 // Every card pairs a pale tint with near-black text (well over 4.5:1), and says
 // the colour as a word, so nothing depends on seeing the colour.
@@ -49,7 +51,12 @@ export function Sticker() {
       <dialog
         ref={dialog}
         aria-labelledby="sticker-h"
-        className="m-auto w-[min(32rem,calc(100vw-1.5rem))] rounded-2xl bg-white p-5 text-ink backdrop:bg-black/70"
+        onClick={(e) => {
+          // A tap on the dimmed backdrop closes it: phones have no Escape key.
+          if (e.target === e.currentTarget && clickedOutside(e.currentTarget.getBoundingClientRect(), e.clientX, e.clientY))
+            e.currentTarget.close();
+        }}
+        className="fit-dialog m-auto w-[min(32rem,calc(100vw-1.5rem))] rounded-2xl bg-[var(--gp-surface)] p-5 text-[var(--gp-ink)] shadow-[0_0_0_1px_var(--gp-line)] backdrop:bg-[rgb(24_24_27/0.45)]"
       >
         <h2 id="sticker-h" className="text-2xl font-semibold">
           My communication sticker
@@ -88,9 +95,11 @@ export function Sticker() {
           </fieldset>
           <p className="mt-4">{STICKER_PICKUP_LINE}</p>
           <p className="mt-1 text-sm text-ink-soft">{STICKER_SOURCE_LINE}</p>
-          <button type="submit" className={`${btn} mt-5 w-full`}>
-            Close
-          </button>
+          <div className="dialog-actions">
+            <button type="submit" className="btn-p">
+              Close
+            </button>
+          </div>
         </form>
       </dialog>
     </div>
