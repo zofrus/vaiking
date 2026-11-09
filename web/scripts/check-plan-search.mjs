@@ -60,7 +60,7 @@ const box = await page.getByRole("button", { name: "Remove Talk about ebpf" }).b
 check("Remove target is at least 44px tall", box.height >= 44);
 await page.getByRole("button", { name: "Remove Talk about ebpf" }).click();
 check("Remove empties the saved list", (await page.getByRole("heading", { name: "Saved on this phone" }).count()) === 0);
-check("focus lands on the search box when the list is gone", await page.evaluate(() => document.activeElement?.id === "q"));
+check("focus lands on the search box when the list is gone", await page.evaluate(() => globalThis.document.activeElement?.id === "q"));
 await page.reload();
 await page.waitForSelector("main");
 check("removal survives a reload", (await page.getByRole("heading", { name: "Saved on this phone" }).count()) === 0);
