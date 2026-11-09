@@ -5,7 +5,7 @@ import { countPress } from "./lib/grace";
 import { PlanSection } from "./Plan";
 import { DayViewSection } from "./DayView";
 import { InstallPrompt } from "./InstallPrompt";
-import { loadBuffer, loadPlan, saveBuffer, savePlan } from "./lib/plan";
+import { loadBreak, loadBuffer, loadPlan, saveBreak, saveBuffer, savePlan } from "./lib/plan";
 import { isPreview, now, samplePlan, useSample } from "./lib/clock";
 import { useAlternatives, useChanges, useSimilar } from "./lib/live";
 import { formatTime, reconcile, type Notice, type PlanItem } from "./lib/reconcile";
@@ -13,6 +13,14 @@ import { closestReachable } from "./lib/reach";
 import { placeLabel } from "./lib/place";
 
 type View = "home" | "calm" | "card";
+
+// The banner names the day being previewed, not always Tuesday.
+const previewDay = new Intl.DateTimeFormat("en-US", {
+  timeZone: "America/Denver",
+  weekday: "long",
+  month: "long",
+  day: "numeric",
+}).format(now());
 
 const viewFromHash = (): View =>
   location.hash === "#/calm" ? "calm" : location.hash === "#/card" ? "card" : "home";
@@ -203,7 +211,8 @@ export default function App() {
 
   const [plan, setPlanState] = useState<PlanItem[]>(() => (useSample ? [...samplePlan] : loadPlan()));
   const [buffer, setBufferState] = useState(loadBuffer);
-  const [grace, setGrace] = useState(false);
+  // A reload keeps a break only when the person pressed the button and it is still valid.
+  const [grace, setGrace] = useState(() => viewFromHash() !== "home" && loadBreak(now().getTime(), isPreview ? "preview" : "live"));
   const setPlan = (p: PlanItem[]) => {
     setPlanState(p);
     if (!isPreview) savePlan(p); // a preview never overwrites the real plan
@@ -250,6 +259,7 @@ export default function App() {
 
   const press = () => {
     setGrace(true);
+    saveBreak(result.clearUntil ?? new Date(now().getTime() + 3 * 3_600_000).toISOString(), isPreview ? "preview" : "live");
     countPress(isPreview ? "preview" : "live");
     // Focus moving to the calm heading says where you are, so the live region
     // adds only the result. It is worked out here from the same plan, so
@@ -265,6 +275,7 @@ export default function App() {
   // The heading's words change, then focus moves to it so a screen reader
   // reads the new words. The button that was pressed is gone by then.
   const putBack = () => {
+    saveBreak(null, isPreview ? "preview" : "live");
     flushSync(() => {
       setGrace(false);
       setAnnounce("");
@@ -302,7 +313,7 @@ export default function App() {
         </a>
         {isPreview && (
           <p className="bg-black px-5 py-3 text-center font-semibold text-white">
-            Preview of Tuesday. Times are real, the moment is simulated.
+            Preview of {previewDay}. Times are real, the moment is simulated.
             {useSample && " The plan below is a sample."}
           </p>
         )}
@@ -326,7 +337,7 @@ export default function App() {
               <p className="text-lg text-ink-soft">
                 Press the button whenever you need a pause. You get the quiet
                 room, a card to show staff, and a list of all-gender restrooms. It
-                works with no account and no signal.
+                needs no account, and works with no signal after your first visit.
               </p>
             </section>
             {result.notices.length > 0 && (
@@ -348,7 +359,7 @@ export default function App() {
                 plan.length > 0 && (
                   <div className="panel space-y-3" aria-labelledby="clear-h" role="group">
                     <h3 id="clear-h" tabIndex={-1} className="text-2xl font-semibold">
-                      {grace ? clearLine(result) : "Your talks are back in your plan."}
+                      {grace ? clearLine(result) : "All your talks are in your plan."}
                     </h3>
                     {grace && <p>Nothing is cancelled. Your plan is saved.</p>}
                     {notices}
