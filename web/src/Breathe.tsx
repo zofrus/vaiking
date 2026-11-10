@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { breathState, createCuePlayer } from "./lib/sound";
 
 const btn =
-  "inline-flex min-h-11 items-center justify-center rounded-xl border-2 border-deep px-5 py-2 font-semibold text-deep";
+  "btn-s";
 
 const reducedMotion = () =>
   typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
