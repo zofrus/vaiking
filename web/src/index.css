@@ -26,33 +26,12 @@
   --gp-chip-ink: #3f3f46;
   --gp-btn: #18181b; /* primary button ground and its text */
   --gp-btn-ink: #ffffff;
-  --gp-ring-1: #e1e9e4;
-  --gp-ring-2: #cfddd5;
   /* kubectl view only */
   --gp-term-bg: #0d1117;
   --gp-term-ink: #e6edf3;
   --gp-term-green: #4ade9b;
   --gp-term-amber: #f5c065;
   --gp-term-blue: #7cc4ff;
-}
-
-/* Calm view: oat ground, sage action, clay notice. The staff card ignores this. */
-[data-view="calm"] {
-  --gp-bg: #f6f3ee;
-  --gp-ink: #2b2f2e;
-  --gp-muted: #5b625f;
-  --gp-line: #e6e1d8;
-  --gp-hair: #e6e1d8;
-  --gp-field-line: #8a867c;
-  --gp-accent: #3e6a5b; /* sage */
-  --gp-accent-soft: #e6ece8;
-  --gp-accent-soft-ink: #2c4d42;
-  --gp-notice: #7a4a1e; /* clay */
-  --gp-notice-bg: #f3e6d6;
-  --gp-notice-line: #e8d3ba;
-  --gp-chip: #e6ece8;
-  --gp-chip-ink: #2c4d42;
-  --gp-accent-ink: #ffffff;
 }
 
 /* Dark: follows the phone's setting. */
@@ -84,26 +63,6 @@
     --gp-chip-ink: #d4d4d8;
     --gp-btn: #f4f4f5;
     --gp-btn-ink: #18181b;
-  }
-  [data-view="calm"] {
-    --gp-bg: #161a19;
-    --gp-surface: #1f2523;
-    --gp-ink: #e8ecea;
-    --gp-muted: #a3ada8;
-    --gp-line: #2d3532;
-    --gp-hair: #2d3532;
-    --gp-field-line: #7f8a85;
-    --gp-accent: #7fb8a3;
-    --gp-accent-ink: #0f1a16;
-    --gp-accent-soft: #223029;
-    --gp-accent-soft-ink: #bfe3d2;
-    --gp-notice: #e8c79b;
-    --gp-notice-bg: #2b2115;
-    --gp-notice-line: #5a4426;
-    --gp-chip: #223029;
-    --gp-chip-ink: #bfe3d2;
-    --gp-ring-1: #1f2d28;
-    --gp-ring-2: #2a3f37;
   }
 }
 
@@ -141,16 +100,9 @@
     --gp-hair: #a1a1aa;
     --gp-notice-line: #9a4a00;
   }
-  [data-view="calm"] {
-    --gp-muted: #33403a;
-    --gp-line: #6b7570;
-    --gp-hair: #8a948f;
-    --gp-notice-line: #7a4a1e;
-  }
 }
 @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
-  :root:has([data-view]),
-  [data-view="calm"] {
+  :root:has([data-view]) {
     --gp-muted: #e4e4e7;
     --gp-line: #a1a1aa;
     --gp-hair: #71717a;
@@ -546,10 +498,7 @@
 [data-view="calm"] .staff-button {
   min-height: 3.25rem;
   border-radius: 1rem;
-  background: var(--gp-accent);
-  color: var(--gp-accent-ink);
   font-size: 1.0625rem;
-  box-shadow: none;
 }
 /* Secondary button: one look for every outlined action. */
 .btn-s {
@@ -672,11 +621,11 @@ mark {
 }
 .calm-mark .c-ring.c-ring-1 {
   inset: 0;
-  background: var(--gp-ring-1);
+  background: color-mix(in srgb, var(--gp-accent) 10%, transparent);
 }
 .calm-mark .c-ring-2 {
   inset: 0.875rem;
-  background: var(--gp-ring-2);
+  background: color-mix(in srgb, var(--gp-accent) 18%, transparent);
   animation-delay: -4s;
 }
 .calm-mark .core {

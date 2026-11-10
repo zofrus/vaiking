@@ -8,7 +8,7 @@ import {
 } from "./lib/sound";
 
 const btn =
-  "inline-flex min-h-11 items-center justify-center rounded-xl border-2 border-deep px-5 py-2 font-semibold text-deep";
+  "btn-s";
 
 // Plain background sound made on this phone. It starts only when you tap Play,
 // starts quiet, stops when the page is hidden, and says nothing about health.
